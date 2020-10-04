@@ -34,7 +34,7 @@ namespace Ecs.Core.Tests
         {
             var config = EcsConfig.Default;
             // Initial array count of 1
-            config.InitialEntityComponentCount = 1;
+            config.InitialEntityComponentCapacity = 1;
 
             var world = new World(config);
 

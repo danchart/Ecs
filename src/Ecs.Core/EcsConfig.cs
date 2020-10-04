@@ -2,15 +2,18 @@
 {
     public struct EcsConfig
     {
-        public int InitialEntityPoolSize;
-        public int InitialComponentPoolSize;
-        public int InitialEntityComponentCount;
+        public int InitialEntityPoolCapacity;
+        public int InitialComponentPoolCapacity;
+        public int InitialEntityComponentCapacity;
+        public int InitialComponentToEntityQueryMapCapacity;
 
         public static readonly EcsConfig Default = new EcsConfig
         {
-            InitialEntityPoolSize = 256,
-            InitialComponentPoolSize = 256,
-            InitialEntityComponentCount = 8,
+            InitialEntityPoolCapacity = 256,
+            InitialComponentPoolCapacity = 256,
+            InitialEntityComponentCapacity = 8,
+
+            InitialComponentToEntityQueryMapCapacity = 256,
         };
     }
 }

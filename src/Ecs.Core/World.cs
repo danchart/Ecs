@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 
 namespace Ecs.Core
 {
@@ -14,13 +15,17 @@ namespace Ecs.Core
         private int _entityCount = 0;
         private int _freeEntityCount = 0;
 
+        private readonly Dictionary<int, AppendOnlyList<EntityQuery>> _componentIdToEntityQueries;
+
         public World(EcsConfig config)
         {
             Config = config;
 
-            ComponentPools = new IComponentPool[Config.InitialComponentPoolSize];
-            _entities = new EntityData[Config.InitialEntityPoolSize];
-            _freeEntityIds = new int[Config.InitialEntityPoolSize];
+            ComponentPools = new IComponentPool[Config.InitialComponentPoolCapacity];
+            _entities = new EntityData[Config.InitialEntityPoolCapacity];
+            _freeEntityIds = new int[Config.InitialEntityPoolCapacity];
+
+            _componentIdToEntityQueries = new Dictionary<int, AppendOnlyList<EntityQuery>>(Config.InitialComponentToEntityQueryMapCapacity);
         }
 
         public Entity NewEntity()
@@ -34,7 +39,7 @@ namespace Ecs.Core
             ref var entityData = ref _entities[entity.Id];
 
             entityData.ComponentCount = 0;
-            entityData.Components = new EntityData.ComponentData[Config.InitialEntityComponentCount];
+            entityData.Components = new EntityData.ComponentData[Config.InitialEntityComponentCapacity];
 
             return entity;
         }
@@ -57,6 +62,18 @@ namespace Ecs.Core
         //    var pool = GetPool<T>();
         //    pool.Free(dataRef.ItemIndex);
         //}
+
+        public void UpdateEntityQueries(int componentPoolIndex, in Entity entity, in EntityData entityData, bool isDelete)
+        {
+            if (isDelete)
+            {
+
+            }
+            else
+            {
+
+            }
+        }
 
         public ComponentPool<T> GetPool<T>() where T : struct
         {

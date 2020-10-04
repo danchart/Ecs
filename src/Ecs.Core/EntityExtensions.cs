@@ -36,6 +36,8 @@ namespace Ecs.Core
             };
             entityData.ComponentCount++;
 
+            entity.World.UpdateEntityQueries(componentPoolIndex, entity, entityData, isDelete: false);
+
             return ref pool.GetItem(index);
         }
 
