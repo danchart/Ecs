@@ -37,6 +37,7 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Collections\AppendOnlyListTests.cs" />
     <Compile Include="ComponentTests.cs" />
     <Compile Include="EntityTests.cs" />
     <Compile Include="Helpers\SampleStructs.cs" />
