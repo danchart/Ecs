@@ -48,12 +48,13 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="Component.cs" />
+    <Compile Include="ComponentRef.cs" />
     <Compile Include="ComponentPool.cs" />
     <Compile Include="ComponentType.cs" />
     <Compile Include="EcsConfig.cs" />
     <Compile Include="EcsConstants.cs" />
     <Compile Include="Entity.cs" />
+    <Compile Include="EntityExtensions.cs" />
     <Compile Include="Hashing\HashingUtil.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="World.cs" />

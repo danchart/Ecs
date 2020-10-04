@@ -1,7 +1,4 @@
-﻿using System;
-using System.Threading;
-
-namespace Ecs.Core
+﻿namespace Ecs.Core
 {
     public struct ComponentRef<T> where T : struct
     {
@@ -9,10 +6,10 @@ namespace Ecs.Core
 
         private readonly ComponentPool<T> _pool;
 
-        public ComponentRef(ComponentPool<T> pool, int poolIndex)
+        public ComponentRef(ComponentPool<T> pool, int itemIndex)
         {
             _pool = pool;
-            ItemIndex = poolIndex;
+            ItemIndex = itemIndex;
         }
 
         public ref T Unref()
@@ -40,27 +37,4 @@ namespace Ecs.Core
             return ItemIndex;
         }
     }
-
-    //public sealed class DataRef<T>
-    //{
-    //    private readonly Func<T> getter;
-    //    private readonly Action<T> setter;
-
-    //    public DataRef(Func<T> getter, Action<T> setter)
-    //    {
-    //        this.getter = getter;
-    //        this.setter = setter;
-    //    }
-
-    //    public T Value 
-    //    { 
-    //        get => getter();
-    //        set => setter(value);
-    //    }
-
-    //    public ref T Unref()
-    //    {
-    //        return ref Pool.Items[Idx];
-    //    }
-    //}
 }

@@ -11,8 +11,8 @@ namespace Ecs.Core.Tests
 
             var entity = world.NewEntity();
 
-            ref var compFoo = ref entity.GetComponent<FooData>();
-            ref var compBar = ref entity.GetComponent<BarData>();
+            ref var compFoo = ref entity.GetComponent<SampleStructs.FooData>();
+            ref var compBar = ref entity.GetComponent<SampleStructs.BarData>();
 
             compFoo.x = 1;
             compFoo.y = 2;
@@ -23,18 +23,6 @@ namespace Ecs.Core.Tests
             compBar.c = true;
 
             int i = 0;
-        }
-
-        private struct FooData
-        {
-            public int x, y;
-            public string text;
-        }
-
-        private struct BarData
-        {
-            public int a, b;
-            public bool c;
         }
     }
 }

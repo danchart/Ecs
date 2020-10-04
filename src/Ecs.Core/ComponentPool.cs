@@ -60,6 +60,11 @@ namespace Ecs.Core
             _freeItemIndices[_freeItemCount++] = index;
         }
 
+        public ComponentRef<T> Reference(int itemIndex)
+        {
+            return new ComponentRef<T>(this, itemIndex);
+        }
+
         public ref T GetItem(int index)
         {
             return ref _items[index];
