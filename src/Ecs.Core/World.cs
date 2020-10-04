@@ -4,14 +4,24 @@ namespace Ecs.Core
 {
     public class World
     {
-        public IComponentPool[] ComponentPools = new IComponentPool[EcsConstants.InitialComponentPoolCount];
+        public readonly EcsConfig Config;
 
-        private EntityData[] _entities = new EntityData[EcsConstants.InitialEntityCount];
+        public IComponentPool[] ComponentPools;
 
-        private int[] _freeEntityIds = new int[EcsConstants.InitialEntityCount];
+        private EntityData[] _entities;
+        private int[] _freeEntityIds;
 
         private int _entityCount = 0;
         private int _freeEntityCount = 0;
+
+        public World(EcsConfig config)
+        {
+            Config = config;
+
+            ComponentPools = new IComponentPool[Config.InitialComponentPoolSize];
+            _entities = new EntityData[Config.InitialEntityPoolSize];
+            _freeEntityIds = new int[Config.InitialEntityPoolSize];
+        }
 
         public Entity NewEntity()
         {
@@ -24,8 +34,7 @@ namespace Ecs.Core
             ref var entityData = ref _entities[entity.Id];
 
             entityData.ComponentCount = 0;
-            entityData.ComponentIndices = new int[EcsConstants.InitialEntityComponentCount];
-            entityData.ComponentPoolIndices = new int[EcsConstants.InitialEntityComponentCount];
+            entityData.Components = new EntityData.ComponentData[Config.InitialEntityComponentCount];
 
             return entity;
         }
@@ -35,19 +44,19 @@ namespace Ecs.Core
             return ref _entities[entity.Id];
         }
 
-        public ref T New<T>() where T : struct
-        {
-            var pool = GetPool<T>();
-            var index = pool.New();
+        //public ref T NewComponent<T>() where T : struct
+        //{
+        //    var pool = GetPool<T>();
+        //    var index = pool.New();
 
-            return ref pool.GetItem(index);
-        }
+        //    return ref pool.GetItem(index);
+        //}
 
-        public void Destroy<T>(ComponentRef<T> dataRef) where T : struct
-        {
-            var pool = GetPool<T>();
-            pool.Free(dataRef.ItemIndex);
-        }
+        //public void DestroyComponent<T>(ComponentRef<T> dataRef) where T : struct
+        //{
+        //    var pool = GetPool<T>();
+        //    pool.Free(dataRef.ItemIndex);
+        //}
 
         public ComponentPool<T> GetPool<T>() where T : struct
         {
@@ -59,8 +68,9 @@ namespace Ecs.Core
 
                 while (len <= poolIndex)
                 {
-                    len <<= 1;
+                    len *= 2;
                 }
+
                 Array.Resize(ref ComponentPools, len);
             }
 
@@ -93,9 +103,14 @@ namespace Ecs.Core
 
         public struct EntityData
         {
-            public int[] ComponentPoolIndices;
-            public int[] ComponentIndices;
+            public ComponentData[] Components;
             public int ComponentCount;
+
+            public struct ComponentData
+            {
+                public int PoolIndex;
+                public int ItemIndex;
+            }
         }
     }
 }

@@ -16,25 +16,27 @@ namespace Ecs.Core
 
             for (int i = 0; i < entityData.ComponentCount; i++)
             {
-                if (entityData.ComponentPoolIndices[i] == componentPoolIndex)
+                if (entityData.Components[i].PoolIndex == componentPoolIndex)
                 {
                     // Found component
-                    return ref ((ComponentPool<T>)World.ComponentPools[componentPoolIndex]).GetItem(entityData.ComponentIndices[i]);
+                    return ref ((ComponentPool<T>)World.ComponentPools[componentPoolIndex]).GetItem(entityData.Components[i].ItemIndex);
                 }
             }
 
             // Create component
 
-            if (entityData.ComponentIndices.Length == entityData.ComponentCount)
+            if (entityData.Components.Length == entityData.ComponentCount)
             {
-                Array.Resize(ref entityData.ComponentIndices, entityData.ComponentCount * 2);
-                Array.Resize(ref entityData.ComponentPoolIndices, entityData.ComponentCount * 2);
+                Array.Resize(ref entityData.Components, entityData.ComponentCount * 2);
             }
 
             var pool = World.GetPool<T>();
             var index = pool.New();
-            entityData.ComponentIndices[entityData.ComponentCount] = index;
-            entityData.ComponentPoolIndices[entityData.ComponentCount] = componentPoolIndex;
+            entityData.Components[entityData.ComponentCount] = new World.EntityData.ComponentData
+            {
+                PoolIndex = componentPoolIndex,
+                ItemIndex = index
+            };
             entityData.ComponentCount++;
 
             return ref pool.GetItem(index);

@@ -51,6 +51,7 @@
     <Compile Include="Component.cs" />
     <Compile Include="ComponentPool.cs" />
     <Compile Include="ComponentType.cs" />
+    <Compile Include="EcsConfig.cs" />
     <Compile Include="EcsConstants.cs" />
     <Compile Include="Entity.cs" />
     <Compile Include="Hashing\HashingUtil.cs" />

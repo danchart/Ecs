@@ -7,7 +7,7 @@ namespace Ecs.Core.Tests
         [Fact]
         public void Test()
         {
-            var world = new World();
+            var world = new World(EcsConfig.Default);
 
             var entity = world.NewEntity();
 
