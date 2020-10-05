@@ -44,6 +44,13 @@ namespace Ecs.Core
             return entity;
         }
 
+        public void FreeEntity(Entity entity)
+        {
+            // TODO: Mark entity as freed.
+
+            _freeEntityIds[_freeEntityCount++] = entity.Id;
+        }
+
         public ref EntityData GetEntityData(Entity entity)
         {
             return ref _entities[entity.Id];
@@ -63,15 +70,52 @@ namespace Ecs.Core
         //    pool.Free(dataRef.ItemIndex);
         //}
 
-        public void UpdateEntityQueries(int componentPoolIndex, in Entity entity, in EntityData entityData, bool isDelete)
+        public void AddEntityQuery(EntityQuery entityQuery)
+        {
+            for (int i = 0; i < entityQuery.ComponentTypeIndices.Length; i++)
+            {
+                if (!_componentIdToEntityQueries.ContainsKey(entityQuery.ComponentTypeIndices[i]))
+                {
+                    _componentIdToEntityQueries[entityQuery.ComponentTypeIndices[i]] = new AppendOnlyList<EntityQuery>(EcsConstants.InitialEntityQueryEntityCapacity);
+                }
+
+                _componentIdToEntityQueries[entityQuery.ComponentTypeIndices[i]].Add(entityQuery);
+            }
+        }
+
+        public void UpdateEntityQueries(
+            int componentPoolIndex, 
+            in Entity entity, 
+            in EntityData entityData, 
+            bool isDelete)
         {
             if (isDelete)
             {
+                AppendOnlyList<EntityQuery> entityQueries;
 
+                if (_componentIdToEntityQueries.TryGetValue(componentPoolIndex, out entityQueries))
+                {
+                    for (int i = 0; i < entityQueries.Count; i++)
+                    {
+                        var entityQuery = entityQueries.Items[i];
+
+                        entityQuery.RemoveEntity(entity);
+                    }
+                }
             }
             else
             {
+                AppendOnlyList<EntityQuery> entityQueries;
 
+                if (_componentIdToEntityQueries.TryGetValue(componentPoolIndex, out entityQueries))
+                {
+                    for (int i = 0; i < entityQueries.Count; i++)
+                    {
+                        var entityQuery = entityQueries.Items[i];
+
+                        entityQuery.AddEntity(entity);
+                    }
+                }
             }
         }
 

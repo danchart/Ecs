@@ -58,10 +58,44 @@ namespace Ecs.Core
             return false;
         }
 
-        //public static bool RemoveComponent<T>(in this Entity entity) where T : struct
-        //{
+        public static bool RemoveComponent<T>(in this Entity entity) where T : struct
+        {
+            bool wasRemoved = false;
 
-        //}
+            var componentPoolIndex = ComponentType<T>.ComponentPoolIndex;
+
+            ref var entityData = ref entity.World.GetEntityData(entity);
+
+            for (int i = 0; i < entityData.ComponentCount; i++)
+            {
+                if (entityData.Components[i].PoolIndex == componentPoolIndex)
+                {
+                    entity.World.UpdateEntityQueries(componentPoolIndex, entity, entityData, isDelete: true);
+
+                    entity.World.ComponentPools[componentPoolIndex].Free(entityData.Components[i].ItemIndex);
+
+                    if (i < entityData.ComponentCount - 1)
+                    {
+                        // Move the last item to the removed position
+                        entityData.Components[i] = entityData.Components[entityData.ComponentCount - 1];
+                    }
+
+                    entityData.ComponentCount--;
+
+                    wasRemoved = true;
+
+                    break;
+                }
+            }
+
+            // Free entities with no more components.
+            if (entityData.ComponentCount == 0)
+            {
+                entity.World.FreeEntity(entity);
+            }
+
+            return wasRemoved;
+        }
 
         public static ComponentRef<T> Reference<T>(in this Entity entity) where T : struct
         {

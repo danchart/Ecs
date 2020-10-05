@@ -1,12 +1,19 @@
 ﻿using System;
 using System.Reflection;
-using System.Runtime.ExceptionServices;
 
 namespace Ecs.Core
 {
     public abstract class SystemBase
     {
         public abstract void OnUpdate();
+
+        //public EntityQuery Create(Type[] types)
+        //{
+        //    var entityQuery = new EntityQuery();
+
+        //    entityQuery.
+        //}
+
     }
 
 
@@ -80,9 +87,11 @@ namespace Ecs.Core
                 {
                     var entityQuery = (EntityQuery) fieldInfo.GetValue(system);
 
-                    entityQuery.
+                    world.AddEntityQuery(entityQuery);
 
-                    fieldInfo.SetValue(system, world.GetFilter(fieldInfo.FieldType));
+                    entityQuery.World = world;
+
+                    //fieldInfo.SetValue(system, world.GetFilter(fieldInfo.FieldType));
                     continue;
                 }
             }
