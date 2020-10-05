@@ -4,6 +4,18 @@ using System.Reflection;
 
 namespace Ecs.Core
 {
+    public class EntityQuery<T> : EntityQuery where T : struct
+    {
+        public EntityQuery() : 
+            base(
+                new Type[] 
+                { 
+                    typeof(T) 
+                })
+        {
+        }
+    }
+
     public class EntityQuery
     {
         public int[] ComponentTypeIndices;
@@ -67,6 +79,29 @@ namespace Ecs.Core
             _entityIndexToQueryIndex.Remove(entity.Id);
 
             _entityCount--;
+        }
+
+        public Enumerator GetEnumerator()
+        {
+            return new Enumerator(GetEntityCount());
+        }
+
+        public struct Enumerator
+        {
+            private readonly int _count;
+
+            internal Enumerator(int count)
+            {
+                _count = count;
+                Current = -1;
+            }
+
+            public int Current { get; private set; }
+
+            public bool MoveNext()
+            {
+                return ++Current < _count;
+            }
         }
     }
 }

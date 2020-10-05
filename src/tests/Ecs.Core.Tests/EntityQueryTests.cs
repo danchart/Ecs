@@ -1,7 +1,5 @@
 ﻿using System;
-using System.Collections.Generic;
 using Xunit;
-using Xunit.Sdk;
 
 namespace Ecs.Core.Tests
 {
@@ -10,7 +8,7 @@ namespace Ecs.Core.Tests
         [Fact]
         public void Resize()
         {
-            var world = new World(EcsConfig.Default);
+            var world = Helpers.NewWorld();
 
             var entity1 = world.NewEntity();
 

@@ -7,7 +7,7 @@ namespace Ecs.Core.Tests
         [Fact]
         public void ComponentReference()
         {
-            var world = new World(EcsConfig.Default);
+            var world = Helpers.NewWorld();
 
             var entity = world.NewEntity();
 

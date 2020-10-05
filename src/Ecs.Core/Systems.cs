@@ -3,20 +3,6 @@ using System.Reflection;
 
 namespace Ecs.Core
 {
-    public abstract class SystemBase
-    {
-        public abstract void OnUpdate();
-
-        //public EntityQuery Create(Type[] types)
-        //{
-        //    var entityQuery = new EntityQuery();
-
-        //    entityQuery.
-        //}
-
-    }
-
-
     public class Systems
     {
         public readonly World World;
@@ -38,24 +24,36 @@ namespace Ecs.Core
             }
 
             BuildEntityQueries();
+
+            for (int i = 0; i < _systems.Count; i++)
+            {
+                _systems.Items[i].System.OnCreate();
+            }
         }
 
-        public void Add(SystemBase system)
+        public Systems Add(SystemBase system)
         {
+            if (_isInitialized)
+            {
+                throw new InvalidOperationException("Cannot add system after intialization.");
+            }
+
             _systems.Add(new SystemData
             {
                 System = system
             });
+
+            return this;
         }
 
         /// <summary>
         /// Run update on systems.
         /// </summary>
-        public void Run()
+        public void Run(float deltaTime)
         {
             for (int i = 0; i < _systems.Count; i++)
             {
-                _systems.Items[i].System.OnUpdate();
+                _systems.Items[i].System.OnUpdate(deltaTime);
             }
         }
 

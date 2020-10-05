@@ -41,6 +41,7 @@
     <Compile Include="ComponentTests.cs" />
     <Compile Include="EntityQueryTests.cs" />
     <Compile Include="EntityTests.cs" />
+    <Compile Include="Helpers\Helpers.cs" />
     <Compile Include="Helpers\SampleStructs.cs" />
     <Compile Include="SystemsTests.cs" />
     <Compile Include="WorldTests.cs" />

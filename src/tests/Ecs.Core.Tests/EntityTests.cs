@@ -8,7 +8,7 @@ namespace Ecs.Core.Tests
         [Fact]
         public void Equality()
         {
-            var world = new World(EcsConfig.Default);
+            var world = Helpers.NewWorld();
 
             var entity1 = world.NewEntity();
             var entity2 = world.NewEntity();
@@ -29,7 +29,7 @@ namespace Ecs.Core.Tests
         [Fact]
         public void Free()
         {
-            var world = new World(EcsConfig.Default);
+            var world = Helpers.NewWorld();
 
             var entity1 = world.NewEntity();
             entity1.GetComponent<SampleStructs.FooData>();
@@ -69,7 +69,7 @@ namespace Ecs.Core.Tests
         [Fact]
         public void ComponentRef()
         {
-            var world = new World(EcsConfig.Default);
+            var world = Helpers.NewWorld();
 
             var entity1 = world.NewEntity();
             ref var compFoo = ref entity1.GetComponent<SampleStructs.FooData>();
