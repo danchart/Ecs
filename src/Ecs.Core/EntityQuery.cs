@@ -83,24 +83,27 @@ namespace Ecs.Core
 
         public Enumerator GetEnumerator()
         {
-            return new Enumerator(GetEntityCount());
+            return new Enumerator(_entities, _entityCount);
         }
 
         public struct Enumerator
         {
+            private readonly Entity[] _entities;
             private readonly int _count;
+            private int _current;
 
-            internal Enumerator(int count)
+            internal Enumerator(Entity[] entities, int count)
             {
+                _entities = entities ?? throw new ArgumentNullException(nameof(entities)); ;
                 _count = count;
-                Current = -1;
+                _current = -1;
             }
 
-            public int Current { get; private set; }
+            public Entity Current => _entities[_current];
 
             public bool MoveNext()
             {
-                return ++Current < _count;
+                return ++_current < _count;
             }
         }
     }

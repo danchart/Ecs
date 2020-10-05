@@ -85,18 +85,15 @@ namespace Ecs.Core.Tests
 
             public override void OnUpdate(float deltaTime)
             {
-                for (int i  = 0; i < QueryFoo.GetEntityCount(); i++)
+                foreach (var entity in QueryFoo)
                 {
-                    var entity = QueryFoo.GetEntity(i);
-
                     ref var foo = ref entity.GetComponent<SampleStructs.FooData>();
 
                     foo.x++;
                 }
 
-                foreach (var index in QueryBar)
+                foreach (var entity in QueryBar)
                 {
-                    var entity = QueryBar.GetEntity(index);
                     ref var bar = ref entity.GetComponent<SampleStructs.BarData>();
 
                     bar.a++;
