@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Runtime.CompilerServices;
 
 namespace Ecs.Core
 {
@@ -7,7 +6,7 @@ namespace Ecs.Core
     {
         public static ref T GetComponent<T>(in this Entity entity) where T : struct
         {
-            ref var entityData = ref entity.World.GetEntityData(entity);
+            ref var entityData = ref entity.World.GetAndValidateEntityData(entity);
 
             var componentPoolIndex = ComponentType<T>.ComponentPoolIndex;
 
@@ -43,7 +42,7 @@ namespace Ecs.Core
 
         public static bool HasComponent<T>(in this Entity entity) where T : struct
         {
-            ref var entityData = ref entity.World.GetEntityData(entity);
+            ref var entityData = ref entity.World.GetAndValidateEntityData(entity);
 
             var componentPoolIndex = ComponentType<T>.ComponentPoolIndex;
 
@@ -64,7 +63,7 @@ namespace Ecs.Core
 
             var componentPoolIndex = ComponentType<T>.ComponentPoolIndex;
 
-            ref var entityData = ref entity.World.GetEntityData(entity);
+            ref var entityData = ref entity.World.GetAndValidateEntityData(entity);
 
             for (int i = 0; i < entityData.ComponentCount; i++)
             {
@@ -91,7 +90,7 @@ namespace Ecs.Core
             // Free entities with no more components.
             if (entityData.ComponentCount == 0)
             {
-                entity.World.FreeEntity(entity);
+                entity.World.FreeEntityData(entity.Id, ref entityData);
             }
 
             return wasRemoved;
@@ -114,6 +113,35 @@ namespace Ecs.Core
             }
 
             return default;
+        }
+
+        public static void Free(in this Entity entity)
+        {
+            ref var entityData = ref entity.World.GetAndValidateEntityData(entity);
+
+            for (int i = entityData.ComponentCount - 1; i >= 0; i--)
+            {
+                var componentPoolIndex = entityData.Components[i].PoolIndex;
+
+                entity.World.UpdateEntityQueries(componentPoolIndex, entity, entityData, isDelete: true);
+                entity.World.ComponentPools[componentPoolIndex].Free(entityData.Components[i].ItemIndex);
+                entityData.ComponentCount--;
+            }
+
+            entity.World.FreeEntityData(entity.Id, ref entityData);
+        }
+
+
+        /// <summary>
+        /// Returns true if the entity has been freed and is no longer usable.
+        /// </summary>
+        public static bool IsFreed(in this Entity entity)
+        {
+            ref var entityData = ref entity.World.GetEntityData(entity);
+
+            return
+                entityData.Version != entity.Version ||
+                entityData.ComponentCount == 0;
         }
     }
 }

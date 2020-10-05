@@ -26,6 +26,25 @@ namespace Ecs.Core.Tests
             Assert.Equal(2, set.Count);
         }
 
+        [Fact]
+        public void Free()
+        {
+            var world = new World(EcsConfig.Default);
+
+            var entity1 = world.NewEntity();
+            entity1.GetComponent<SampleStructs.FooData>();
+            var entity2 = world.NewEntity();
+            entity2.GetComponent<SampleStructs.BarData>();
+
+            Assert.False(entity1.IsFreed());
+            Assert.False(entity2.IsFreed());
+
+            entity1.Free();
+
+            Assert.True(entity1.IsFreed());
+            Assert.False(entity2.IsFreed());
+        }
+
         /// <summary>
         /// Validate entity component array resize
         /// </summary>
@@ -45,6 +64,23 @@ namespace Ecs.Core.Tests
             ref var foo = ref entity.GetComponent<SampleStructs.FooData>();
             // Resize should happen here.
             ref var bar = ref entity.GetComponent<SampleStructs.BarData>();
+        }
+
+        [Fact]
+        public void ComponentRef()
+        {
+            var world = new World(EcsConfig.Default);
+
+            var entity1 = world.NewEntity();
+            ref var compFoo = ref entity1.GetComponent<SampleStructs.FooData>();
+            compFoo.x = 1;
+
+            var compRefFoo = entity1.Reference<SampleStructs.FooData>();
+            ref var compFooFromRef = ref compRefFoo.Unref();
+
+            compFooFromRef.x = 2;
+
+            Assert.Equal(compFoo.x, compFooFromRef.x);
         }
     }
 }

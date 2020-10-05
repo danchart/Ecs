@@ -63,11 +63,11 @@ namespace Ecs.Core
         {
             for (int i = 0; i < _systems.Count; i++)
             {
-                BuildEntityQuerysForSystem(World, _systems.Items[i].System);
+                BuildEntityQueriesForSystem(World, _systems.Items[i].System);
             }
         }
 
-        private static void BuildEntityQuerysForSystem(World world, SystemBase system)
+        private static void BuildEntityQueriesForSystem(World world, SystemBase system)
         {
             var systemType = system.GetType();
             var worldType = world.GetType();

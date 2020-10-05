@@ -29,6 +29,7 @@ namespace Ecs.Core.Tests
 
             systems.Run();
 
+            Assert.False(entity1.IsFreed());
             Assert.Equal(2, systemFoo.QueryA.GetEntityCount());
             Assert.Equal(2, e1CompFoo.x);
             Assert.Equal(3, e2CompFoo.x);
@@ -37,12 +38,13 @@ namespace Ecs.Core.Tests
 
             systems.Run();
 
+            Assert.False(entity1.IsFreed());
             Assert.Equal(1, systemFoo.QueryA.GetEntityCount());
             Assert.Equal(4, e2CompFoo.x);
 
             entity1.RemoveComponent<SampleStructs.BarData>();
 
-
+            Assert.True(entity1.IsFreed());
         }
 
         private class SystemFoo : SystemBase

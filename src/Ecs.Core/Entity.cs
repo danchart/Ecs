@@ -1,5 +1,4 @@
-﻿using Ecs.Core.src.Hashing;
-using System;
+﻿using System;
 
 namespace Ecs.Core
 {
@@ -7,15 +6,16 @@ namespace Ecs.Core
     {
         public World World;
         public int Id;
+        public uint Version;
 
         public static bool operator ==(in Entity lhs, in Entity rhs)
         {
-            return lhs.Id == rhs.Id;
+            return lhs.Id == rhs.Id && lhs.Version == rhs.Version;
         }
 
         public static bool operator !=(in Entity lhs, in Entity rhs)
         {
-            return lhs.Id != rhs.Id;
+            return lhs.Id != rhs.Id || lhs.Version != rhs.Version;
         }
 
         public override int GetHashCode()
@@ -23,7 +23,9 @@ namespace Ecs.Core
             return
                 HashingUtil.CombineHashCodes(
                     Id,
-                    World.GetHashCode());
+                    HashingUtil.CombineHashCodes(
+                        (int) Version,
+                        World.GetHashCode()));
         }
 
         public override bool Equals(object other)
@@ -31,9 +33,9 @@ namespace Ecs.Core
             return other is Entity otherEntity && Equals(otherEntity);
         }
 
-        public bool Equals(Entity other)
+        public bool Equals(Entity entity)
         {
-            return Id == other.Id && World == other.World;
+            return Id == entity.Id && Version == entity.Version && World == entity.World;
         }
     }
 }

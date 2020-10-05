@@ -32,23 +32,42 @@ namespace Ecs.Core
         {
             var entity = new Entity
             {
-                World = this,
-                Id = GetNextEntityId(),
+                World = this
             };
 
-            ref var entityData = ref _entities[entity.Id];
+            if (_freeEntityCount > 0)
+            {
+                entity.Id = _freeEntityIds[--_freeEntityCount];
 
-            entityData.ComponentCount = 0;
-            entityData.Components = new EntityData.ComponentData[Config.InitialEntityComponentCapacity];
+                ref var entityData = ref _entities[entity.Id];
+                entity.Version = entityData.Version;
+                entityData.ComponentCount = 0;
+            }
+            else
+            {
+                entity.Id = GetNextEntityId();
+
+                ref var entityData = ref _entities[entity.Id];
+
+                entityData.ComponentCount = 0;
+                entityData.Components = new EntityData.ComponentData[Config.InitialEntityComponentCapacity];
+                entityData.Version = EcsConstants.InitialEntityVersion;
+                entity.Version = entityData.Version;
+            }
 
             return entity;
         }
 
-        public void FreeEntity(Entity entity)
+        public void FreeEntityData(int id, ref EntityData entityData)
         {
-            // TODO: Mark entity as freed.
+            entityData.ComponentCount = 0;
 
-            _freeEntityIds[_freeEntityCount++] = entity.Id;
+            if (++entityData.Version == 0)
+            {
+                entityData.Version = EcsConstants.InitialEntityVersion;
+            }
+
+            _freeEntityIds[_freeEntityCount++] = id;
         }
 
         public ref EntityData GetEntityData(Entity entity)
@@ -56,19 +75,17 @@ namespace Ecs.Core
             return ref _entities[entity.Id];
         }
 
-        //public ref T NewComponent<T>() where T : struct
-        //{
-        //    var pool = GetPool<T>();
-        //    var index = pool.New();
+        public ref EntityData GetAndValidateEntityData(Entity entity)
+        {
+            ref var entityData = ref GetEntityData(entity);
 
-        //    return ref pool.GetItem(index);
-        //}
+            if (entityData.Version != entity.Version)
+            {
+                throw new InvalidOperationException("Accessing a destroyed entity.");
+            }
 
-        //public void DestroyComponent<T>(ComponentRef<T> dataRef) where T : struct
-        //{
-        //    var pool = GetPool<T>();
-        //    pool.Free(dataRef.ItemIndex);
-        //}
+            return ref entityData;
+        }
 
         public void AddEntityQuery(EntityQuery entityQuery)
         {
@@ -166,6 +183,7 @@ namespace Ecs.Core
         {
             public ComponentData[] Components;
             public int ComponentCount;
+            public uint Version;
 
             public struct ComponentData
             {

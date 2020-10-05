@@ -1,4 +1,4 @@
-﻿namespace Ecs.Core.src.Hashing
+﻿namespace Ecs.Core
 {
     public static class HashingUtil
     {
