@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using Xunit;
 
 namespace Ecs.Core.Tests
@@ -34,9 +35,9 @@ namespace Ecs.Core.Tests
             var world = Helpers.NewWorld();
 
             var entity1 = world.NewEntity();
-            entity1.GetComponent<SampleStructs.FooData>();
+            entity1.GetComponent<SampleStructs.Foo>();
             var entity2 = world.NewEntity();
-            entity2.GetComponent<SampleStructs.BarData>();
+            entity2.GetComponent<SampleStructs.Bar>();
 
             Assert.False(entity1.IsFreed());
             Assert.False(entity2.IsFreed());
@@ -63,9 +64,9 @@ namespace Ecs.Core.Tests
 
             // Add 2 components
 
-            ref var foo = ref entity.GetComponent<SampleStructs.FooData>();
+            ref var foo = ref entity.GetComponent<SampleStructs.Foo>();
             // Resize should happen here.
-            ref var bar = ref entity.GetComponent<SampleStructs.BarData>();
+            ref var bar = ref entity.GetComponent<SampleStructs.Bar>();
         }
 
         [Fact]
@@ -74,10 +75,10 @@ namespace Ecs.Core.Tests
             var world = Helpers.NewWorld();
 
             var entity1 = world.NewEntity();
-            ref var compFoo = ref entity1.GetComponent<SampleStructs.FooData>();
+            ref var compFoo = ref entity1.GetComponent<SampleStructs.Foo>();
             compFoo.x = 1;
 
-            var compRefFoo = entity1.Reference<SampleStructs.FooData>();
+            var compRefFoo = entity1.Reference<SampleStructs.Foo>();
             ref var compFooFromRef = ref compRefFoo.Unref();
 
             compFooFromRef.x = 2;
@@ -86,36 +87,83 @@ namespace Ecs.Core.Tests
         }
 
         [Fact]
+        public void RemoveComponent()
+        {
+            var world = Helpers.NewWorld();
+
+            var entity1 = world.NewEntity();
+            ref var compFoo = ref entity1.GetComponent<SampleStructs.Foo>();
+            compFoo.x = 1;
+            ref var compBar = ref entity1.GetComponent<SampleStructs.Bar>();
+
+            Assert.True(entity1.HasComponent<SampleStructs.Foo>());
+
+            entity1.RemoveComponent<SampleStructs.Foo>();
+
+            Assert.False(entity1.HasComponent<SampleStructs.Foo>());
+        }
+
+        [Fact]
+        public void ReplaceComponent()
+        {
+            var world = Helpers.NewWorld();
+            var entity = world.NewEntity();
+            ref var value = ref entity.GetComponent<SampleStructs.Foo>();
+            value.x = 1;
+            value.text = "helo";
+
+            ref var value2 = ref entity.GetComponent<SampleStructs.Foo>();
+
+            Assert.Equal(value, value2);
+            Assert.Equal(1, value.x);
+            Assert.Equal("helo", value.text);
+
+            var newValue = new SampleStructs.Foo
+            {
+                x = 7,
+                text = "bye"
+            };
+
+            entity.ReplaceComponent(newValue);
+
+            ref var value3 = ref entity.GetComponent<SampleStructs.Foo>();
+
+            Assert.Equal(value, value3);
+            Assert.Equal(7, value.x);
+            Assert.Equal("bye", value.text);
+        }
+
+        [Fact]
         public void GetVersion()
         {
             var systems = new Systems(Helpers.NewWorld());
-            var system = new GetVersionSystem<SampleStructs.FooData>();
+            var system = new GetVersionSystem<SampleStructs.Foo>();
             systems
                 .Add(system)
-                .Init();
+                .Create();
 
             var entity = systems.World.NewEntity();
-            entity.GetComponent<SampleStructs.FooData>();
+            entity.GetComponent<SampleStructs.Foo>();
 
-            var version1 = entity.GetComponentVersion<SampleStructs.FooData>();
+            var version1 = entity.GetComponentVersion<SampleStructs.Foo>();
 
             systems.Run(1);
 
-            var version2 = entity.GetComponentVersion<SampleStructs.FooData>();
+            var version2 = entity.GetComponentVersion<SampleStructs.Foo>();
 
             Assert.NotEqual(version1, version2);
             Assert.True(system.WasComponentModified);
 
             system.UseReadOnly = true;
             systems.Run(1);
-            var version3 = entity.GetComponentVersion<SampleStructs.FooData>();
+            var version3 = entity.GetComponentVersion<SampleStructs.Foo>();
 
             Assert.Equal(version2, version3);
             Assert.False(system.WasComponentModified);
 
             system.UseReadOnly = false;
             systems.Run(1);
-            var version4 = entity.GetComponentVersion<SampleStructs.FooData>();
+            var version4 = entity.GetComponentVersion<SampleStructs.Foo>();
 
             Assert.NotEqual(version3, version4);
             Assert.True(system.WasComponentModified);
@@ -134,14 +182,14 @@ namespace Ecs.Core.Tests
                 {
                     if (UseReadOnly)
                     {
-                        ref readonly var foo = ref entity.GetReadOnlyComponent<SampleStructs.FooData>();
+                        ref readonly var foo = ref entity.GetReadOnlyComponent<SampleStructs.Foo>();
                     }
                     else
                     {
-                        ref var foo = ref entity.GetComponent<SampleStructs.FooData>();
+                        ref var foo = ref entity.GetComponent<SampleStructs.Foo>();
                     }
 
-                    var version = entity.GetComponentVersion<SampleStructs.FooData>();
+                    var version = entity.GetComponentVersion<SampleStructs.Foo>();
 
                     WasComponentModified = DidChange(version);
                 }

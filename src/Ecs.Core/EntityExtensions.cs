@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Diagnostics;
 
 namespace Ecs.Core
 {
@@ -7,6 +8,8 @@ namespace Ecs.Core
         public static Version GetComponentVersion<T>(in this Entity entity) where T : struct
         {
             ref readonly var entityData = ref entity.World.GetEntityData(entity);
+
+            entity.ValidateEntity(entityData);
 
             var componentTypeIndex = ComponentType<T>.Index;
 
@@ -25,6 +28,8 @@ namespace Ecs.Core
         internal static void SetDirty<T>(in this Entity entity) where T : struct 
         {
             ref var entityData = ref entity.World.GetEntityData(entity);
+
+            entity.ValidateEntity(entityData);
 
             var componentTypeIndex = ComponentType<T>.Index;
 
@@ -52,6 +57,8 @@ namespace Ecs.Core
             bool dirtyEntity) where T : struct
         {
             ref var entityData = ref entity.World.GetEntityData(entity);
+
+            entity.ValidateEntity(entityData);
 
             var componentTypeIndex = ComponentType<T>.Index;
 
@@ -98,9 +105,16 @@ namespace Ecs.Core
             return ref GetComponentWorker<T>(entity, dirtyEntity: false);
         }
 
+        public static void ReplaceComponent<T>(in this Entity entity, in T value) where T : struct
+        {
+            GetComponent<T>(entity) = value;
+        }
+
         public static bool HasComponent<T>(in this Entity entity) where T : struct
         {
             ref var entityData = ref entity.World.GetEntityData(entity);
+
+            entity.ValidateEntity(entityData);
 
             var componentTypeIndex = ComponentType<T>.Index;
 
@@ -122,6 +136,8 @@ namespace Ecs.Core
             var componentTypeIndex = ComponentType<T>.Index;
 
             ref var entityData = ref entity.World.GetEntityData(entity);
+
+            entity.ValidateEntity(entityData);
 
             for (int i = 0; i < entityData.ComponentCount; i++)
             {
@@ -158,6 +174,8 @@ namespace Ecs.Core
         {
             ref var entityData = ref entity.World.GetEntityData(entity);
 
+            entity.ValidateEntity(entityData);
+
             var poolIndex = ComponentType<T>.Index;
 
             for (int i = 0; i < entityData.ComponentCount; i++)
@@ -181,6 +199,8 @@ namespace Ecs.Core
         {
             ref var entityData = ref entity.World.GetEntityData(entity);
 
+            entity.ValidateEntity(entityData);
+
             for (int i = entityData.ComponentCount - 1; i >= 0; i--)
             {
                 var componentTypeIndex = entityData.Components[i].TypeIndex;
@@ -200,6 +220,15 @@ namespace Ecs.Core
         public static bool IsFreed(in this Entity entity)
         {
             return entity.World.IsFreed(entity);
+        }
+
+        [Conditional("DEBUG")]
+        internal static void ValidateEntity(in this Entity entity, in World.EntityData data)
+        {
+            if (data.Generation != entity.Generation)
+            {
+                throw new InvalidOperationException($"Accessing a destroyed entity. Gen={entity.Generation}, CurrentGen={data.Generation}");
+            }
         }
     }
 }

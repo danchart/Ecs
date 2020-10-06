@@ -12,14 +12,14 @@ namespace Ecs.Core.Tests
             var entity1 = world.NewEntity();
             var entity2 = world.NewEntity();
 
-            ref var e1CompFoo = ref entity1.GetComponent<SampleStructs.FooData>();
-            ref var e1CompFoo2 = ref entity1.GetComponent<SampleStructs.FooData>();
+            ref var e1CompFoo = ref entity1.GetComponent<SampleStructs.Foo>();
+            ref var e1CompFoo2 = ref entity1.GetComponent<SampleStructs.Foo>();
 
-            ref var e1CompBar = ref entity1.GetComponent<SampleStructs.BarData>();
-            ref var e1CompBar2 = ref entity1.GetComponent<SampleStructs.BarData>();
+            ref var e1CompBar = ref entity1.GetComponent<SampleStructs.Bar>();
+            ref var e1CompBar2 = ref entity1.GetComponent<SampleStructs.Bar>();
 
-            ref var e2CompFoo = ref entity2.GetComponent<SampleStructs.FooData>();
-            ref var e2CompBar = ref entity2.GetComponent<SampleStructs.BarData>();
+            ref var e2CompFoo = ref entity2.GetComponent<SampleStructs.Foo>();
+            ref var e2CompBar = ref entity2.GetComponent<SampleStructs.Bar>();
 
             e1CompFoo.x = 1;
             e1CompFoo.y = 2;
@@ -56,8 +56,8 @@ namespace Ecs.Core.Tests
             Assert.Equal(15, e2CompBar.b);
             Assert.False(e2CompBar.c);
 
-            Assert.True(entity1.HasComponent<SampleStructs.FooData>());
-            Assert.True(entity1.HasComponent<SampleStructs.BarData>());
+            Assert.True(entity1.HasComponent<SampleStructs.Foo>());
+            Assert.True(entity1.HasComponent<SampleStructs.Bar>());
         }
     }
 }

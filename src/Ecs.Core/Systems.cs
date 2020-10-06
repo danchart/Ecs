@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Data;
 using System.Reflection;
 
 namespace Ecs.Core
@@ -17,14 +16,14 @@ namespace Ecs.Core
             World = world;
         }
 
-        public void Init()
+        public void Create()
         {
             if (_isInitialized)
             {
                 throw new InvalidOperationException($"{nameof(System)} already initialized.");
             }
 
-            CreateEntityQueries();
+            InjectEntityQueries();
 
             for (int i = 0; i < _systems.Count; i++)
             {
@@ -70,15 +69,15 @@ namespace Ecs.Core
             World.GlobalSystemVersion = World.GlobalSystemVersion.GetNext();
         }
 
-        private void CreateEntityQueries()
+        private void InjectEntityQueries()
         {
             for (int i = 0; i < _systems.Count; i++)
             {
-                AssignEntityQueriesToSystem(World, _systems.Items[i].System);
+                InjectEntityQueriesToSystem(World, _systems.Items[i].System);
             }
         }
 
-        private static void AssignEntityQueriesToSystem(World world, SystemBase system)
+        private static void InjectEntityQueriesToSystem(World world, SystemBase system)
         {
             var systemType = system.GetType();
             var worldType = world.GetType();

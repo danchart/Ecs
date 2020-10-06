@@ -1,10 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Runtime.CompilerServices;
 
 namespace Ecs.Core
 {
-
     public abstract class EntityQuery
     {
         // Input System State
@@ -14,11 +12,12 @@ namespace Ecs.Core
         internal int[] ComponentTypeIndices;
 
         // Query Results
-        internal protected EntityResultData[] _entityResults = new EntityResultData[EcsConstants.InitialEntityQueryEntityCapacity];
+        internal protected EntityItem[] _entityResults = new EntityItem[EcsConstants.InitialEntityQueryEntityCapacity];
         internal protected int _entityCount = 0;
 
         private Dictionary<int, int> _entityIndexToQueryIndex = new Dictionary<int, int>(EcsConstants.InitialEntityQueryEntityCapacity);
 
+        // Locking & Pending Changes 
         private int _lockCount = 0;
 
         private PendingEntityUpdate[] _pendingEntityUpdates = new PendingEntityUpdate[EcsConstants.InitialEntityQueryEntityCapacity];
@@ -160,7 +159,7 @@ namespace Ecs.Core
                 }
 
                 _entityIndexToQueryIndex[entity.Id] = _entityCount;
-                _entityResults[_entityCount++] = new EntityResultData
+                _entityResults[_entityCount++] = new EntityItem
                 {
                     Entity = entity,
                     ComponentVersion = lastVersion,
@@ -186,6 +185,7 @@ namespace Ecs.Core
             {
                 var queryEntityIndex = _entityIndexToQueryIndex[entity.Id];
 
+                // Update the component version.
                 _entityResults[queryEntityIndex].ComponentVersion = lastVersion;
             }
         }
@@ -220,7 +220,34 @@ namespace Ecs.Core
             }
         }
 
-        public virtual Enumerator GetEnumerator()
+        public struct EntityItem
+        {
+            public Entity Entity;
+            public Version ComponentVersion;
+        }
+
+        internal protected struct PendingEntityUpdate
+        {
+            public Entity Entity;
+            public OperationType Operation;
+
+            public enum OperationType
+            { 
+                Add,
+                Change,
+                Remove
+            }
+        }
+    }
+
+    public class EntityQuery<T> : EntityQuery where T : struct
+    {
+        protected EntityQuery(World world) : base(world)
+        {
+            this.ComponentTypeIndices = new[] { ComponentType<T>.Index };
+        }
+
+        public Enumerator GetEnumerator()
         {
             return new Enumerator(this);
         }
@@ -250,42 +277,17 @@ namespace Ecs.Core
                 return ++_current < _query._entityCount;
             }
         }
-
-        public struct EntityResultData
-        {
-            public Entity Entity;
-            public Version ComponentVersion;
-        }
-
-        internal protected struct PendingEntityUpdate
-        {
-            public Entity Entity;
-            public OperationType Operation;
-
-            public enum OperationType
-            { 
-                Add,
-                Change,
-                Remove
-            }
-        }
     }
 
-    public class EntityQuery<T> : EntityQuery where T : struct
+    public class EntityQueryWithChangeFilter<T> : EntityQuery where T : struct
     {
-        protected EntityQuery(World world) : base(world)
+
+        protected EntityQueryWithChangeFilter(World world) : base(world)
         {
             this.ComponentTypeIndices = new[] { ComponentType<T>.Index };
         }
-    }
 
-    public class EntityQueryWithChangeFilter<T> : EntityQuery<T> where T : struct
-    {
-        protected EntityQueryWithChangeFilter(World world) : base(world)
-        {
-        }
-
-        public virtual ChangeFilteredEnumerator GetEnumerator()
+        public ChangeFilteredEnumerator GetEnumerator()
         {
             return new ChangeFilteredEnumerator(
                 this,
@@ -333,202 +335,5 @@ namespace Ecs.Core
             }
         }
     }
-
-#if MOTHBALL
-    public abstract class EntityQuery
-    {
-        internal int[] ComponentTypeIndices;
-
-        protected Entity[] _entities = new Entity[EcsConstants.InitialEntityQueryEntityCapacity];
-        protected int _entityCount = 0;
-
-        private Dictionary<int, int> _entityIndexToQueryIndex = new Dictionary<int, int>(EcsConstants.InitialEntityQueryEntityCapacity);
-
-        protected World _world;
-
-        protected EntityQuery(World world)
-        {
-            _world = world;
-        }
-
-        public Entity GetEntity(int index)
-        {
-            return _entities[index];
-        }
-
-        public int GetEntityCount()
-        {
-            return _entityCount;
-        }
-
-        /// <summary>
-        /// Returns true if this query matches the given entity. False otherwise.
-        /// </summary>
-        public virtual bool IsMatch(in World.EntityData entityData)
-        {
-            for (int i = 0; i < ComponentTypeIndices.Length; i++)
-            {
-                bool hasComponent = false;
-
-                for (int j = 0; j < entityData.ComponentCount; j++)
-                {
-                    if (entityData.Components[j].TypeIndex == ComponentTypeIndices[i])
-                    {
-                        hasComponent = true;
-
-                        break;
-                    }
-                }
-
-                if (!hasComponent)
-                {
-                    return false;
-                }
-            }
-
-            return true;
-        }
-
-        internal virtual void OnAddEntity(in Entity entity, in World.EntityData entityData)
-        {
-            if (_entities.Length == _entityCount)
-            {
-                Array.Resize(ref _entities, 2 * _entityCount);
-            }
-
-            _entityIndexToQueryIndex[entity.Id] = _entityCount;
-            _entities[_entityCount++] = entity;
-        }
-
-        internal virtual void OnRemoveEntity(in Entity entity, in World.EntityData entityData)
-        {
-            var queryEntityIndex = _entityIndexToQueryIndex[entity.Id];
-
-            // Move the last item to removed position.
-            if (queryEntityIndex < _entityCount - 1)
-            {
-                _entities[queryEntityIndex] = _entities[_entityCount - 1];
-            }
-
-            _entityIndexToQueryIndex.Remove(entity.Id);
-
-            _entityCount--;
-        }
-
-        public virtual Enumerator GetEnumerator()
-        {
-            return new Enumerator(_entities, _entityCount);
-        }
-
-        public struct Enumerator
-        {
-            private readonly Entity[] _entities;
-            private readonly int _count;
-            private int _current;
-
-            internal Enumerator(Entity[] entities, int count)
-            {
-                _entities = entities ?? throw new ArgumentNullException(nameof(entities)); ;
-                _count = count;
-                _current = -1;
-            }
-
-            public Entity Current => _entities[_current];
-
-            public bool MoveNext()
-            {
-                return ++_current < _count;
-            }
-        }
-    }
-
-    public class EntityQuery<T> : EntityQuery where T : struct
-    {
-        protected EntityQuery(World world) : base(world)
-        {
-            this.ComponentTypeIndices = new[] { ComponentType<T>.Index };
-
-            //this.ComponentTypeIndices = new int[types.Length];
-
-            //for (int i = 0; i < types.Length; i++)
-            //{
-            //    var componentTypeType = typeof(ComponentType<>);
-            //    var type = componentTypeType.MakeGenericType(new Type[] { types[i] });
-            //    var componentType = Activator.CreateInstance(type);
-
-            //    var field = type.GetField("componentTypeIndex", BindingFlags.Static | BindingFlags.Public);
-
-            //    var componentIndex = (int)field.GetValue(componentType);
-
-            //    this.ComponentTypeIndices[i] = componentIndex;
-            //}
-        }
-    }
-
-    public class EntityQueryWithChangeFilter<T> : EntityQuery<T> where T : struct
-    {
-        protected EntityQueryWithChangeFilter(World world) : base(world)
-        {
-        }
-
-        public virtual Enumerator GetEnumerator()
-        {
-            return new Enumerator(_entities, _entityCount);
-        }
-
-        public struct Enumerator
-        {
-            private readonly Entity[] _entities;
-            private readonly int _count;
-            private int _current;
-
-            private int _componentTypeIndex;
-            private Version _lastSystemVersion
-
-            internal Enumerator(Entity[] entities, int count, int componentTypeIndex, Version lastSystemVersion)
-            {
-                _entities = entities ?? throw new ArgumentNullException(nameof(entities)); ;
-                _count = count;
-                _current = -1;
-
-                _componentTypeIndex = componentTypeIndex;
-                _lastSystemVersion = lastSystemVersion;
-            }
-
-            public Entity Current => _entities[_current];
-
-            public bool MoveNext()
-            {
-                while (++_current < _count)
-                {
-
-                }
-
-                return false;
-            }
-        }
-
-        internal override void OnAddEntity(in Entity entity, in World.EntityData entityData)
-        {
-            var componentTypeIndex = ComponentType<T>.Index;
-
-            for (int i = 0; i < entityData.ComponentCount; i++)
-            {
-                if (entityData.Components[i].TypeIndex == componentTypeIndex)
-                {
-                    if (_world.LastSystemVersion < entityData.Components[i].Version)
-                    {
-                        // Component changed
-                        base.OnRemoveEntity(in entity, in entityData);
-                    }
-                    else
-                    {
-                        base.OnAddEntity(in entity, in entityData);
-                    }
-                }
-            }
-        }
-    }
-#endif //MOTHBALL
 }
 

@@ -78,14 +78,7 @@ namespace Ecs.Core
 
         public ref EntityData GetEntityData(in Entity entity)
         {
-            ref var entityData = ref _entities[entity.Id];
-
-            if (entityData.Generation != entity.Generation)
-            {
-                throw new InvalidOperationException($"Accessing a destroyed entity. Gen={entity.Generation}, CurrentGen={entityData.Generation}");
-            }
-
-            return ref entityData;
+            return ref _entities[entity.Id];
         }
 
         public bool IsFreed(in Entity entity)

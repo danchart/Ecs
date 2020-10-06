@@ -12,26 +12,26 @@ namespace Ecs.Core.Tests
         public void EntityQueryWithChangeFilter()
         {
             var systems = new Systems(Helpers.NewWorld());
-            var system0 = new ChangeFilterSystem<SampleStructs.FooData>();
-            var system1 = new ChangeFilterSystem<SampleStructs.FooData>();
+            var system0 = new ChangeFilterSystem<SampleStructs.Foo>();
+            var system1 = new ChangeFilterSystem<SampleStructs.Foo>();
             systems
                 .Add(system0)
                 .Add(system1)
-                .Init();
+                .Create();
 
             var entity1 = systems.World.NewEntity();
-            entity1.GetComponent<SampleStructs.FooData>();
+            entity1.GetComponent<SampleStructs.Foo>();
             var entity2 = systems.World.NewEntity();
-            entity2.GetComponent<SampleStructs.FooData>();
+            entity2.GetComponent<SampleStructs.Foo>();
             var entity3 = systems.World.NewEntity();
-            entity3.GetComponent<SampleStructs.FooData>();
+            entity3.GetComponent<SampleStructs.Foo>();
 
             systems.Run(1);
 
             // All components dirty
             Assert.Equal(3, system0.LastFilteredEntityCount);
 
-            entity1.GetComponent<SampleStructs.FooData>();
+            entity1.GetComponent<SampleStructs.Foo>();
 
             systems.Run(1);
 
@@ -43,8 +43,8 @@ namespace Ecs.Core.Tests
             // 0 components dirty
             Assert.Equal(0, system0.LastFilteredEntityCount);
 
-            entity1.GetReadOnlyComponent<SampleStructs.FooData>();
-            entity2.GetComponent<SampleStructs.FooData>();
+            entity1.GetReadOnlyComponent<SampleStructs.Foo>();
+            entity2.GetComponent<SampleStructs.Foo>();
 
             systems.Run(1);
 
@@ -60,7 +60,7 @@ namespace Ecs.Core.Tests
             // Modify component state during Run()
             system0.OnUpdateAction = () =>
             {
-                ref var component = ref entity1.GetComponent<SampleStructs.FooData>();
+                ref var component = ref entity1.GetComponent<SampleStructs.Foo>();
                 component.x = 17;
                 component.text = "bye";
             };
@@ -78,7 +78,7 @@ namespace Ecs.Core.Tests
             Assert.Equal(0, system0.LastFilteredEntityCount);
             Assert.Equal(3, system0.LastTotalEntityCount);
 
-            ref readonly var c1 = ref entity1.GetReadOnlyComponent<SampleStructs.FooData>();
+            ref readonly var c1 = ref entity1.GetReadOnlyComponent<SampleStructs.Foo>();
 
             Assert.Equal(17, c1.x);
             Assert.Equal("bye", c1.text);

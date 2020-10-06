@@ -8,12 +8,12 @@ namespace Ecs.Core.Tests.Collections
         [Fact]
         public void Test()
         {
-            var list = new AppendOnlyList<SampleStructs.FooData>(2);
+            var list = new AppendOnlyList<SampleStructs.Foo>(2);
 
-            list.Add(new SampleStructs.FooData { });
-            list.Add(new SampleStructs.FooData { });
-            list.Add(new SampleStructs.FooData { });
-            list.Add(new SampleStructs.FooData { text = "helo" });
+            list.Add(new SampleStructs.Foo { });
+            list.Add(new SampleStructs.Foo { });
+            list.Add(new SampleStructs.Foo { });
+            list.Add(new SampleStructs.Foo { text = "helo" });
 
             Assert.Equal(4, list.Count);
             Assert.Equal("helo", list.Items[3].text);

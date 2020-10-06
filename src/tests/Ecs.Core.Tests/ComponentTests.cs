@@ -13,11 +13,11 @@ namespace Ecs.Core.Tests
 
             // Add 2 components
 
-            ref var foo = ref entity.GetComponent<SampleStructs.FooData>();
+            ref var foo = ref entity.GetComponent<SampleStructs.Foo>();
             foo.x = 1;
             foo.text = "helo";
 
-            var fooRef = entity.Reference<SampleStructs.FooData>();
+            var fooRef = entity.Reference<SampleStructs.Foo>();
             ref var fooFromRef = ref fooRef.Unref();
 
             fooFromRef.x = 2;
