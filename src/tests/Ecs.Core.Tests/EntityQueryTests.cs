@@ -19,12 +19,12 @@ namespace Ecs.Core.Tests
 
             ref var e2CompFoo = ref entity2.GetComponent<SampleStructs.FooData>();
 
-            var query = new EntityQuery(
-                new Type[] 
-                {
-                    typeof(SampleStructs.FooData),
-                    typeof(SampleStructs.BarData),
-                });
+            //var query = new EntityQuery(
+            //    new Type[] 
+            //    {
+            //        typeof(SampleStructs.FooData),
+            //        typeof(SampleStructs.BarData),
+            //    });
 
             int i = 0;
         }

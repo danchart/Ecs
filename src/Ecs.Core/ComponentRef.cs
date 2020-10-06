@@ -2,18 +2,28 @@
 {
     public struct ComponentRef<T> where T : struct
     {
-        public readonly int ItemIndex;
+        internal readonly int ItemIndex;
 
         private readonly ComponentPool<T> _pool;
 
-        public ComponentRef(ComponentPool<T> pool, int itemIndex)
+        private readonly Entity _entity;
+
+        internal ComponentRef(in Entity entity, ComponentPool<T> pool, int itemIndex)
         {
+            _entity = entity;
             _pool = pool;
             ItemIndex = itemIndex;
         }
 
+        public ref readonly T UnrefReadOnly()
+        {
+            return ref _pool.GetItem(ItemIndex);
+        }
+
         public ref T Unref()
         {
+            _entity.Dirty<T>();
+
             return ref _pool.GetItem(ItemIndex);
         }
 

@@ -23,7 +23,7 @@ namespace Ecs.Core
                 throw new InvalidOperationException($"{nameof(System)} already initialized.");
             }
 
-            BuildEntityQueries();
+            CreateEntityQueries();
 
             for (int i = 0; i < _systems.Count; i++)
             {
@@ -53,43 +53,48 @@ namespace Ecs.Core
         {
             for (int i = 0; i < _systems.Count; i++)
             {
-                _systems.Items[i].System.OnUpdate(deltaTime);
+                var system = _systems.Items[i].System;
+
+                system.GlobalSystemVersion = ++World.GlobalSystemVersion;
+                system.LastSystemVersion = World.LastSystemVersion;
+
+                system.OnUpdate(deltaTime);
+
+                //World.GlobalSystemVersion++;
             }
+
+            World.LastSystemVersion = World.GlobalSystemVersion;
         }
 
-        private void BuildEntityQueries()
+        private void CreateEntityQueries()
         {
             for (int i = 0; i < _systems.Count; i++)
             {
-                BuildEntityQueriesForSystem(World, _systems.Items[i].System);
+                AssignEntityQueriesToSystem(World, _systems.Items[i].System);
             }
         }
 
-        private static void BuildEntityQueriesForSystem(World world, SystemBase system)
+        private static void AssignEntityQueriesToSystem(World world, SystemBase system)
         {
             var systemType = system.GetType();
             var worldType = world.GetType();
             var entityQueryType = typeof(EntityQuery);
 
-            foreach (var fieldInfo in systemType.GetFields(BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance))
+            foreach (var field in systemType.GetFields(BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance))
             {
-                // Inject World
-                if (fieldInfo.FieldType.IsAssignableFrom(worldType))
+                // Assign World
+                if (field.FieldType.IsAssignableFrom(worldType))
                 {
-                    fieldInfo.SetValue(system, world);
+                    field.SetValue(system, world);
 
                     continue;
                 }
-                // Inject entity query
-                if (fieldInfo.FieldType == entityQueryType)
+
+                // Assign entity query
+                if (field.FieldType.IsSubclassOf(entityQueryType))
                 {
-                    var entityQuery = (EntityQuery) fieldInfo.GetValue(system);
+                    field.SetValue(system, world.GetEntityQuery(field.FieldType));
 
-                    world.AddEntityQuery(entityQuery);
-
-                    entityQuery.World = world;
-
-                    //fieldInfo.SetValue(system, world.GetFilter(fieldInfo.FieldType));
                     continue;
                 }
             }

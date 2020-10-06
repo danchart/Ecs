@@ -2,19 +2,19 @@
 
 namespace Ecs.Core
 {
-    public static class ComponentPool
+    internal static class ComponentPool
     {
         public static int PoolCount = 0;
     }
 
-    public interface IComponentPool
+    internal interface IComponentPool
     {
         int New();
         void Free(int index);
         object GetItem(int index);
     }
 
-    public class ComponentPool<T> : IComponentPool where T : struct
+    internal class ComponentPool<T> : IComponentPool where T : struct
     {
         private T[] _items = new T[128];
         int[] _freeItemIndices = new int[128];
@@ -60,10 +60,10 @@ namespace Ecs.Core
             _freeItemIndices[_freeItemCount++] = index;
         }
 
-        public ComponentRef<T> Reference(int itemIndex)
-        {
-            return new ComponentRef<T>(this, itemIndex);
-        }
+        //public ComponentRef<T> Reference(int itemIndex)
+        //{
+        //    return new ComponentRef<T>(this, itemIndex);
+        //}
 
         public ref T GetItem(int index)
         {

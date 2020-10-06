@@ -2,6 +2,9 @@
 {
     public abstract class SystemBase
     {
+        protected internal uint GlobalSystemVersion;
+        protected internal uint LastSystemVersion;
+
         /// <summary>
         /// Invoked on System.Init();
         /// </summary>
@@ -16,5 +19,4 @@
         {
         }
     }
-
 }

@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Runtime.InteropServices;
 using Xunit;
 
 namespace Ecs.Core.Tests
@@ -60,7 +59,7 @@ namespace Ecs.Core.Tests
 
             var systems = new Systems(Helpers.NewWorld());
             systems.Add(
-                new SystemOnCreate
+                new SystemWithCallbacks
                 {
                     OnCreateAction = () =>
                     {
@@ -78,10 +77,8 @@ namespace Ecs.Core.Tests
 
         private class SystemFoo : SystemBase
         {
-            public EntityQuery QueryFoo = 
-                new EntityQuery(
-                    new Type[] { typeof(SampleStructs.FooData) });
-            public EntityQuery QueryBar = new EntityQuery<SampleStructs.BarData>();
+            public EntityQuery<SampleStructs.FooData> QueryFoo = null;
+            public EntityQuery<SampleStructs.BarData> QueryBar = null;
 
             public override void OnUpdate(float deltaTime)
             {
@@ -95,19 +92,10 @@ namespace Ecs.Core.Tests
                 foreach (var entity in QueryBar)
                 {
                     ref var bar = ref entity.GetComponent<SampleStructs.BarData>();
+                    //ref readonly var bar = ref entity.GetComponent<SampleStructs.BarData>();
 
                     bar.a++;
                 }
-            }
-        }
-
-        private class SystemOnCreate : SystemBase
-        {
-            public Action OnCreateAction;
-
-            public override void OnCreate()
-            {
-                OnCreateAction?.Invoke();
             }
         }
     }

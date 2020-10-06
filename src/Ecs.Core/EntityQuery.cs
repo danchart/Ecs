@@ -1,48 +1,20 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Reflection;
+using System.Security;
 
 namespace Ecs.Core
 {
-    public class EntityQuery<T> : EntityQuery where T : struct
-    {
-        public EntityQuery() : 
-            base(
-                new Type[] 
-                { 
-                    typeof(T) 
-                })
-        {
-        }
-    }
-
-    public class EntityQuery
+    public abstract class EntityQuery
     {
         public int[] ComponentTypeIndices;
-
-        public World World;
 
         private Entity[] _entities = new Entity[EcsConstants.InitialEntityQueryEntityCapacity];
         private int _entityCount = 0;
 
         private Dictionary<int, int> _entityIndexToQueryIndex = new Dictionary<int, int>(EcsConstants.InitialEntityQueryEntityCapacity);
 
-        public EntityQuery(Type[] types)
-            {
-            this.ComponentTypeIndices = new int[types.Length];
-
-            for (int i = 0; i < types.Length; i++)
-            {
-                var componentTypeType = typeof(ComponentType<>);
-                var type = componentTypeType.MakeGenericType(new Type[] { types[i] });
-                var componentType = Activator.CreateInstance(type);
-
-                var field = type.GetField("ComponentPoolIndex", BindingFlags.Static | BindingFlags.Public);
-
-                var componentIndex = (int)field.GetValue(componentType);
-
-                this.ComponentTypeIndices[i] = componentIndex;
-            }
+        protected EntityQuery(World world)
+        {
         }
 
         public Entity GetEntity(int index)
@@ -53,6 +25,34 @@ namespace Ecs.Core
         public int GetEntityCount()
         {
             return _entityCount;
+        }
+
+        /// <summary>
+        /// Returns true if this query matches the given entity. False otherwise.
+        /// </summary>
+        public bool IsMatch(in World.EntityData entityData)
+        {
+            for (int i = 0; i < ComponentTypeIndices.Length; i++)
+            {
+                bool hasComponent = false;
+
+                for (int j = 0; j < entityData.ComponentCount; j++)
+                {
+                    if (entityData.Components[j].PoolIndex == ComponentTypeIndices[i])
+                    {
+                        hasComponent = true;
+
+                        break;
+                    }
+                }
+
+                if (!hasComponent)
+                {
+                    return false;
+                }
+            }
+
+            return true;
         }
 
         public void AddEntity(in Entity entity)
@@ -107,4 +107,28 @@ namespace Ecs.Core
             }
         }
     }
+
+    public class EntityQuery<T> : EntityQuery where T : struct
+    {
+        protected EntityQuery(World world) : base(world)
+        {
+            this.ComponentTypeIndices = new[] { ComponentType<T>.ComponentPoolIndex };
+
+            //this.ComponentTypeIndices = new int[types.Length];
+
+            //for (int i = 0; i < types.Length; i++)
+            //{
+            //    var componentTypeType = typeof(ComponentType<>);
+            //    var type = componentTypeType.MakeGenericType(new Type[] { types[i] });
+            //    var componentType = Activator.CreateInstance(type);
+
+            //    var field = type.GetField("ComponentPoolIndex", BindingFlags.Static | BindingFlags.Public);
+
+            //    var componentIndex = (int)field.GetValue(componentType);
+
+            //    this.ComponentTypeIndices[i] = componentIndex;
+            //}
+        }
+    }
+
 }

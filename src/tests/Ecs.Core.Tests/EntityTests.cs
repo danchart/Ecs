@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using Xunit;
 
 namespace Ecs.Core.Tests
@@ -20,7 +21,9 @@ namespace Ecs.Core.Tests
 
             Assert.NotEqual(entity1, entity2);
             Assert.True(entity1 != entity2);
+#pragma warning disable CS1718 // Comparison made to same variable
             Assert.True(entity1 == entity1);
+#pragma warning restore CS1718 // Comparison made to same variable
             Assert.True(entity1.Equals(entity1));
             Assert.False(entity1.Equals(entity2));
             Assert.Equal(2, set.Count);
@@ -81,6 +84,69 @@ namespace Ecs.Core.Tests
             compFooFromRef.x = 2;
 
             Assert.Equal(compFoo.x, compFooFromRef.x);
+        }
+
+        [Fact]
+        public void GetVersion()
+        {
+            var systems = new Systems(Helpers.NewWorld());
+            var system = new GetVersionSystem<SampleStructs.FooData>();
+            systems.Add(system);
+
+            systems.Init();
+
+            var entity = systems.World.NewEntity();
+            entity.GetComponent<SampleStructs.FooData>();
+
+            var version1 = entity.GetVersion<SampleStructs.FooData>();
+
+            systems.Run(1);
+
+            var version2 = entity.GetVersion<SampleStructs.FooData>();
+
+            Assert.NotEqual(version1, version2);
+            Assert.True(system.WasComponentModified);
+
+            system.UseReadOnly = true;
+            systems.Run(1);
+            var version3 = entity.GetVersion<SampleStructs.FooData>();
+
+            Assert.Equal(version2, version3);
+            Assert.False(system.WasComponentModified);
+
+            system.UseReadOnly = false;
+            systems.Run(1);
+            var version4 = entity.GetVersion<SampleStructs.FooData>();
+
+            Assert.NotEqual(version3, version4);
+            Assert.True(system.WasComponentModified);
+        }
+
+        internal class GetVersionSystem<T> : SystemBase where T : struct
+        {
+            public EntityQuery<T> Query = null;
+
+            public bool WasComponentModified { get; private set; } = false;
+            public bool UseReadOnly = false;
+
+            public override void OnUpdate(float deltaTime)
+            {
+                foreach (var entity in Query)
+                {
+                    if (UseReadOnly)
+                    {
+                        ref readonly var foo = ref entity.GetReadOnlyComponent<SampleStructs.FooData>();
+                    }
+                    else
+                    {
+                        ref var foo = ref entity.GetComponent<SampleStructs.FooData>();
+                    }
+
+                    var version = entity.GetVersion<SampleStructs.FooData>();
+
+                    WasComponentModified = (this.LastSystemVersion < version);
+                }
+            }
         }
     }
 }

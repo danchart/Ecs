@@ -4,9 +4,9 @@ namespace Ecs.Core
 {
     public static class EntityExtensions
     {
-        public static ref T GetComponent<T>(in this Entity entity) where T : struct
+        public static uint GetVersion<T>(in this Entity entity) where T : struct
         {
-            ref var entityData = ref entity.World.GetAndValidateEntityData(entity);
+            ref var entityData = ref entity.World.GetCheckedEntityData(entity);
 
             var componentPoolIndex = ComponentType<T>.ComponentPoolIndex;
 
@@ -15,6 +15,54 @@ namespace Ecs.Core
                 if (entityData.Components[i].PoolIndex == componentPoolIndex)
                 {
                     // Found component
+                    return entityData.Components[i].Version;
+                }
+            }
+
+            return default;
+        }
+
+        public static void Dirty<T>(in this Entity entity) where T : struct 
+        {
+            ref var entityData = ref entity.World.GetCheckedEntityData(entity);
+
+            var componentPoolIndex = ComponentType<T>.ComponentPoolIndex;
+
+            for (int i = 0; i < entityData.ComponentCount; i++)
+            {
+                if (entityData.Components[i].PoolIndex == componentPoolIndex)
+                {
+                    // Found component
+                    entityData.Components[i].Version = entity.World.GlobalSystemVersion;
+
+                    break;
+                }
+            }
+        }
+
+        public static ref T GetComponent<T>(in this Entity entity) where T : struct
+        {
+            return ref GetComponentWorker<T>(entity, dirtyEntity: true);
+        }
+
+        private static ref T GetComponentWorker<T>(
+            Entity entity, 
+            bool dirtyEntity) where T : struct
+        {
+            ref var entityData = ref entity.World.GetCheckedEntityData(entity);
+
+            var componentPoolIndex = ComponentType<T>.ComponentPoolIndex;
+
+            for (int i = 0; i < entityData.ComponentCount; i++)
+            {
+                if (entityData.Components[i].PoolIndex == componentPoolIndex)
+                {
+                    // Found component
+                    if (dirtyEntity)
+                    {
+                        entityData.Components[i].Version = entity.World.GlobalSystemVersion;
+                    }
+
                     return ref ((ComponentPool<T>)entity.World.ComponentPools[componentPoolIndex]).GetItem(entityData.Components[i].ItemIndex);
                 }
             }
@@ -31,7 +79,7 @@ namespace Ecs.Core
             entityData.Components[entityData.ComponentCount] = new World.EntityData.ComponentData
             {
                 PoolIndex = componentPoolIndex,
-                ItemIndex = index
+                ItemIndex = index,
             };
             entityData.ComponentCount++;
 
@@ -40,9 +88,14 @@ namespace Ecs.Core
             return ref pool.GetItem(index);
         }
 
+        public static ref readonly T GetReadOnlyComponent<T>(in this Entity entity) where T : struct
+        {
+            return ref GetComponentWorker<T>(entity, dirtyEntity: false);
+        }
+
         public static bool HasComponent<T>(in this Entity entity) where T : struct
         {
-            ref var entityData = ref entity.World.GetAndValidateEntityData(entity);
+            ref var entityData = ref entity.World.GetCheckedEntityData(entity);
 
             var componentPoolIndex = ComponentType<T>.ComponentPoolIndex;
 
@@ -63,7 +116,7 @@ namespace Ecs.Core
 
             var componentPoolIndex = ComponentType<T>.ComponentPoolIndex;
 
-            ref var entityData = ref entity.World.GetAndValidateEntityData(entity);
+            ref var entityData = ref entity.World.GetCheckedEntityData(entity);
 
             for (int i = 0; i < entityData.ComponentCount; i++)
             {
@@ -106,9 +159,13 @@ namespace Ecs.Core
             {
                 if (entityData.Components[i].PoolIndex == poolIndex)
                 {
-                    return 
-                        ((ComponentPool<T>)entity.World.ComponentPools[poolIndex])
-                        .Reference(entityData.Components[i].ItemIndex);
+                    return new ComponentRef<T>(
+                        entity, 
+                        (ComponentPool<T>)entity.World.ComponentPools[poolIndex], 
+                        entityData.Components[i].ItemIndex);
+                    //return 
+                    //    ((ComponentPool<T>)entity.World.ComponentPools[poolIndex])
+                    //    .Reference(entityData.Components[i].ItemIndex);
                 }
             }
 
@@ -117,7 +174,7 @@ namespace Ecs.Core
 
         public static void Free(in this Entity entity)
         {
-            ref var entityData = ref entity.World.GetAndValidateEntityData(entity);
+            ref var entityData = ref entity.World.GetCheckedEntityData(entity);
 
             for (int i = entityData.ComponentCount - 1; i >= 0; i--)
             {

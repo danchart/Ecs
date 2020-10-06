@@ -43,6 +43,7 @@
     <Compile Include="EntityTests.cs" />
     <Compile Include="Helpers\Helpers.cs" />
     <Compile Include="Helpers\SampleStructs.cs" />
+    <Compile Include="Helpers\SystemWithCallbacks.cs" />
     <Compile Include="SystemsTests.cs" />
     <Compile Include="WorldTests.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />

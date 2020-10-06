@@ -1,13 +1,18 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Globalization;
+using System.Reflection;
 
 namespace Ecs.Core
 {
     public class World
     {
-        public readonly EcsConfig Config;
+        internal readonly EcsConfig Config;
 
-        public IComponentPool[] ComponentPools;
+        internal uint GlobalSystemVersion;
+        internal uint LastSystemVersion;
+
+        internal IComponentPool[] ComponentPools;
 
         private EntityData[] _entities;
         private int[] _freeEntityIds;
@@ -16,6 +21,8 @@ namespace Ecs.Core
         private int _freeEntityCount = 0;
 
         private readonly Dictionary<int, AppendOnlyList<EntityQuery>> _componentIdToEntityQueries;
+
+        private readonly AppendOnlyList<EntityQuery> _queries;
 
         public World(EcsConfig config)
         {
@@ -26,6 +33,10 @@ namespace Ecs.Core
             _freeEntityIds = new int[Config.InitialEntityPoolCapacity];
 
             _componentIdToEntityQueries = new Dictionary<int, AppendOnlyList<EntityQuery>>(Config.InitialComponentToEntityQueryMapCapacity);
+            _queries = new AppendOnlyList<EntityQuery>(Config.InitialEntityQueryCapacity);
+
+            GlobalSystemVersion = 1;
+            LastSystemVersion = GlobalSystemVersion;
         }
 
         public Entity NewEntity()
@@ -61,12 +72,7 @@ namespace Ecs.Core
         public void FreeEntityData(int id, ref EntityData entityData)
         {
             entityData.ComponentCount = 0;
-
-            if (++entityData.Version == 0)
-            {
-                entityData.Version = EcsConstants.InitialEntityVersion;
-            }
-
+            entityData.Version++;
             _freeEntityIds[_freeEntityCount++] = id;
         }
 
@@ -75,7 +81,7 @@ namespace Ecs.Core
             return ref _entities[entity.Id];
         }
 
-        public ref EntityData GetAndValidateEntityData(Entity entity)
+        public ref EntityData GetCheckedEntityData(Entity entity)
         {
             ref var entityData = ref GetEntityData(entity);
 
@@ -87,8 +93,30 @@ namespace Ecs.Core
             return ref entityData;
         }
 
-        public void AddEntityQuery(EntityQuery entityQuery)
+        /// <summary>
+        /// Returns a shared entity query of the matching type.
+        /// </summary>
+        public EntityQuery GetEntityQuery(Type entityQueryType)
         {
+            for (int i = 0; i < _queries.Count; i++)
+            {
+                if (_queries.Items[i].GetType() == entityQueryType)
+                {
+                    // Matching query exists.
+                    return _queries.Items[i];
+                }
+            }
+
+            // Create query.
+            var entityQuery = (EntityQuery) Activator.CreateInstance(
+                entityQueryType, 
+                BindingFlags.NonPublic | BindingFlags.Instance, 
+                null,
+                new[] { this }, 
+                CultureInfo.InvariantCulture);
+
+            _queries.Add(entityQuery);
+
             for (int i = 0; i < entityQuery.ComponentTypeIndices.Length; i++)
             {
                 if (!_componentIdToEntityQueries.ContainsKey(entityQuery.ComponentTypeIndices[i]))
@@ -98,6 +126,8 @@ namespace Ecs.Core
 
                 _componentIdToEntityQueries[entityQuery.ComponentTypeIndices[i]].Add(entityQuery);
             }
+
+            return entityQuery;
         }
 
         public void UpdateEntityQueries(
@@ -116,7 +146,10 @@ namespace Ecs.Core
                     {
                         var entityQuery = entityQueries.Items[i];
 
-                        entityQuery.RemoveEntity(entity);
+                        if (entityQuery.IsMatch(entityData))
+                        {
+                            entityQuery.RemoveEntity(entity);
+                        }
                     }
                 }
             }
@@ -130,13 +163,16 @@ namespace Ecs.Core
                     {
                         var entityQuery = entityQueries.Items[i];
 
-                        entityQuery.AddEntity(entity);
+                        if (entityQuery.IsMatch(entityData))
+                        {
+                            entityQuery.AddEntity(entity);
+                        }
                     }
                 }
             }
         }
 
-        public ComponentPool<T> GetPool<T>() where T : struct
+        internal ComponentPool<T> GetPool<T>() where T : struct
         {
             var poolIndex = ComponentType<T>.ComponentPoolIndex;
 
@@ -189,6 +225,7 @@ namespace Ecs.Core
             {
                 public int PoolIndex;
                 public int ItemIndex;
+                public uint Version;
             }
         }
     }

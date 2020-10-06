@@ -5,6 +5,7 @@
         public int InitialEntityPoolCapacity;
         public int InitialComponentPoolCapacity;
         public int InitialEntityComponentCapacity;
+        public int InitialEntityQueryCapacity;
         public int InitialComponentToEntityQueryMapCapacity;
 
         public static readonly EcsConfig Default = new EcsConfig
@@ -13,6 +14,7 @@
             InitialComponentPoolCapacity = 256,
             InitialEntityComponentCapacity = 8,
 
+            InitialEntityQueryCapacity = 64,
             InitialComponentToEntityQueryMapCapacity = 256,
         };
     }
