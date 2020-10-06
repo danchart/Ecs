@@ -17,14 +17,14 @@
 
         public ref readonly T UnrefReadOnly()
         {
-            return ref _pool.GetItem(ItemIndex);
+            return ref _pool.GetItem(ItemIndex).Item;
         }
 
         public ref T Unref()
         {
             _entity.SetDirty<T>();
 
-            return ref _pool.GetItem(ItemIndex);
+            return ref _pool.GetItem(ItemIndex).Item;
         }
 
         public static bool operator ==(in ComponentRef<T> lhs, in ComponentRef<T> rhs)

@@ -102,9 +102,11 @@ namespace Ecs.Core
                     {
                         hasComponent = true;
 
+                        var version = this.World.ComponentPools[ComponentTypeIndices[i]].GetItemVersion(entityData.Components[j].ItemIndex);
+
                         lastVersion =
-                            entityData.Components[j].Version > lastVersion
-                            ? entityData.Components[j].Version
+                            version > lastVersion
+                            ? version
                             : lastVersion;
 
                         break;

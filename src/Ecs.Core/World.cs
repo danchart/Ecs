@@ -234,7 +234,6 @@ namespace Ecs.Core
             {
                 public int TypeIndex;
                 public int ItemIndex;
-                public Version Version;
             }
         }
     }

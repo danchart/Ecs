@@ -12,11 +12,12 @@ namespace Ecs.Core
         int New();
         void Free(int index);
         object GetItem(int index);
+        Version GetItemVersion(int index);
     }
 
     internal class ComponentPool<T> : IComponentPool where T : struct
     {
-        private T[] _items = new T[128];
+        private ComponentItem<T>[] _items = new ComponentItem<T>[128];
         int[] _freeItemIndices = new int[128];
         private int _itemCount = 0;
         private int _freeItemCount = 0;
@@ -65,7 +66,12 @@ namespace Ecs.Core
         //    return new ComponentRef<T>(this, itemIndex);
         //}
 
-        public ref T GetItem(int index)
+        public Version GetItemVersion(int index)
+        {
+            return GetItem(index).Version;
+        }
+
+        public ref ComponentItem<T> GetItem(int index)
         {
             return ref _items[index];
         }
@@ -73,6 +79,12 @@ namespace Ecs.Core
         object IComponentPool.GetItem(int index)
         {
             return _items[index];
+        }
+
+        internal struct ComponentItem<TItem> where TItem : struct
+        {
+            public TItem Item;
+            public Version Version;
         }
     }
 }
