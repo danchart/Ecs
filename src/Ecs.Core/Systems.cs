@@ -65,6 +65,9 @@ namespace Ecs.Core
             }
 
             World.LastSystemVersion = World.GlobalSystemVersion;
+
+            // Increment system version to handle any updates outside the Run() loop.
+            World.GlobalSystemVersion = World.GlobalSystemVersion.GetNext();
         }
 
         private void CreateEntityQueries()

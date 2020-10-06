@@ -19,9 +19,11 @@
         {
         }
 
-        public bool IsModifiedVersion(Version version)
+        public bool DidChange(Version version)
         {
-            return this.LastSystemVersion < version;
+            return 
+                version > this.LastSystemVersion ||
+                version == Version.Zero;
         }
     }
 }

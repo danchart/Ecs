@@ -90,9 +90,9 @@ namespace Ecs.Core.Tests
         {
             var systems = new Systems(Helpers.NewWorld());
             var system = new GetVersionSystem<SampleStructs.FooData>();
-            systems.Add(system);
-
-            systems.Init();
+            systems
+                .Add(system)
+                .Init();
 
             var entity = systems.World.NewEntity();
             entity.GetComponent<SampleStructs.FooData>();
@@ -143,7 +143,7 @@ namespace Ecs.Core.Tests
 
                     var version = entity.GetComponentVersion<SampleStructs.FooData>();
 
-                    WasComponentModified = IsModifiedVersion(version);
+                    WasComponentModified = DidChange(version);
                 }
             }
         }

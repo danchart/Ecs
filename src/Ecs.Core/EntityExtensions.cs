@@ -38,6 +38,8 @@ namespace Ecs.Core
                     break;
                 }
             }
+
+            entity.World.OnChangeEntity(componentTypeIndex, entity, entityData);
         }
 
         public static ref T GetComponent<T>(in this Entity entity) where T : struct
@@ -61,6 +63,8 @@ namespace Ecs.Core
                     if (dirtyEntity)
                     {
                         entityData.Components[i].Version = entity.World.GlobalSystemVersion;
+
+                        entity.World.OnChangeEntity(componentTypeIndex, entity, entityData);
                     }
 
                     return ref ((ComponentPool<T>)entity.World.ComponentPools[componentTypeIndex]).GetItem(entityData.Components[i].ItemIndex);
@@ -80,10 +84,11 @@ namespace Ecs.Core
             {
                 TypeIndex = componentTypeIndex,
                 ItemIndex = index,
-            };
+                Version = entity.World.GlobalSystemVersion,
+        };
             entityData.ComponentCount++;
 
-            entity.World.UpdateEntityQueries(componentTypeIndex, entity, entityData, isDelete: false);
+            entity.World.OnAddEntity(componentTypeIndex, entity, entityData);
 
             return ref pool.GetItem(index);
         }
@@ -122,7 +127,7 @@ namespace Ecs.Core
             {
                 if (entityData.Components[i].TypeIndex == componentTypeIndex)
                 {
-                    entity.World.UpdateEntityQueries(componentTypeIndex, entity, entityData, isDelete: true);
+                    entity.World.OnRemoveEntity(componentTypeIndex, entity, entityData);
 
                     entity.World.ComponentPools[componentTypeIndex].Free(entityData.Components[i].ItemIndex);
 
@@ -180,7 +185,7 @@ namespace Ecs.Core
             {
                 var componentTypeIndex = entityData.Components[i].TypeIndex;
 
-                entity.World.UpdateEntityQueries(componentTypeIndex, entity, entityData, isDelete: true);
+                entity.World.OnRemoveEntity(componentTypeIndex, entity, entityData);
                 entity.World.ComponentPools[componentTypeIndex].Free(entityData.Components[i].ItemIndex);
                 entityData.ComponentCount--;
             }

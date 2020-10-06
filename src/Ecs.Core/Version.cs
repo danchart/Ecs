@@ -4,9 +4,14 @@ namespace Ecs.Core
 {
     public readonly struct Version : IComparable<Version>, IEquatable<Version>
     {
+        /// <summary>
+        /// "Zero" is considered always changed (it's either the initial or wrap around state).
+        /// </summary>
+        static public readonly Version Zero = new Version(0);
+
         internal uint Value { get; }
 
-        internal Version(uint value = 1)
+        internal Version(uint value = 0)
         {
             Value = value;
         }
@@ -32,19 +37,15 @@ namespace Ecs.Core
         public static bool operator ==(Version a, Version b) => a.CompareTo(b) == 0;
         public static bool operator !=(Version a, Version b) => !(a == b);
         public static bool operator <(Version a, Version b) => (a.Value < b.Value);
+        public static bool operator <=(Version a, Version b) => (a.Value <= b.Value);
         public static bool operator >(Version a, Version b) => (a.Value > b.Value);
+        public static bool operator >=(Version a, Version b) => (a.Value >= b.Value);
     }
 
     public static class VersionExtensions
     {
         internal static Version GetNext(in this Version version)
         {
-            if (version.Value == uint.MaxValue)
-            {
-                // TODO: Handle wrapping.
-                throw new Exception("Version count wrapped to 0.");
-            }
-
             return new Version(version.Value + 1);
         }
     }
