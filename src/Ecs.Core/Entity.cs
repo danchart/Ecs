@@ -6,20 +6,20 @@ namespace Ecs.Core
     {
         internal World World;
         internal int Id;
-        internal uint Version;
+        internal uint Generation;
 
         public static bool operator ==(in Entity lhs, in Entity rhs)
         {
             return 
                 lhs.Id == rhs.Id && 
-                lhs.Version == rhs.Version;
+                lhs.Generation == rhs.Generation;
         }
 
         public static bool operator !=(in Entity lhs, in Entity rhs)
         {
             return 
                 lhs.Id != rhs.Id || 
-                lhs.Version != rhs.Version;
+                lhs.Generation != rhs.Generation;
         }
 
         public override int GetHashCode()
@@ -28,7 +28,7 @@ namespace Ecs.Core
                 HashingUtil.CombineHashCodes(
                     Id,
                     HashingUtil.CombineHashCodes(
-                        (int) Version,
+                        (int) Generation,
                         World.GetHashCode()));
         }
 
@@ -43,7 +43,7 @@ namespace Ecs.Core
         {
             return 
                 Id == entity.Id && 
-                Version == entity.Version && 
+                Generation == entity.Generation && 
                 World == entity.World;
         }
     }

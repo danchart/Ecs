@@ -7,11 +7,11 @@ namespace Ecs.Core
     {
         static ComponentType()
         {
-            ComponentPoolIndex = Interlocked.Increment(ref ComponentPool.PoolCount) - 1;
+            Index = Interlocked.Increment(ref ComponentPool.PoolCount) - 1;
             Type = typeof(T);
         }
 
-        public static readonly int ComponentPoolIndex;
+        public static readonly int Index;
         public static readonly Type Type;
     }
 }

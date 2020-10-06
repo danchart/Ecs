@@ -9,8 +9,8 @@ namespace Ecs.Core
     {
         internal readonly EcsConfig Config;
 
-        internal uint GlobalSystemVersion;
-        internal uint LastSystemVersion;
+        internal Version GlobalSystemVersion;
+        internal Version LastSystemVersion;
 
         internal IComponentPool[] ComponentPools;
 
@@ -35,7 +35,7 @@ namespace Ecs.Core
             _componentIdToEntityQueries = new Dictionary<int, AppendOnlyList<EntityQuery>>(Config.InitialComponentToEntityQueryMapCapacity);
             _queries = new AppendOnlyList<EntityQuery>(Config.InitialEntityQueryCapacity);
 
-            GlobalSystemVersion = 1;
+            GlobalSystemVersion.Value = 1;
             LastSystemVersion = GlobalSystemVersion;
         }
 
@@ -51,7 +51,7 @@ namespace Ecs.Core
                 entity.Id = _freeEntityIds[--_freeEntityCount];
 
                 ref var entityData = ref _entities[entity.Id];
-                entity.Version = entityData.Version;
+                entity.Generation = entityData.Generation;
                 entityData.ComponentCount = 0;
             }
             else
@@ -62,8 +62,8 @@ namespace Ecs.Core
 
                 entityData.ComponentCount = 0;
                 entityData.Components = new EntityData.ComponentData[Config.InitialEntityComponentCapacity];
-                entityData.Version = EcsConstants.InitialEntityVersion;
-                entity.Version = entityData.Version;
+                entityData.Generation = EcsConstants.InitialEntityVersion;
+                entity.Generation = entityData.Generation;
             }
 
             return entity;
@@ -72,7 +72,7 @@ namespace Ecs.Core
         public void FreeEntityData(int id, ref EntityData entityData)
         {
             entityData.ComponentCount = 0;
-            entityData.Version++;
+            entityData.Generation++;
             _freeEntityIds[_freeEntityCount++] = id;
         }
 
@@ -85,7 +85,7 @@ namespace Ecs.Core
         {
             ref var entityData = ref GetEntityData(entity);
 
-            if (entityData.Version != entity.Version)
+            if (entityData.Generation != entity.Generation)
             {
                 throw new InvalidOperationException("Accessing a destroyed entity.");
             }
@@ -131,7 +131,7 @@ namespace Ecs.Core
         }
 
         public void UpdateEntityQueries(
-            int componentPoolIndex, 
+            int componentTypeIndex, 
             in Entity entity, 
             in EntityData entityData, 
             bool isDelete)
@@ -140,7 +140,7 @@ namespace Ecs.Core
             {
                 AppendOnlyList<EntityQuery> entityQueries;
 
-                if (_componentIdToEntityQueries.TryGetValue(componentPoolIndex, out entityQueries))
+                if (_componentIdToEntityQueries.TryGetValue(componentTypeIndex, out entityQueries))
                 {
                     for (int i = 0; i < entityQueries.Count; i++)
                     {
@@ -157,7 +157,7 @@ namespace Ecs.Core
             {
                 AppendOnlyList<EntityQuery> entityQueries;
 
-                if (_componentIdToEntityQueries.TryGetValue(componentPoolIndex, out entityQueries))
+                if (_componentIdToEntityQueries.TryGetValue(componentTypeIndex, out entityQueries))
                 {
                     for (int i = 0; i < entityQueries.Count; i++)
                     {
@@ -174,7 +174,7 @@ namespace Ecs.Core
 
         internal ComponentPool<T> GetPool<T>() where T : struct
         {
-            var poolIndex = ComponentType<T>.ComponentPoolIndex;
+            var poolIndex = ComponentType<T>.Index;
 
             if (ComponentPools.Length < poolIndex)
             {
@@ -219,13 +219,13 @@ namespace Ecs.Core
         {
             public ComponentData[] Components;
             public int ComponentCount;
-            public uint Version;
+            public uint Generation;
 
             public struct ComponentData
             {
-                public int PoolIndex;
+                public int TypeIndex;
                 public int ItemIndex;
-                public uint Version;
+                public Version Version;
             }
         }
     }

@@ -38,7 +38,7 @@ namespace Ecs.Core
 
                 for (int j = 0; j < entityData.ComponentCount; j++)
                 {
-                    if (entityData.Components[j].PoolIndex == ComponentTypeIndices[i])
+                    if (entityData.Components[j].TypeIndex == ComponentTypeIndices[i])
                     {
                         hasComponent = true;
 
@@ -112,7 +112,7 @@ namespace Ecs.Core
     {
         protected EntityQuery(World world) : base(world)
         {
-            this.ComponentTypeIndices = new[] { ComponentType<T>.ComponentPoolIndex };
+            this.ComponentTypeIndices = new[] { ComponentType<T>.Index };
 
             //this.ComponentTypeIndices = new int[types.Length];
 
@@ -122,7 +122,7 @@ namespace Ecs.Core
             //    var type = componentTypeType.MakeGenericType(new Type[] { types[i] });
             //    var componentType = Activator.CreateInstance(type);
 
-            //    var field = type.GetField("ComponentPoolIndex", BindingFlags.Static | BindingFlags.Public);
+            //    var field = type.GetField("componentTypeIndex", BindingFlags.Static | BindingFlags.Public);
 
             //    var componentIndex = (int)field.GetValue(componentType);
 

@@ -1,5 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using Xunit;
 
 namespace Ecs.Core.Tests
@@ -98,25 +97,25 @@ namespace Ecs.Core.Tests
             var entity = systems.World.NewEntity();
             entity.GetComponent<SampleStructs.FooData>();
 
-            var version1 = entity.GetVersion<SampleStructs.FooData>();
+            var version1 = entity.GetComponentVersion<SampleStructs.FooData>();
 
             systems.Run(1);
 
-            var version2 = entity.GetVersion<SampleStructs.FooData>();
+            var version2 = entity.GetComponentVersion<SampleStructs.FooData>();
 
             Assert.NotEqual(version1, version2);
             Assert.True(system.WasComponentModified);
 
             system.UseReadOnly = true;
             systems.Run(1);
-            var version3 = entity.GetVersion<SampleStructs.FooData>();
+            var version3 = entity.GetComponentVersion<SampleStructs.FooData>();
 
             Assert.Equal(version2, version3);
             Assert.False(system.WasComponentModified);
 
             system.UseReadOnly = false;
             systems.Run(1);
-            var version4 = entity.GetVersion<SampleStructs.FooData>();
+            var version4 = entity.GetComponentVersion<SampleStructs.FooData>();
 
             Assert.NotEqual(version3, version4);
             Assert.True(system.WasComponentModified);
@@ -142,9 +141,9 @@ namespace Ecs.Core.Tests
                         ref var foo = ref entity.GetComponent<SampleStructs.FooData>();
                     }
 
-                    var version = entity.GetVersion<SampleStructs.FooData>();
+                    var version = entity.GetComponentVersion<SampleStructs.FooData>();
 
-                    WasComponentModified = (this.LastSystemVersion < version);
+                    WasComponentModified = IsModifiedVersion(version);
                 }
             }
         }

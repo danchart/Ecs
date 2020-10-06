@@ -2,8 +2,8 @@
 {
     public abstract class SystemBase
     {
-        protected internal uint GlobalSystemVersion;
-        protected internal uint LastSystemVersion;
+        protected internal Version GlobalSystemVersion;
+        protected internal Version LastSystemVersion;
 
         /// <summary>
         /// Invoked on System.Init();
@@ -17,6 +17,11 @@
         /// </summary>
         public virtual void OnUpdate(float deltaTime)
         {
+        }
+
+        public bool IsModifiedVersion(Version version)
+        {
+            return this.LastSystemVersion.IsNewer(version);
         }
     }
 }

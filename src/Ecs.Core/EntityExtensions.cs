@@ -4,15 +4,15 @@ namespace Ecs.Core
 {
     public static class EntityExtensions
     {
-        public static uint GetVersion<T>(in this Entity entity) where T : struct
+        public static Version GetComponentVersion<T>(in this Entity entity) where T : struct
         {
-            ref var entityData = ref entity.World.GetCheckedEntityData(entity);
+            ref readonly var entityData = ref entity.World.GetCheckedEntityData(entity);
 
-            var componentPoolIndex = ComponentType<T>.ComponentPoolIndex;
+            var componentTypeIndex = ComponentType<T>.Index;
 
             for (int i = 0; i < entityData.ComponentCount; i++)
             {
-                if (entityData.Components[i].PoolIndex == componentPoolIndex)
+                if (entityData.Components[i].TypeIndex == componentTypeIndex)
                 {
                     // Found component
                     return entityData.Components[i].Version;
@@ -26,11 +26,11 @@ namespace Ecs.Core
         {
             ref var entityData = ref entity.World.GetCheckedEntityData(entity);
 
-            var componentPoolIndex = ComponentType<T>.ComponentPoolIndex;
+            var componentTypeIndex = ComponentType<T>.Index;
 
             for (int i = 0; i < entityData.ComponentCount; i++)
             {
-                if (entityData.Components[i].PoolIndex == componentPoolIndex)
+                if (entityData.Components[i].TypeIndex == componentTypeIndex)
                 {
                     // Found component
                     entityData.Components[i].Version = entity.World.GlobalSystemVersion;
@@ -51,11 +51,11 @@ namespace Ecs.Core
         {
             ref var entityData = ref entity.World.GetCheckedEntityData(entity);
 
-            var componentPoolIndex = ComponentType<T>.ComponentPoolIndex;
+            var componentTypeIndex = ComponentType<T>.Index;
 
             for (int i = 0; i < entityData.ComponentCount; i++)
             {
-                if (entityData.Components[i].PoolIndex == componentPoolIndex)
+                if (entityData.Components[i].TypeIndex == componentTypeIndex)
                 {
                     // Found component
                     if (dirtyEntity)
@@ -63,7 +63,7 @@ namespace Ecs.Core
                         entityData.Components[i].Version = entity.World.GlobalSystemVersion;
                     }
 
-                    return ref ((ComponentPool<T>)entity.World.ComponentPools[componentPoolIndex]).GetItem(entityData.Components[i].ItemIndex);
+                    return ref ((ComponentPool<T>)entity.World.ComponentPools[componentTypeIndex]).GetItem(entityData.Components[i].ItemIndex);
                 }
             }
 
@@ -78,12 +78,12 @@ namespace Ecs.Core
             var index = pool.New();
             entityData.Components[entityData.ComponentCount] = new World.EntityData.ComponentData
             {
-                PoolIndex = componentPoolIndex,
+                TypeIndex = componentTypeIndex,
                 ItemIndex = index,
             };
             entityData.ComponentCount++;
 
-            entity.World.UpdateEntityQueries(componentPoolIndex, entity, entityData, isDelete: false);
+            entity.World.UpdateEntityQueries(componentTypeIndex, entity, entityData, isDelete: false);
 
             return ref pool.GetItem(index);
         }
@@ -97,11 +97,11 @@ namespace Ecs.Core
         {
             ref var entityData = ref entity.World.GetCheckedEntityData(entity);
 
-            var componentPoolIndex = ComponentType<T>.ComponentPoolIndex;
+            var componentTypeIndex = ComponentType<T>.Index;
 
             for (int i = 0; i < entityData.ComponentCount; i++)
             {
-                if (entityData.Components[i].PoolIndex == componentPoolIndex)
+                if (entityData.Components[i].TypeIndex == componentTypeIndex)
                 {
                     return true;
                 }
@@ -114,17 +114,17 @@ namespace Ecs.Core
         {
             bool wasRemoved = false;
 
-            var componentPoolIndex = ComponentType<T>.ComponentPoolIndex;
+            var componentTypeIndex = ComponentType<T>.Index;
 
             ref var entityData = ref entity.World.GetCheckedEntityData(entity);
 
             for (int i = 0; i < entityData.ComponentCount; i++)
             {
-                if (entityData.Components[i].PoolIndex == componentPoolIndex)
+                if (entityData.Components[i].TypeIndex == componentTypeIndex)
                 {
-                    entity.World.UpdateEntityQueries(componentPoolIndex, entity, entityData, isDelete: true);
+                    entity.World.UpdateEntityQueries(componentTypeIndex, entity, entityData, isDelete: true);
 
-                    entity.World.ComponentPools[componentPoolIndex].Free(entityData.Components[i].ItemIndex);
+                    entity.World.ComponentPools[componentTypeIndex].Free(entityData.Components[i].ItemIndex);
 
                     if (i < entityData.ComponentCount - 1)
                     {
@@ -153,11 +153,11 @@ namespace Ecs.Core
         {
             ref var entityData = ref entity.World.GetEntityData(entity);
 
-            var poolIndex = ComponentType<T>.ComponentPoolIndex;
+            var poolIndex = ComponentType<T>.Index;
 
             for (int i = 0; i < entityData.ComponentCount; i++)
             {
-                if (entityData.Components[i].PoolIndex == poolIndex)
+                if (entityData.Components[i].TypeIndex == poolIndex)
                 {
                     return new ComponentRef<T>(
                         entity, 
@@ -178,10 +178,10 @@ namespace Ecs.Core
 
             for (int i = entityData.ComponentCount - 1; i >= 0; i--)
             {
-                var componentPoolIndex = entityData.Components[i].PoolIndex;
+                var componentTypeIndex = entityData.Components[i].TypeIndex;
 
-                entity.World.UpdateEntityQueries(componentPoolIndex, entity, entityData, isDelete: true);
-                entity.World.ComponentPools[componentPoolIndex].Free(entityData.Components[i].ItemIndex);
+                entity.World.UpdateEntityQueries(componentTypeIndex, entity, entityData, isDelete: true);
+                entity.World.ComponentPools[componentTypeIndex].Free(entityData.Components[i].ItemIndex);
                 entityData.ComponentCount--;
             }
 
@@ -197,7 +197,7 @@ namespace Ecs.Core
             ref var entityData = ref entity.World.GetEntityData(entity);
 
             return
-                entityData.Version != entity.Version ||
+                entityData.Generation != entity.Generation ||
                 entityData.ComponentCount == 0;
         }
     }

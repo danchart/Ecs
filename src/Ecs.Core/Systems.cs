@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Data;
 using System.Reflection;
 
 namespace Ecs.Core
@@ -55,12 +56,12 @@ namespace Ecs.Core
             {
                 var system = _systems.Items[i].System;
 
-                system.GlobalSystemVersion = ++World.GlobalSystemVersion;
+                World.GlobalSystemVersion = World.GlobalSystemVersion.GetNext();
+
+                system.GlobalSystemVersion = World.GlobalSystemVersion;
                 system.LastSystemVersion = World.LastSystemVersion;
 
                 system.OnUpdate(deltaTime);
-
-                //World.GlobalSystemVersion++;
             }
 
             World.LastSystemVersion = World.GlobalSystemVersion;
