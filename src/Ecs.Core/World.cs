@@ -35,7 +35,7 @@ namespace Ecs.Core
             _componentIdToEntityQueries = new Dictionary<int, AppendOnlyList<EntityQuery>>(Config.InitialComponentToEntityQueryMapCapacity);
             _queries = new AppendOnlyList<EntityQuery>(Config.InitialEntityQueryCapacity);
 
-            GlobalSystemVersion.Value = 1;
+            GlobalSystemVersion = new Version();
             LastSystemVersion = GlobalSystemVersion;
         }
 
@@ -76,21 +76,25 @@ namespace Ecs.Core
             _freeEntityIds[_freeEntityCount++] = id;
         }
 
-        public ref EntityData GetEntityData(Entity entity)
+        public ref EntityData GetEntityData(in Entity entity)
         {
-            return ref _entities[entity.Id];
-        }
-
-        public ref EntityData GetCheckedEntityData(Entity entity)
-        {
-            ref var entityData = ref GetEntityData(entity);
+            ref var entityData = ref _entities[entity.Id];
 
             if (entityData.Generation != entity.Generation)
             {
-                throw new InvalidOperationException("Accessing a destroyed entity.");
+                throw new InvalidOperationException($"Accessing a destroyed entity. Gen={entity.Generation}, CurrentGen={entityData.Generation}");
             }
 
             return ref entityData;
+        }
+
+        public bool IsFreed(in Entity entity)
+        {
+            ref var entityData = ref _entities[entity.Id];
+
+            return
+                entityData.Generation != entity.Generation ||
+                entityData.ComponentCount == 0;
         }
 
         /// <summary>

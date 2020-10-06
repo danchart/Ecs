@@ -22,7 +22,7 @@
 
         public ref T Unref()
         {
-            _entity.Dirty<T>();
+            _entity.SetDirty<T>();
 
             return ref _pool.GetItem(ItemIndex);
         }

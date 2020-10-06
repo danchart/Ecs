@@ -21,7 +21,7 @@
 
         public bool IsModifiedVersion(Version version)
         {
-            return this.LastSystemVersion.IsNewer(version);
+            return this.LastSystemVersion < version;
         }
     }
 }

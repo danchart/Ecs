@@ -6,7 +6,7 @@ namespace Ecs.Core
     {
         public static Version GetComponentVersion<T>(in this Entity entity) where T : struct
         {
-            ref readonly var entityData = ref entity.World.GetCheckedEntityData(entity);
+            ref readonly var entityData = ref entity.World.GetEntityData(entity);
 
             var componentTypeIndex = ComponentType<T>.Index;
 
@@ -22,9 +22,9 @@ namespace Ecs.Core
             return default;
         }
 
-        public static void Dirty<T>(in this Entity entity) where T : struct 
+        internal static void SetDirty<T>(in this Entity entity) where T : struct 
         {
-            ref var entityData = ref entity.World.GetCheckedEntityData(entity);
+            ref var entityData = ref entity.World.GetEntityData(entity);
 
             var componentTypeIndex = ComponentType<T>.Index;
 
@@ -49,7 +49,7 @@ namespace Ecs.Core
             Entity entity, 
             bool dirtyEntity) where T : struct
         {
-            ref var entityData = ref entity.World.GetCheckedEntityData(entity);
+            ref var entityData = ref entity.World.GetEntityData(entity);
 
             var componentTypeIndex = ComponentType<T>.Index;
 
@@ -95,7 +95,7 @@ namespace Ecs.Core
 
         public static bool HasComponent<T>(in this Entity entity) where T : struct
         {
-            ref var entityData = ref entity.World.GetCheckedEntityData(entity);
+            ref var entityData = ref entity.World.GetEntityData(entity);
 
             var componentTypeIndex = ComponentType<T>.Index;
 
@@ -116,7 +116,7 @@ namespace Ecs.Core
 
             var componentTypeIndex = ComponentType<T>.Index;
 
-            ref var entityData = ref entity.World.GetCheckedEntityData(entity);
+            ref var entityData = ref entity.World.GetEntityData(entity);
 
             for (int i = 0; i < entityData.ComponentCount; i++)
             {
@@ -174,7 +174,7 @@ namespace Ecs.Core
 
         public static void Free(in this Entity entity)
         {
-            ref var entityData = ref entity.World.GetCheckedEntityData(entity);
+            ref var entityData = ref entity.World.GetEntityData(entity);
 
             for (int i = entityData.ComponentCount - 1; i >= 0; i--)
             {
@@ -194,11 +194,7 @@ namespace Ecs.Core
         /// </summary>
         public static bool IsFreed(in this Entity entity)
         {
-            ref var entityData = ref entity.World.GetEntityData(entity);
-
-            return
-                entityData.Generation != entity.Generation ||
-                entityData.ComponentCount == 0;
+            return entity.World.IsFreed(entity);
         }
     }
 }
