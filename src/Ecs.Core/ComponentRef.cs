@@ -22,9 +22,14 @@
 
         public ref T Unref()
         {
-            _entity.SetDirty<T>();
+            ref var item = ref _pool.GetItem(ItemIndex);
 
-            return ref _pool.GetItem(ItemIndex).Item;
+            ref var entityData = ref _entity.World.GetEntityData(_entity);
+
+            item.Version = _entity.World.GlobalSystemVersion;
+            _entity.World.OnChangeComponent(ComponentType<T>.Index, _entity, entityData);
+
+            return ref item.Item;
         }
 
         public static bool operator ==(in ComponentRef<T> lhs, in ComponentRef<T> rhs)

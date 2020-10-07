@@ -5,6 +5,9 @@ using System.Reflection;
 
 namespace Ecs.Core
 {
+    /// <summary>
+    /// Contains all ECS state.
+    /// </summary>
     public class World
     {
         internal readonly EcsConfig Config;
@@ -20,7 +23,8 @@ namespace Ecs.Core
         private int _entityCount = 0;
         private int _freeEntityCount = 0;
 
-        private readonly Dictionary<int, AppendOnlyList<EntityQuery>> _componentIdToEntityQueries;
+        private readonly Dictionary<int, AppendOnlyList<EntityQuery>> _includedComponentIdToEntityQueries;
+        private readonly Dictionary<int, AppendOnlyList<EntityQuery>> _excludedComponentIdToEntityQueries;
 
         private readonly AppendOnlyList<EntityQuery> _queries;
 
@@ -32,7 +36,8 @@ namespace Ecs.Core
             _entities = new EntityData[Config.InitialEntityPoolCapacity];
             _freeEntityIds = new int[Config.InitialEntityPoolCapacity];
 
-            _componentIdToEntityQueries = new Dictionary<int, AppendOnlyList<EntityQuery>>(Config.InitialComponentToEntityQueryMapCapacity);
+            _includedComponentIdToEntityQueries = new Dictionary<int, AppendOnlyList<EntityQuery>>(Config.InitialComponentToEntityQueryMapCapacity);
+            _excludedComponentIdToEntityQueries = new Dictionary<int, AppendOnlyList<EntityQuery>>(Config.InitialComponentToEntityQueryMapCapacity);
             _queries = new AppendOnlyList<EntityQuery>(Config.InitialEntityQueryCapacity);
 
             GlobalSystemVersion = new Version();
@@ -90,6 +95,11 @@ namespace Ecs.Core
                 entityData.ComponentCount == 0;
         }
 
+        public EntityQuery GetEntityQuery<T>()
+        {
+            return GetEntityQuery(typeof(T));
+        }
+
         /// <summary>
         /// Returns a shared entity query of the matching type.
         /// </summary>
@@ -114,69 +124,100 @@ namespace Ecs.Core
 
             _queries.Add(entityQuery);
 
-            for (int i = 0; i < entityQuery.ComponentTypeIndices.Length; i++)
+            // Add to included component->query list
+            for (int i = 0; i < entityQuery.IncludedComponentTypeIndices.Length; i++)
             {
-                if (!_componentIdToEntityQueries.ContainsKey(entityQuery.ComponentTypeIndices[i]))
+                if (!_includedComponentIdToEntityQueries.ContainsKey(entityQuery.IncludedComponentTypeIndices[i]))
                 {
-                    _componentIdToEntityQueries[entityQuery.ComponentTypeIndices[i]] = new AppendOnlyList<EntityQuery>(EcsConstants.InitialEntityQueryEntityCapacity);
+                    _includedComponentIdToEntityQueries[entityQuery.IncludedComponentTypeIndices[i]] = new AppendOnlyList<EntityQuery>(EcsConstants.InitialEntityQueryEntityCapacity);
                 }
 
-                _componentIdToEntityQueries[entityQuery.ComponentTypeIndices[i]].Add(entityQuery);
+                _includedComponentIdToEntityQueries[entityQuery.IncludedComponentTypeIndices[i]].Add(entityQuery);
+            }
+
+            if (entityQuery.ExcludedComponentTypeIndices != null)
+            {
+                // Add any to excluded component->query list
+                for (int i = 0; i < entityQuery.ExcludedComponentTypeIndices.Length; i++)
+                {
+                    if (!_excludedComponentIdToEntityQueries.ContainsKey(entityQuery.ExcludedComponentTypeIndices[i]))
+                    {
+                        _excludedComponentIdToEntityQueries[entityQuery.ExcludedComponentTypeIndices[i]] = new AppendOnlyList<EntityQuery>(EcsConstants.InitialEntityQueryEntityCapacity);
+                    }
+
+                    _excludedComponentIdToEntityQueries[entityQuery.ExcludedComponentTypeIndices[i]].Add(entityQuery);
+                }
             }
 
             return entityQuery;
         }
 
-        public void OnAddEntity(
+        public void OnAddComponent(
             int componentTypeIndex, 
             in Entity entity, 
             in EntityData entityData)
         {
-            AppendOnlyList<EntityQuery> entityQueries;
-
-            if (_componentIdToEntityQueries.TryGetValue(componentTypeIndex, out entityQueries))
+            if (_includedComponentIdToEntityQueries.TryGetValue(componentTypeIndex, out var includeEntityQueries))
             {
-                for (int i = 0; i < entityQueries.Count; i++)
+                for (int i = 0; i < includeEntityQueries.Count; i++)
                 {
-                    var entityQuery = entityQueries.Items[i];
+                    var entityQuery = includeEntityQueries.Items[i];
 
-                    entityQuery.OnAddEntity(entity, entityData);
+                    entityQuery.OnAddIncludeComponent(entity, entityData, componentTypeIndex);
+                }
+            }
+
+            if (_excludedComponentIdToEntityQueries.TryGetValue(componentTypeIndex, out var excludeEntityQueries))
+            {
+                for (int i = 0; i < excludeEntityQueries.Count; i++)
+                {
+                    var entityQuery = excludeEntityQueries.Items[i];
+
+                    entityQuery.OnAddExcludeComponent(entity, entityData, componentTypeIndex);
                 }
             }
         }
 
-        public void OnChangeEntity(
+        public void OnChangeComponent(
             int componentTypeIndex,
-            in Entity entity,
+            in Entity entity, 
             in EntityData entityData)
         {
-            AppendOnlyList<EntityQuery> entityQueries;
-
-            if (_componentIdToEntityQueries.TryGetValue(componentTypeIndex, out entityQueries))
+            if (_includedComponentIdToEntityQueries.TryGetValue(componentTypeIndex, out var entityQueries))
             {
                 for (int i = 0; i < entityQueries.Count; i++)
                 {
                     var entityQuery = entityQueries.Items[i];
 
-                    entityQuery.OnChangeEntity(entity, entityData);
+                    entityQuery.OnChangeIncludeComponent(entity, entityData, componentTypeIndex);
                 }
             }
+
+            // Changes do not effect exclusions.
         }
 
-        public void OnRemoveEntity(
+        public void OnRemoveComponent(
             int componentTypeIndex,
             in Entity entity,
             in EntityData entityData)
         {
-            AppendOnlyList<EntityQuery> entityQueries;
-
-            if (_componentIdToEntityQueries.TryGetValue(componentTypeIndex, out entityQueries))
+            if (_includedComponentIdToEntityQueries.TryGetValue(componentTypeIndex, out var includeEntityQueries))
             {
-                for (int i = 0; i < entityQueries.Count; i++)
+                for (int i = 0; i < includeEntityQueries.Count; i++)
                 {
-                    var entityQuery = entityQueries.Items[i];
+                    var entityQuery = includeEntityQueries.Items[i];
 
-                    entityQuery.OnRemoveEntity(entity, entityData);
+                    entityQuery.OnRemoveIncludeComponent(entity, entityData, componentTypeIndex);
+                }
+            }
+
+            if (_excludedComponentIdToEntityQueries.TryGetValue(componentTypeIndex, out var excludeEntityQueries))
+            {
+                for (int i = 0; i < excludeEntityQueries.Count; i++)
+                {
+                    var entityQuery = excludeEntityQueries.Items[i];
+
+                    entityQuery.OnRemoveExcludeComponent(entity, entityData, componentTypeIndex);
                 }
             }
         }

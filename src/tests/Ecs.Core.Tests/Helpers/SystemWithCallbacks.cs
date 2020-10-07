@@ -3,16 +3,34 @@ using System.Collections.Generic;
 
 namespace Ecs.Core.Tests
 {
-    internal class SystemWithCallbacks<Comp> : SystemWithCallbacks<object, Comp> where Comp : struct
+    internal class SystemWithCallbacks<T> : SystemBase 
+    {
+        public Action<SystemWithCallbacks<T>> OnCreateAction = null;
+        public Action<SystemWithCallbacks<T>, float> OnUpdateAction = null;
+
+        public Dictionary<string, T> Data = new Dictionary<string, T>();
+
+        public override void OnCreate()
+        {
+            OnCreateAction?.Invoke(this);
+        }
+
+        public override void OnUpdate(float deltaTime)
+        {
+            OnUpdateAction?.Invoke(this, deltaTime);
+        }
+    }
+
+    internal class SystemWithCallbacksAndQuery<Comp> : SystemWithCallbacksAndQuery<object, Comp> where Comp : struct
     {
     }
 
-    internal class SystemWithCallbacks<T, Comp> : SystemBase where Comp : struct
+    internal class SystemWithCallbacksAndQuery<T, Comp> : SystemBase where Comp : struct
     {
         public EntityQuery<Comp> Query = null;
 
-        public Action<SystemWithCallbacks<T, Comp>> OnCreateAction = null;
-        public Action<SystemWithCallbacks<T, Comp>, float> OnUpdateAction = null;
+        public Action<SystemWithCallbacksAndQuery<T, Comp>> OnCreateAction = null;
+        public Action<SystemWithCallbacksAndQuery<T, Comp>, float> OnUpdateAction = null;
 
         public Dictionary<string, T> Data = new Dictionary<string, T>();
 

@@ -13,5 +13,11 @@
             public int a, b;
             public bool c;
         }
+
+        public struct Baz
+        {
+            public int c, d;
+            public bool e;
+        }
     }
 }

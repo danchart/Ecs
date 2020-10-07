@@ -40,7 +40,8 @@ namespace Ecs.Core
 
             _systems.Add(new SystemData
             {
-                System = system
+                System = system,
+                Active = true,
             });
 
             return this;
@@ -58,20 +59,38 @@ namespace Ecs.Core
         {
             for (int i = 0; i < _systems.Count; i++)
             {
-                var system = _systems.Items[i].System;
+                if (_systems.Items[i].Active)
+                {
+                    var system = _systems.Items[i].System;
 
-                World.GlobalSystemVersion = World.GlobalSystemVersion.GetNext();
+                    World.GlobalSystemVersion = World.GlobalSystemVersion.GetNext();
 
-                system.GlobalSystemVersion = World.GlobalSystemVersion;
-                system.LastSystemVersion = World.LastSystemVersion;
+                    system.GlobalSystemVersion = World.GlobalSystemVersion;
+                    system.LastSystemVersion = World.LastSystemVersion;
 
-                system.OnUpdate(deltaTime);
+                    system.OnUpdate(deltaTime);
+                }
             }
 
             World.LastSystemVersion = World.GlobalSystemVersion;
 
             // Increment system version to handle any updates outside the Run() loop.
             World.GlobalSystemVersion = World.GlobalSystemVersion.GetNext();
+        }
+
+        public void SetActive(SystemBase system, bool isActive)
+        {
+            for (int i = 0; i < _systems.Count; i++)
+            {
+                ref var systemData = ref _systems.Items[i];
+
+                if (system == systemData.System)
+                {
+                    systemData.Active = isActive;
+
+                    return;
+                }
+            }
         }
 
         private void InjectEntityQueries()
@@ -112,7 +131,9 @@ namespace Ecs.Core
         public struct SystemData
         {
             public SystemBase System;
+            public bool Active;
         }
+
         internal sealed class RemoveSingleFrames<T> : SystemBase where T : struct
         {
             readonly EntityQuery<T> Query = null;

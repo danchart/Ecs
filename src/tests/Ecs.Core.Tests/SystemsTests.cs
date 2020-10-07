@@ -1,18 +1,52 @@
-﻿using System;
-using Xunit;
+﻿using Xunit;
 
 namespace Ecs.Core.Tests
 {
     public class SystemsTests
     {
         [Fact]
+        public void ActiveInactive()
+        {
+            var systemFoo = new SystemFoo();
+
+            var systems =
+                new Systems(Helpers.NewWorld())
+                    .Add(systemFoo);
+            systems.Create();
+
+            var entity = systems.World.NewEntity();
+
+            ref var foo = ref entity.GetComponent<SampleStructs.Foo>();
+            foo.x = 1;
+
+            systems.Run(1);
+
+            Assert.Equal(2, foo.x);
+
+            systems.SetActive(systemFoo, isActive: false);
+
+            systems.Run(1);
+
+            Assert.Equal(2, foo.x);
+
+            systems.SetActive(systemFoo, isActive: true);
+
+            systems.Run(1);
+
+            Assert.Equal(3, foo.x);
+
+            // For good measure verify OnCreate called once.
+            Assert.Equal(1, systemFoo.OnCreateCallCounter);
+        }
+
+        [Fact]
         public void SystemsAndEntitiesAndQueries()
         {
             var systemFoo = new SystemFoo();
 
-            var systems = new Systems(Helpers.NewWorld());
-            systems.Add(systemFoo);
-
+            var systems =
+                new Systems(Helpers.NewWorld())
+                    .Add(systemFoo);
             systems.Create();
 
             var entity1 = systems.World.NewEntity();
@@ -59,7 +93,7 @@ namespace Ecs.Core.Tests
 
             var systems = new Systems(Helpers.NewWorld());
             systems.Add(
-                new SystemWithCallbacks<SampleStructs.Foo>
+                new SystemWithCallbacksAndQuery<SampleStructs.Foo>
                 {
                     OnCreateAction = (system) =>
                     {
@@ -75,6 +109,9 @@ namespace Ecs.Core.Tests
             Assert.Equal(1, onCreateCounter);
         }
 
+        /// <summary>
+        /// Validate single frame component.
+        /// </summary>
         [Fact]
         public void SingleFrame()
         {
@@ -84,7 +121,7 @@ namespace Ecs.Core.Tests
             var systems = new Systems(Helpers.NewWorld());
             systems
                 .Add(
-                    new SystemWithCallbacks<Entity, SampleStructs.Foo> 
+                    new SystemWithCallbacksAndQuery<Entity, SampleStructs.Foo> 
                     {
                         OnCreateAction = (system) =>
                         {
@@ -103,7 +140,7 @@ namespace Ecs.Core.Tests
                         }
                     })
                 .Add(
-                    new SystemWithCallbacks<Entity, SampleStructs.Bar>
+                    new SystemWithCallbacksAndQuery<Entity, SampleStructs.Bar>
                     {
                         OnUpdateAction = (system, dt) =>
                         {
@@ -120,10 +157,13 @@ namespace Ecs.Core.Tests
 
             systems.Run(1);
 
+            // Should have single frame component during first run.
             Assert.True(hadSingleFrameComponent);
+            // Stop adding single frame component.
+            addSingleFrameComponent = false;
 
             systems.Run(1);
-
+            // Single frame component now removed.
             Assert.False(hadSingleFrameComponent);
 
         }
@@ -132,6 +172,13 @@ namespace Ecs.Core.Tests
         {
             public EntityQuery<SampleStructs.Foo> QueryFoo = null;
             public EntityQuery<SampleStructs.Bar> QueryBar = null;
+
+            public int OnCreateCallCounter = 0;
+
+            public override void OnCreate()
+            {
+                OnCreateCallCounter++;
+            }
 
             public override void OnUpdate(float deltaTime)
             {
@@ -145,7 +192,6 @@ namespace Ecs.Core.Tests
                 foreach (var entity in QueryBar)
                 {
                     ref var bar = ref entity.GetComponent<SampleStructs.Bar>();
-                    //ref readonly var bar = ref entity.GetComponent<SampleStructs.BarData>();
 
                     bar.a++;
                 }

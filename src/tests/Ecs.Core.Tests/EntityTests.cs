@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using Xunit;
 
 namespace Ecs.Core.Tests
@@ -214,7 +215,10 @@ namespace Ecs.Core.Tests
 
                     var version = entity.GetComponentVersion<SampleStructs.Foo>();
                     Version version2;
-                    entity.GetComponentAndVersion<SampleStructs.Foo>(out version2);
+                    entity.GetReadonlyComponentAndVersion<SampleStructs.Foo>(out version2);
+
+                    if (version != version2)
+                        throw new Exception($"Two different versions: version={version}, version2={version2}.");
 
                     WasComponentModified = IsChanged(version);
                 }

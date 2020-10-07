@@ -5,6 +5,82 @@ namespace Ecs.Core.Tests
 {
     public class EntityQueryTests
     {
+        [Fact]
+        public void EntityQuery()
+        {
+            var systems = new Systems(Helpers.NewWorld());
+
+            systems
+                // No system Add's
+                .Create();
+
+            var query =
+                systems.World
+                .GetEntityQuery<EntityQuery<SampleStructs.Foo>>();
+
+            // Create 2 entities
+            var entity1 = systems.World.NewEntity();
+            var entity2 = systems.World.NewEntity();
+
+            Assert.Equal(0, query.GetEntityCount());
+
+            // Add inclusion #1
+            entity1.GetComponent<SampleStructs.Foo>();
+
+            Assert.Equal(1, query.GetEntityCount());
+
+            // Add inclusion #2
+            entity2.GetComponent<SampleStructs.Foo>();
+
+            Assert.Equal(2, query.GetEntityCount());
+
+            // Remove inclusion #1 
+            entity1.RemoveComponent<SampleStructs.Foo>();
+
+            Assert.Equal(1, query.GetEntityCount());
+
+            // Remove inclusion #2 - should place entity in query results.
+            entity2.RemoveComponent<SampleStructs.Foo>();
+
+            Assert.Equal(0, query.GetEntityCount());
+        }
+        [Fact]
+        public void EntityQuery_IncludeExclude()
+        {
+            var systems = new Systems(Helpers.NewWorld());
+            
+            systems
+                // No system Add's
+                .Create();
+
+            var queryWithExclude = 
+                systems.World
+                .GetEntityQuery<EntityQuery<SampleStructs.Foo>.Exclude<SampleStructs.Bar, SampleStructs.Baz>>();
+
+            // Create 2 entities, one with exclusions
+            var entity1 = systems.World.NewEntity();
+            entity1.GetComponent<SampleStructs.Foo>();
+            var entity2 = systems.World.NewEntity();
+            // Include
+            entity2.GetComponent<SampleStructs.Foo>();
+            // Exclude #1
+            entity2.GetComponent<SampleStructs.Bar>();
+            // Exclude #2
+            entity2.GetComponent<SampleStructs.Baz>();
+
+            Assert.Equal(1, queryWithExclude.GetEntityCount());
+
+            // Remove exclusion #1
+            entity2.RemoveComponent<SampleStructs.Bar>();
+
+            Assert.Equal(1, queryWithExclude.GetEntityCount());
+
+            // Remove exclusion #2 - should place entity in query results.
+            entity2.RemoveComponent<SampleStructs.Baz>();
+
+            Assert.Equal(2, queryWithExclude.GetEntityCount());
+        }
+
         /// <summary>
         /// Validate entity query with change filtering.
         /// </summary>

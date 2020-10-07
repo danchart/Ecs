@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 
 namespace Ecs.Core
 {
@@ -9,7 +10,8 @@ namespace Ecs.Core
         internal World World;
 
         // Query 
-        internal int[] ComponentTypeIndices;
+        internal int[] IncludedComponentTypeIndices;
+        internal int[] ExcludedComponentTypeIndices;
 
         // Query Results
         internal protected EntityItem[] _entityResults = new EntityItem[EcsConstants.InitialEntityQueryEntityCapacity];
@@ -50,42 +52,6 @@ namespace Ecs.Core
             }
         }
 
-        private void ProcessPendingUpdates()
-        {
-            for (int i = 0; i < _pendingUpdateCount; i++)
-            {
-                ref readonly var pendingUpdate = ref _pendingEntityUpdates[i];
-                ref readonly var entityData = ref World.GetEntityData(pendingUpdate.Entity);
-
-                if (pendingUpdate.Operation == PendingEntityUpdate.OperationType.Add)
-                {
-                    Version lastVersion;
-                    FindComponents(in entityData, out lastVersion);
-
-                    AddEntityToQueryResults(in pendingUpdate.Entity, lastVersion);
-                }
-                else if (pendingUpdate.Operation == PendingEntityUpdate.OperationType.Change)
-                {
-                    Version lastVersion;
-                    FindComponents(in entityData, out lastVersion);
-
-                    UpdateEntityInQueryResults(in pendingUpdate.Entity, lastVersion);
-                }
-                else if (pendingUpdate.Operation == PendingEntityUpdate.OperationType.Remove)
-                {
-                    RemoveEntityFromQueryResults(pendingUpdate.Entity);
-                }
-#if DEBUG
-                else
-                {
-                    throw new InvalidOperationException($"Unknown operation type: {nameof(PendingEntityUpdate.OperationType)}={pendingUpdate.Operation}");
-                }
-#endif
-            }
-
-            _pendingUpdateCount = 0;
-        }
-
         public Entity GetEntity(int index)
         {
             return _entityResults[index].Entity;
@@ -96,131 +62,179 @@ namespace Ecs.Core
             return _entityCount;
         }
 
-        protected virtual bool IsMatch(in World.EntityData entityData, out Version lastVersion)
+        public bool IsEmpty()
         {
-            return FindComponents(in entityData, out lastVersion);
+            return _entityCount == 0;
         }
 
-        private bool FindComponents(in World.EntityData entityData, out Version lastVersion)
+        internal virtual void OnAddIncludeComponent(
+            in Entity entity,
+            in World.EntityData entityData,
+            int componentTypeIndex)
         {
-            lastVersion = default;
-
-            for (int i = 0; i < ComponentTypeIndices.Length; i++)
+            if (_entityIndexToQueryIndex.ContainsKey(entity.Id))
             {
-                if (!FindComponent(
-                    in entityData,
-                    ComponentTypeIndices[i],
-                    out lastVersion))
-                {
-                    return false;
-                }
+                return;
             }
 
-            return true;
-        }
+            Version componentVersion;
+            FindComponentInEntity(entityData, componentTypeIndex, out componentVersion);
 
-        private bool FindComponent(in World.EntityData entityData, int componentTypeIndex, out Version lastVersion)
-        {
-            lastVersion = default;
-
-            for (int j = 0; j < entityData.ComponentCount; j++)
-            {
-                if (entityData.Components[j].TypeIndex == componentTypeIndex)
-                {
-                    var version =
-                        this.World
-                        .ComponentPools[componentTypeIndex]
-                        .GetItemVersion(
-                            entityData.Components[j]
-                            .ItemIndex);
-
-                    lastVersion =
-                        version > lastVersion
-                        ? version
-                        : lastVersion;
-
-                    return true;
-                }
-            }
-
-            return false;
-        }
-
-        private bool AddPendingEntityUpdate(in PendingEntityUpdate pendingUpdate)
-        {
-            if (_lockCount == 0)
-            {
-                return false;
-            }
-
-            if (_pendingEntityUpdates.Length == _pendingUpdateCount)
-            {
-                Array.Resize(ref _pendingEntityUpdates, 2 * _pendingUpdateCount);
-            }
-
-            _pendingEntityUpdates[_pendingUpdateCount++] = pendingUpdate;
-
-            return true;
-        }
-
-        internal virtual void OnAddEntity(in Entity entity, in World.EntityData entityData)
-        {
-            if (AddPendingEntityUpdate(
+            if (QueueEntityUpdate(
                 new PendingEntityUpdate
                 {
                     Entity = entity,
+                    ComponentTypeIndex = componentTypeIndex,
+                    ComponentVersion = componentVersion,
                     Operation = PendingEntityUpdate.OperationType.Add,
                 }))
             {
                 return;
             }
-            
-            Version lastVersion = default;
 
-            if (IsMatch(in entityData, out lastVersion))
-            {
-                AddEntityToQueryResults(entity, lastVersion);
-            }
+            AddEntityToQueryResults(entity, componentVersion);
         }
 
-        internal virtual void OnChangeEntity(in Entity entity, in World.EntityData entityData)
+        internal virtual void OnAddExcludeComponent(
+            in Entity entity,
+            in World.EntityData entityData,
+            int componentTypeIndex)
         {
-            if (AddPendingEntityUpdate(
-                new PendingEntityUpdate
-                {
-                    Entity = entity,
-                    Operation = PendingEntityUpdate.OperationType.Change,
-                }))
+            if (!_entityIndexToQueryIndex.ContainsKey(entity.Id))
             {
                 return;
             }
 
-            Version lastVersion = default;
-
-            if (IsMatch(in entityData, out lastVersion))
+            for (int i = 0; i < ExcludedComponentTypeIndices.Length; i++)
             {
-                UpdateEntityInQueryResults(entity, lastVersion);
-            }
-        }
+                if (ExcludedComponentTypeIndices[i] == componentTypeIndex)
+                {
+                    continue;
+                }
 
-        internal virtual void OnRemoveEntity(in Entity entity, in World.EntityData entityData)
-        {
-            if (AddPendingEntityUpdate(
+                for (int j = 0; j < entityData.ComponentCount; j++)
+                {
+                    if (entityData.Components[j].TypeIndex == ExcludedComponentTypeIndices[i])
+                    {
+
+                       // At least one excluded component already exists.
+                        return;
+                    }
+                }
+            }
+
+            // Remove this entity from results. An excluded component was added.
+
+            if (QueueEntityUpdate(
                 new PendingEntityUpdate
                 {
                     Entity = entity,
+                    ComponentTypeIndex = componentTypeIndex,
                     Operation = PendingEntityUpdate.OperationType.Remove,
                 }))
             {
                 return;
             }
 
-            Version lastVersion = default;
+            RemoveEntityFromQueryResults(entity);
+        }
 
-            if (IsMatch(in entityData, out lastVersion))
+        internal virtual void OnChangeIncludeComponent(
+            in Entity entity,
+            in World.EntityData entityData,
+            int componentTypeIndex)
+        {
+#if DEBUG
+            if (!_entityIndexToQueryIndex.ContainsKey(entity.Id))
             {
-                RemoveEntityFromQueryResults(entity);
+                throw new InvalidOperationException($"Called {nameof(OnChangeIncludeComponent)} on component not found in the include list.");
             }
+#endif
+
+            Version componentVersion;
+            FindComponentInEntity(entityData, componentTypeIndex, out componentVersion);
+
+            if (QueueEntityUpdate(
+                new PendingEntityUpdate
+                {
+                    Entity = entity,
+                    ComponentTypeIndex = componentTypeIndex,
+                    ComponentVersion = componentVersion,
+                    Operation = PendingEntityUpdate.OperationType.Change,
+                }))
+            {
+                return;
+            }
+
+            DirtyEntityInQueryResults(entity, componentVersion);
+        }
+
+        internal virtual void OnRemoveIncludeComponent(
+            in Entity entity,
+            in World.EntityData entityData,
+            int componentTypeIndex)
+        {
+            if (!_entityIndexToQueryIndex.ContainsKey(entity.Id))
+            {
+                return;
+            }
+
+            if (QueueEntityUpdate(
+                new PendingEntityUpdate
+                {
+                    Entity = entity,
+                    ComponentTypeIndex = componentTypeIndex,
+                    Operation = PendingEntityUpdate.OperationType.Remove,
+                }))
+            {
+                return;
+            }
+
+            RemoveEntityFromQueryResults(entity);
+        }
+
+        internal virtual void OnRemoveExcludeComponent(
+            in Entity entity,
+            in World.EntityData entityData,
+            int componentTypeIndex)
+        {
+            Debug.Assert(!_entityIndexToQueryIndex.ContainsKey(entity.Id));
+
+            for (int i = 0; i < ExcludedComponentTypeIndices.Length; i++)
+            {
+                if (ExcludedComponentTypeIndices[i] == componentTypeIndex)
+                {
+                    continue;
+                }
+
+                for (int j = 0; j < entityData.ComponentCount; j++)
+                {
+                    if (entityData.Components[j].TypeIndex == ExcludedComponentTypeIndices[i])
+                    {
+                        // At least one excluded component remains.
+                        return;
+                    }
+                }
+            }
+
+            // Add this entity from results. No excluded components are attached to the entity.
+
+            Version componentVersion;
+            FindComponentInEntity(entityData, componentTypeIndex, out componentVersion);
+
+            if (QueueEntityUpdate(
+                new PendingEntityUpdate
+                {
+                    Entity = entity,
+                    ComponentTypeIndex = componentTypeIndex,
+                    ComponentVersion = componentVersion,
+                    Operation = PendingEntityUpdate.OperationType.Add,
+                }))
+            {
+                return;
+            }
+
+            AddEntityToQueryResults(entity, componentVersion);
         }
 
         private void AddEntityToQueryResults(in Entity entity, Version lastVersion)
@@ -238,12 +252,54 @@ namespace Ecs.Core
             };
         }
 
-        private void UpdateEntityInQueryResults(in Entity entity, Version lastVersion)
+        private bool FindComponentInEntity(in World.EntityData entityData, int componentTypeIndex, out Version version)
+        {
+            version = default;
+
+            for (int j = 0; j < entityData.ComponentCount; j++)
+            {
+                if (entityData.Components[j].TypeIndex == componentTypeIndex)
+                {
+                    version =
+                        this.World
+                        .ComponentPools[componentTypeIndex]
+                        .GetItemVersion(
+                            entityData.Components[j]
+                            .ItemIndex);
+
+                    return true;
+                }
+            }
+
+            return false;
+        }
+
+        private bool QueueEntityUpdate(in PendingEntityUpdate pendingUpdate)
+        {
+            if (_lockCount == 0)
+            {
+                return false;
+            }
+
+            if (_pendingEntityUpdates.Length == _pendingUpdateCount)
+            {
+                Array.Resize(ref _pendingEntityUpdates, 2 * _pendingUpdateCount);
+            }
+
+            _pendingEntityUpdates[_pendingUpdateCount++] = pendingUpdate;
+
+            return true;
+        }
+
+        private void DirtyEntityInQueryResults(in Entity entity, Version version)
         {
             var queryEntityIndex = _entityIndexToQueryIndex[entity.Id];
 
             // Update the component version.
-            _entityResults[queryEntityIndex].ComponentVersion = lastVersion;
+            _entityResults[queryEntityIndex].ComponentVersion =
+                _entityResults[queryEntityIndex].ComponentVersion > version
+                ? _entityResults[queryEntityIndex].ComponentVersion
+                : version;
         }
 
         private void RemoveEntityFromQueryResults(in Entity entity)
@@ -261,7 +317,37 @@ namespace Ecs.Core
             _entityCount--;
         }
 
-        public struct EntityItem
+        private void ProcessPendingUpdates()
+        {
+            for (int i = 0; i < _pendingUpdateCount; i++)
+            {
+                ref readonly var pendingUpdate = ref _pendingEntityUpdates[i];
+                ref readonly var entityData = ref World.GetEntityData(pendingUpdate.Entity);
+
+                if (pendingUpdate.Operation == PendingEntityUpdate.OperationType.Add)
+                {
+                    AddEntityToQueryResults(in pendingUpdate.Entity, pendingUpdate.ComponentVersion);
+                }
+                else if (pendingUpdate.Operation == PendingEntityUpdate.OperationType.Change)
+                {
+                    DirtyEntityInQueryResults(in pendingUpdate.Entity, pendingUpdate.ComponentVersion);
+                }
+                else if (pendingUpdate.Operation == PendingEntityUpdate.OperationType.Remove)
+                {
+                    RemoveEntityFromQueryResults(pendingUpdate.Entity);
+                }
+#if DEBUG
+                else
+                {
+                    throw new InvalidOperationException($"Unknown operation type: {nameof(PendingEntityUpdate.OperationType)}={pendingUpdate.Operation}");
+                }
+#endif
+            }
+
+            _pendingUpdateCount = 0;
+        }
+
+        internal protected struct EntityItem
         {
             public Entity Entity;
             public Version ComponentVersion;
@@ -270,6 +356,8 @@ namespace Ecs.Core
         internal protected struct PendingEntityUpdate
         {
             public Entity Entity;
+            public int ComponentTypeIndex;
+            public Version ComponentVersion;
             public OperationType Operation;
 
             public enum OperationType
@@ -281,11 +369,11 @@ namespace Ecs.Core
         }
     }
 
-    public class EntityQuery<T> : EntityQuery where T : struct
+    public class EntityQuery<IncType> : EntityQuery where IncType : struct
     {
         protected EntityQuery(World world) : base(world)
         {
-            this.ComponentTypeIndices = new[] { ComponentType<T>.Index };
+            this.IncludedComponentTypeIndices = new[] { ComponentType<IncType>.Index };
         }
 
         public Enumerator GetEnumerator()
@@ -318,14 +406,38 @@ namespace Ecs.Core
                 return ++_current < _query._entityCount;
             }
         }
+
+        public class Exclude<ExcType> : EntityQuery<IncType> where ExcType : struct
+        {
+            protected Exclude(World world) : base(world)
+            {
+                ExcludedComponentTypeIndices = new[]
+                {
+                    ComponentType<ExcType>.Index,
+                };
+            }
+        }
+
+        public class Exclude<ExcType1, ExcType2> : EntityQuery<IncType>
+            where ExcType1 : struct
+            where ExcType2 : struct
+        {
+            protected Exclude(World world) : base(world)
+            {
+                ExcludedComponentTypeIndices = new[]
+                {
+                    ComponentType<ExcType1>.Index,
+                    ComponentType<ExcType2>.Index,
+                };
+            }
+        }
     }
 
-    public class EntityQueryWithChangeFilter<T> : EntityQuery where T : struct
+    public class EntityQueryWithChangeFilter<IncType> : EntityQuery where IncType : struct
     {
-
         protected EntityQueryWithChangeFilter(World world) : base(world)
         {
-            this.ComponentTypeIndices = new[] { ComponentType<T>.Index };
+            this.IncludedComponentTypeIndices = new[] { ComponentType<IncType>.Index };
         }
 
         public ChangeFilteredEnumerator GetEnumerator()
@@ -373,6 +485,31 @@ namespace Ecs.Core
                 }
 
                 return false;
+            }
+        }
+
+        public class Exclude<ExcType> : EntityQueryWithChangeFilter<IncType> where ExcType : struct
+        {
+            protected Exclude(World world) : base(world)
+            {
+                ExcludedComponentTypeIndices = new[]
+                {
+                    ComponentType<ExcType>.Index,
+                };
+            }
+        }
+
+        public class Exclude<ExcType1, ExcType2> : EntityQueryWithChangeFilter<IncType> 
+            where ExcType1: struct 
+            where ExcType2 : struct
+        {
+            protected Exclude(World world) : base(world)
+            {
+                ExcludedComponentTypeIndices = new[]
+                {
+                    ComponentType<ExcType1>.Index,
+                    ComponentType<ExcType2>.Index,
+                };
             }
         }
     }

@@ -35,7 +35,7 @@ namespace Ecs.Core
 
         public static ref T GetComponentAndVersion<T>(in this Entity entity, out Version version) where T : struct
         {
-            ref var item = ref GetComponentItem<T>(entity, dirtyEntity: true);
+            ref var item = ref GetComponentItem<T>(entity, isReadonly: false);
 
             version = item.Version;
 
@@ -46,7 +46,7 @@ namespace Ecs.Core
             in this Entity entity, 
             out Version version) where T : struct
         {
-            ref var item = ref GetComponentItem<T>(entity, dirtyEntity: false);
+            ref var item = ref GetComponentItem<T>(entity, isReadonly: true);
 
             version = item.Version;
 
@@ -56,50 +56,17 @@ namespace Ecs.Core
 
         public static ref T GetComponent<T>(in this Entity entity) where T : struct
         {
-            return ref GetComponentItem<T>(entity, dirtyEntity: true).Item;
+            return ref GetComponentItem<T>(entity, isReadonly: false).Item;
         }
 
         public static ref readonly T GetReadOnlyComponent<T>(in this Entity entity) where T : struct
         {
-            return ref GetComponentItem<T>(entity, dirtyEntity: false).Item;
+            return ref GetComponentItem<T>(entity, isReadonly: true).Item;
         }
 
         public static void ReplaceComponent<T>(in this Entity entity, in T value) where T : struct
         {
             GetComponent<T>(entity) = value;
-        }
-
-        internal static void SetDirty<T>(in this Entity entity) where T : struct
-        {
-            ref var entityData = ref entity.World.GetEntityData(entity);
-
-            entity.ValidateEntity(entityData);
-
-            var componentTypeIndex = ComponentType<T>.Index;
-
-            for (int i = 0; i < entityData.ComponentCount; i++)
-            {
-                if (entityData.Components[i].TypeIndex == componentTypeIndex)
-                {
-                    // Found component
-
-                    ((ComponentPool<T>)entity
-                        .World
-                        .ComponentPools[componentTypeIndex])
-                    .GetItem(
-                        entityData
-                        .Components[i]
-                        .ItemIndex)
-                    .Version = 
-                        entity
-                        .World
-                        .GlobalSystemVersion;
-
-                    break;
-                }
-            }
-
-            entity.World.OnChangeEntity(componentTypeIndex, entity, entityData);
         }
 
         public static bool HasComponent<T>(in this Entity entity) where T : struct
@@ -135,7 +102,7 @@ namespace Ecs.Core
             {
                 if (entityData.Components[i].TypeIndex == componentTypeIndex)
                 {
-                    entity.World.OnRemoveEntity(componentTypeIndex, entity, entityData);
+                    entity.World.OnRemoveComponent(componentTypeIndex, entity, entityData);
 
                     entity.World.ComponentPools[componentTypeIndex].Free(entityData.Components[i].ItemIndex);
 
@@ -199,7 +166,7 @@ namespace Ecs.Core
             {
                 var componentTypeIndex = entityData.Components[i].TypeIndex;
 
-                entity.World.OnRemoveEntity(componentTypeIndex, entity, entityData);
+                entity.World.OnRemoveComponent(componentTypeIndex, entity, entityData);
                 entity.World.ComponentPools[componentTypeIndex].Free(entityData.Components[i].ItemIndex);
                 entityData.ComponentCount--;
             }
@@ -218,7 +185,7 @@ namespace Ecs.Core
 
         private static ref ComponentPool<T>.ComponentItem<T> GetComponentItem<T>(
             Entity entity,
-            bool dirtyEntity) where T : struct
+            bool isReadonly) where T : struct
         {
             ref var entityData = ref entity.World.GetEntityData(entity);
 
@@ -232,7 +199,7 @@ namespace Ecs.Core
                 {
                     // Found component
 
-                    if (dirtyEntity)
+                    if (!isReadonly)
                     {
                         ((ComponentPool<T>)entity
                             .World
@@ -243,7 +210,7 @@ namespace Ecs.Core
                         .Version = 
                             entity.World.GlobalSystemVersion;
 
-                        entity.World.OnChangeEntity(componentTypeIndex, entity, entityData);
+                        entity.World.OnChangeComponent(componentTypeIndex, entity, entityData);
                     }
 
                     return ref 
@@ -272,7 +239,7 @@ namespace Ecs.Core
             };
             entityData.ComponentCount++;
 
-            entity.World.OnAddEntity(componentTypeIndex, entity, entityData);
+            entity.World.OnAddComponent(componentTypeIndex, entity, entityData);
 
             ref var componentItem = ref pool.GetItem(index);
             componentItem.Version = entity.World.GlobalSystemVersion;
