@@ -59,11 +59,17 @@ namespace Ecs.Core
 
                 if (pendingUpdate.Operation == PendingEntityUpdate.OperationType.Add)
                 {
-                    AddEntityToQueryResults(in pendingUpdate.Entity);
+                    Version lastVersion;
+                    FindComponents(in entityData, out lastVersion);
+
+                    AddEntityToQueryResults(in pendingUpdate.Entity, lastVersion);
                 }
                 else if (pendingUpdate.Operation == PendingEntityUpdate.OperationType.Change)
                 {
-                    UpdateEntityInQueryResults(in pendingUpdate.Entity);
+                    Version lastVersion;
+                    FindComponents(in entityData, out lastVersion);
+
+                    UpdateEntityInQueryResults(in pendingUpdate.Entity, lastVersion);
                 }
                 else if (pendingUpdate.Operation == PendingEntityUpdate.OperationType.Remove)
                 {
@@ -76,6 +82,8 @@ namespace Ecs.Core
                 }
 #endif
             }
+
+            _pendingUpdateCount = 0;
         }
 
         public Entity GetEntity(int index)
@@ -90,36 +98,52 @@ namespace Ecs.Core
 
         protected virtual bool IsMatch(in World.EntityData entityData, out Version lastVersion)
         {
+            return FindComponents(in entityData, out lastVersion);
+        }
+
+        private bool FindComponents(in World.EntityData entityData, out Version lastVersion)
+        {
             lastVersion = default;
 
             for (int i = 0; i < ComponentTypeIndices.Length; i++)
             {
-                bool hasComponent = false;
-
-                for (int j = 0; j < entityData.ComponentCount; j++)
-                {
-                    if (entityData.Components[j].TypeIndex == ComponentTypeIndices[i])
-                    {
-                        hasComponent = true;
-
-                        var version = this.World.ComponentPools[ComponentTypeIndices[i]].GetItemVersion(entityData.Components[j].ItemIndex);
-
-                        lastVersion =
-                            version > lastVersion
-                            ? version
-                            : lastVersion;
-
-                        break;
-                    }
-                }
-
-                if (!hasComponent)
+                if (!FindComponent(
+                    in entityData,
+                    ComponentTypeIndices[i],
+                    out lastVersion))
                 {
                     return false;
                 }
             }
 
             return true;
+        }
+
+        private bool FindComponent(in World.EntityData entityData, int componentTypeIndex, out Version lastVersion)
+        {
+            lastVersion = default;
+
+            for (int j = 0; j < entityData.ComponentCount; j++)
+            {
+                if (entityData.Components[j].TypeIndex == componentTypeIndex)
+                {
+                    var version =
+                        this.World
+                        .ComponentPools[componentTypeIndex]
+                        .GetItemVersion(
+                            entityData.Components[j]
+                            .ItemIndex);
+
+                    lastVersion =
+                        version > lastVersion
+                        ? version
+                        : lastVersion;
+
+                    return true;
+                }
+            }
+
+            return false;
         }
 
         private bool AddPendingEntityUpdate(in PendingEntityUpdate pendingUpdate)
