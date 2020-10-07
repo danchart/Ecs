@@ -46,6 +46,11 @@ namespace Ecs.Core
             return this;
         }
 
+        public Systems SingleFrame<T>() where T : struct
+        {
+            return Add(new RemoveSingleFrames<T>());
+        }
+
         /// <summary>
         /// Run update on systems.
         /// </summary>
@@ -99,6 +104,7 @@ namespace Ecs.Core
                     field.SetValue(system, world.GetEntityQuery(field.FieldType));
 
                     continue;
+
                 }
             }
         }
@@ -106,6 +112,18 @@ namespace Ecs.Core
         public struct SystemData
         {
             public SystemBase System;
+        }
+        internal sealed class RemoveSingleFrames<T> : SystemBase where T : struct
+        {
+            readonly EntityQuery<T> Query = null;
+
+            public override void OnUpdate(float deltaTime)
+            {
+                foreach (var entity in Query)
+                {
+                    entity.RemoveComponent<T>();
+                }
+            }
         }
     }
 }

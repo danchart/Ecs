@@ -75,6 +75,12 @@ namespace Ecs.Core.Tests
             Assert.Equal(1, onCreateCounter);
         }
 
+        [Fact]
+        public void SingleFrame()
+        {
+            ADD TEST!!
+        }
+
         private class SystemFoo : SystemBase
         {
             public EntityQuery<SampleStructs.Foo> QueryFoo = null;

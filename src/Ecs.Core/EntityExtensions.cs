@@ -5,14 +5,6 @@ namespace Ecs.Core
 {
     public static class EntityExtensions
     {
-
-        public static ref T GetComponentAndVersion<T>(in this Entity entity, out Version version) where T : struct
-        {
-            version = Version.Zero;
-
-            return ref GetComponentWorker<T>(entity, dirtyEntity: true);
-        }
-
         public static Version GetComponentVersion<T>(in this Entity entity) where T : struct
         {
             ref readonly var entityData = ref entity.World.GetEntityData(entity);
@@ -26,14 +18,58 @@ namespace Ecs.Core
                 if (entityData.Components[i].TypeIndex == componentTypeIndex)
                 {
                     // Found component
-                    return ((ComponentPool<T>)entity.World.ComponentPools[componentTypeIndex]).GetItem(entityData.Components[i].ItemIndex).Version;
+                    return 
+                        ((ComponentPool<T>) entity
+                            .World
+                            .ComponentPools[componentTypeIndex])
+                        .GetItem(
+                            entityData
+                            .Components[i]
+                            .ItemIndex)
+                        .Version;
                 }
             }
 
             return default;
         }
 
-        internal static void SetDirty<T>(in this Entity entity) where T : struct 
+        public static ref T GetComponentAndVersion<T>(in this Entity entity, out Version version) where T : struct
+        {
+            ref var item = ref GetComponentItem<T>(entity, dirtyEntity: true);
+
+            version = item.Version;
+
+            return ref item.Item;
+        }
+
+        public static ref readonly T GetReadonlyComponentAndVersion<T>(
+            in this Entity entity, 
+            out Version version) where T : struct
+        {
+            ref var item = ref GetComponentItem<T>(entity, dirtyEntity: false);
+
+            version = item.Version;
+
+            return ref item.Item;
+        }
+
+
+        public static ref T GetComponent<T>(in this Entity entity) where T : struct
+        {
+            return ref GetComponentItem<T>(entity, dirtyEntity: true).Item;
+        }
+
+        public static ref readonly T GetReadOnlyComponent<T>(in this Entity entity) where T : struct
+        {
+            return ref GetComponentItem<T>(entity, dirtyEntity: false).Item;
+        }
+
+        public static void ReplaceComponent<T>(in this Entity entity, in T value) where T : struct
+        {
+            GetComponent<T>(entity) = value;
+        }
+
+        internal static void SetDirty<T>(in this Entity entity) where T : struct
         {
             ref var entityData = ref entity.World.GetEntityData(entity);
 
@@ -47,84 +83,23 @@ namespace Ecs.Core
                 {
                     // Found component
 
-                    ((ComponentPool<T>)entity.World.ComponentPools[componentTypeIndex]).GetItem(entityData.Components[i].ItemIndex).Version = entity.World.GlobalSystemVersion;
+                    ((ComponentPool<T>)entity
+                        .World
+                        .ComponentPools[componentTypeIndex])
+                    .GetItem(
+                        entityData
+                        .Components[i]
+                        .ItemIndex)
+                    .Version = 
+                        entity
+                        .World
+                        .GlobalSystemVersion;
 
                     break;
                 }
             }
 
             entity.World.OnChangeEntity(componentTypeIndex, entity, entityData);
-        }
-
-        public static ref T GetComponent<T>(in this Entity entity) where T : struct
-        {
-            return ref GetComponentWorker<T>(entity, dirtyEntity: true);
-        }
-
-        //
-        MODIFY THIS TO RETURN COMPONENT TYPE INDEX AND ITEM INDEX, REUSE IN GET VERSION VERSION
-            //
-
-
-        private static ref T GetComponentWorker<T>(
-            Entity entity, 
-            bool dirtyEntity) where T : struct
-        {
-            ref var entityData = ref entity.World.GetEntityData(entity);
-
-            entity.ValidateEntity(entityData);
-
-            var componentTypeIndex = ComponentType<T>.Index;
-
-            for (int i = 0; i < entityData.ComponentCount; i++)
-            {
-                if (entityData.Components[i].TypeIndex == componentTypeIndex)
-                {
-                    // Found component
-
-                    if (dirtyEntity)
-                    {
-                        ((ComponentPool<T>)entity.World.ComponentPools[componentTypeIndex]).GetItem(entityData.Components[i].ItemIndex).Version = entity.World.GlobalSystemVersion;
-
-                        entity.World.OnChangeEntity(componentTypeIndex, entity, entityData);
-                    }
-
-                    return ref ((ComponentPool<T>)entity.World.ComponentPools[componentTypeIndex]).GetItem(entityData.Components[i].ItemIndex).Item;
-                }
-            }
-
-            // Create component
-
-            if (entityData.Components.Length == entityData.ComponentCount)
-            {
-                Array.Resize(ref entityData.Components, entityData.ComponentCount * 2);
-            }
-
-            var pool = entity.World.GetPool<T>();
-            var index = pool.New();
-            entityData.Components[entityData.ComponentCount] = new World.EntityData.ComponentData
-            {
-                TypeIndex = componentTypeIndex,
-                ItemIndex = index,
-            };
-            entityData.ComponentCount++;
-
-            entity.World.OnAddEntity(componentTypeIndex, entity, entityData);
-
-            ref var componentItem = ref pool.GetItem(index);
-            componentItem.Version = entity.World.GlobalSystemVersion;
-
-            return ref componentItem.Item;
-        }
-
-        public static ref readonly T GetReadOnlyComponent<T>(in this Entity entity) where T : struct
-        {
-            return ref GetComponentWorker<T>(entity, dirtyEntity: false);
-        }
-
-        public static void ReplaceComponent<T>(in this Entity entity, in T value) where T : struct
-        {
-            GetComponent<T>(entity) = value;
         }
 
         public static bool HasComponent<T>(in this Entity entity) where T : struct
@@ -201,7 +176,9 @@ namespace Ecs.Core
                 {
                     return new ComponentRef<T>(
                         entity, 
-                        (ComponentPool<T>)entity.World.ComponentPools[poolIndex], 
+                        (ComponentPool<T>)entity
+                            .World
+                            .ComponentPools[poolIndex], 
                         entityData.Components[i].ItemIndex);
                     //return 
                     //    ((ComponentPool<T>)entity.World.ComponentPools[poolIndex])
@@ -239,8 +216,72 @@ namespace Ecs.Core
             return entity.World.IsFreed(entity);
         }
 
+        private static ref ComponentPool<T>.ComponentItem<T> GetComponentItem<T>(
+            Entity entity,
+            bool dirtyEntity) where T : struct
+        {
+            ref var entityData = ref entity.World.GetEntityData(entity);
+
+            entity.ValidateEntity(entityData);
+
+            var componentTypeIndex = ComponentType<T>.Index;
+
+            for (int i = 0; i < entityData.ComponentCount; i++)
+            {
+                if (entityData.Components[i].TypeIndex == componentTypeIndex)
+                {
+                    // Found component
+
+                    if (dirtyEntity)
+                    {
+                        ((ComponentPool<T>)entity
+                            .World
+                            .ComponentPools[componentTypeIndex])
+                        .GetItem(
+                            entityData.Components[i]
+                            .ItemIndex)
+                        .Version = 
+                            entity.World.GlobalSystemVersion;
+
+                        entity.World.OnChangeEntity(componentTypeIndex, entity, entityData);
+                    }
+
+                    return ref 
+                        ((ComponentPool<T>)entity
+                            .World
+                            .ComponentPools[componentTypeIndex])
+                        .GetItem(
+                            entityData.Components[i]
+                            .ItemIndex);
+                }
+            }
+
+            // Create component
+
+            if (entityData.Components.Length == entityData.ComponentCount)
+            {
+                Array.Resize(ref entityData.Components, entityData.ComponentCount * 2);
+            }
+
+            var pool = entity.World.GetPool<T>();
+            var index = pool.New();
+            entityData.Components[entityData.ComponentCount] = new World.EntityData.ComponentData
+            {
+                TypeIndex = componentTypeIndex,
+                ItemIndex = index,
+            };
+            entityData.ComponentCount++;
+
+            entity.World.OnAddEntity(componentTypeIndex, entity, entityData);
+
+            ref var componentItem = ref pool.GetItem(index);
+            componentItem.Version = entity.World.GlobalSystemVersion;
+
+            return ref componentItem;
+        }
+
         [Conditional("DEBUG")]
-        internal static void ValidateEntity(in this Entity entity, in World.EntityData data)
+        private static void ValidateEntity(in this Entity entity, in World.EntityData data)
         {
             if (data.Generation != entity.Generation)
             {

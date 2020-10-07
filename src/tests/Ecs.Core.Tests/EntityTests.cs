@@ -1,5 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using Xunit;
 
 namespace Ecs.Core.Tests
@@ -169,6 +168,30 @@ namespace Ecs.Core.Tests
             Assert.True(system.WasComponentModified);
         }
 
+        [Fact]
+        public void GetComponentAndVersion()
+        {
+            var systems = new Systems(Helpers.NewWorld());
+            var system = new GetComponentAndVersionSystem<SampleStructs.Foo>();
+            systems
+                .Add(system)
+                .Create();
+
+            var entity = systems.World.NewEntity();
+            entity.GetComponent<SampleStructs.Foo>();
+
+            system.UseReadOnly = false;
+
+            systems.Run(1);
+
+            Assert.True(system.WasComponentModified);
+
+            system.UseReadOnly = true;
+            systems.Run(1);
+
+            Assert.False(system.WasComponentModified);
+        }
+
         internal class GetVersionSystem<T> : SystemBase where T : struct
         {
             public EntityQuery<T> Query = null;
@@ -190,8 +213,37 @@ namespace Ecs.Core.Tests
                     }
 
                     var version = entity.GetComponentVersion<SampleStructs.Foo>();
+                    Version version2;
+                    entity.GetComponentAndVersion<SampleStructs.Foo>(out version2);
 
-                    WasComponentModified = DidChange(version);
+                    WasComponentModified = IsChanged(version);
+                }
+            }
+        }
+
+        internal class GetComponentAndVersionSystem<T> : SystemBase where T : struct
+        {
+            public EntityQuery<T> Query = null;
+
+            public bool WasComponentModified { get; private set; } = false;
+            public bool UseReadOnly = false;
+
+            public Version Version;
+
+            public override void OnUpdate(float deltaTime)
+            {
+                foreach (var entity in Query)
+                {
+                    if (UseReadOnly)
+                    {
+                        ref readonly var foo = ref entity.GetReadonlyComponentAndVersion<SampleStructs.Foo>(out Version);
+                    }
+                    else
+                    {
+                        ref var foo = ref entity.GetComponentAndVersion<SampleStructs.Foo>(out Version);
+                    }
+
+                    WasComponentModified = IsChanged(Version);
                 }
             }
         }

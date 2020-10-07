@@ -19,7 +19,7 @@
         {
         }
 
-        public bool DidChange(Version version)
+        public bool IsChanged(Version version)
         {
             return 
                 version > this.LastSystemVersion ||
