@@ -59,9 +59,9 @@ namespace Ecs.Core.Tests
 
             var systems = new Systems(Helpers.NewWorld());
             systems.Add(
-                new SystemWithCallbacks
+                new SystemWithCallbacks<SampleStructs.Foo>
                 {
-                    OnCreateAction = () =>
+                    OnCreateAction = (system) =>
                     {
                         onCreateCounter++;
                     }
@@ -78,7 +78,54 @@ namespace Ecs.Core.Tests
         [Fact]
         public void SingleFrame()
         {
-            ADD TEST!!
+            bool addSingleFrameComponent = true;
+            bool hadSingleFrameComponent = false;
+
+            var systems = new Systems(Helpers.NewWorld());
+            systems
+                .Add(
+                    new SystemWithCallbacks<Entity, SampleStructs.Foo> 
+                    {
+                        OnCreateAction = (system) =>
+                        {
+                            // Create entity with 1 component
+                            var entity = systems.World.NewEntity();
+                            entity.GetComponent<SampleStructs.Foo>();
+
+                            system.Data["entity"] = entity;
+                        },
+                        OnUpdateAction = (system, dt) =>
+                        {
+                            if (addSingleFrameComponent)
+                            {
+                                system.Data["entity"].GetComponent<SampleStructs.Bar>();
+                            }
+                        }
+                    })
+                .Add(
+                    new SystemWithCallbacks<Entity, SampleStructs.Bar>
+                    {
+                        OnUpdateAction = (system, dt) =>
+                        {
+                            hadSingleFrameComponent = false;
+
+                            foreach (var entity in system.Query)
+                            {
+                                hadSingleFrameComponent = true;
+                            }
+                        }
+                    })
+                .SingleFrame<SampleStructs.Bar>()
+                .Create();
+
+            systems.Run(1);
+
+            Assert.True(hadSingleFrameComponent);
+
+            systems.Run(1);
+
+            Assert.False(hadSingleFrameComponent);
+
         }
 
         private class SystemFoo : SystemBase

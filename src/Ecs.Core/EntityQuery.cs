@@ -59,15 +59,15 @@ namespace Ecs.Core
 
                 if (pendingUpdate.Operation == PendingEntityUpdate.OperationType.Add)
                 {
-                    OnAddEntity(in pendingUpdate.Entity, entityData);
+                    AddEntityToQueryResults(in pendingUpdate.Entity);
                 }
                 else if (pendingUpdate.Operation == PendingEntityUpdate.OperationType.Change)
                 {
-                    OnChangeEntity(in pendingUpdate.Entity, entityData);
+                    UpdateEntityInQueryResults(in pendingUpdate.Entity);
                 }
                 else if (pendingUpdate.Operation == PendingEntityUpdate.OperationType.Remove)
                 {
-                    OnRemoveEntity(in pendingUpdate.Entity, entityData);
+                    RemoveEntityFromQueryResults(pendingUpdate.Entity);
                 }
 #if DEBUG
                 else
@@ -155,17 +155,7 @@ namespace Ecs.Core
 
             if (IsMatch(in entityData, out lastVersion))
             {
-                if (_entityResults.Length == _entityCount)
-                {
-                    Array.Resize(ref _entityResults, 2 * _entityCount);
-                }
-
-                _entityIndexToQueryIndex[entity.Id] = _entityCount;
-                _entityResults[_entityCount++] = new EntityItem
-                {
-                    Entity = entity,
-                    ComponentVersion = lastVersion,
-                };
+                AddEntityToQueryResults(entity, lastVersion);
             }
         }
 
@@ -185,10 +175,7 @@ namespace Ecs.Core
 
             if (IsMatch(in entityData, out lastVersion))
             {
-                var queryEntityIndex = _entityIndexToQueryIndex[entity.Id];
-
-                // Update the component version.
-                _entityResults[queryEntityIndex].ComponentVersion = lastVersion;
+                UpdateEntityInQueryResults(entity, lastVersion);
             }
         }
 
@@ -208,18 +195,46 @@ namespace Ecs.Core
 
             if (IsMatch(in entityData, out lastVersion))
             {
-                var queryEntityIndex = _entityIndexToQueryIndex[entity.Id];
-
-                // Move the last item to removed position.
-                if (queryEntityIndex < _entityCount - 1)
-                {
-                    _entityResults[queryEntityIndex] = _entityResults[_entityCount - 1];
-                }
-
-                _entityIndexToQueryIndex.Remove(entity.Id);
-
-                _entityCount--;
+                RemoveEntityFromQueryResults(entity);
             }
+        }
+
+        private void AddEntityToQueryResults(in Entity entity, Version lastVersion)
+        {
+            if (_entityResults.Length == _entityCount)
+            {
+                Array.Resize(ref _entityResults, 2 * _entityCount);
+            }
+
+            _entityIndexToQueryIndex[entity.Id] = _entityCount;
+            _entityResults[_entityCount++] = new EntityItem
+            {
+                Entity = entity,
+                ComponentVersion = lastVersion,
+            };
+        }
+
+        private void UpdateEntityInQueryResults(in Entity entity, Version lastVersion)
+        {
+            var queryEntityIndex = _entityIndexToQueryIndex[entity.Id];
+
+            // Update the component version.
+            _entityResults[queryEntityIndex].ComponentVersion = lastVersion;
+        }
+
+        private void RemoveEntityFromQueryResults(in Entity entity)
+        {
+            var queryEntityIndex = _entityIndexToQueryIndex[entity.Id];
+
+            // Move the last item to removed position.
+            if (queryEntityIndex < _entityCount - 1)
+            {
+                _entityResults[queryEntityIndex] = _entityResults[_entityCount - 1];
+            }
+
+            _entityIndexToQueryIndex.Remove(entity.Id);
+
+            _entityCount--;
         }
 
         public struct EntityItem
