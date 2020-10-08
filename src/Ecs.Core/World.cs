@@ -36,7 +36,6 @@ namespace Ecs.Core
                 _freeEntityIds = state._freeEntityIds,
                 _entityCount = state._entityCount,
                 _freeEntityCount = state._freeEntityCount,
-
             };
 
             copiedState.ComponentPools = new IComponentPool[state.ComponentPools.Length];
