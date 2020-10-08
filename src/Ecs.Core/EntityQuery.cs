@@ -262,7 +262,7 @@ namespace Ecs.Core
                 {
                     version =
                         this.World
-                        .ComponentPools[componentTypeIndex]
+                        .State.ComponentPools[componentTypeIndex]
                         .GetItemVersion(
                             entityData.Components[j]
                             .ItemIndex);
@@ -444,7 +444,7 @@ namespace Ecs.Core
         {
             return new ChangeFilteredEnumerator(
                 this,
-                World.LastSystemVersion);
+                World.State.LastSystemVersion);
         }
 
         public struct ChangeFilteredEnumerator : IDisposable

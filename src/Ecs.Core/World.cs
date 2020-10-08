@@ -10,38 +10,76 @@ namespace Ecs.Core
     /// </summary>
     public class World
     {
+        public struct WorldState
+        {
+            internal Version GlobalSystemVersion;
+            internal Version LastSystemVersion;
+
+            internal IComponentPool[] ComponentPools;
+
+            internal World.EntityData[] _entities;
+            internal int[] _freeEntityIds;
+
+            internal int _entityCount;
+            internal int _freeEntityCount;
+
+            internal AppendOnlyList<EntityQuery> _queries;
+        }
+
+        public static WorldState CopyState(in WorldState state)
+        {
+            var copiedState = new WorldState
+            {
+                GlobalSystemVersion = state.GlobalSystemVersion,
+                LastSystemVersion = state.LastSystemVersion,
+
+                _freeEntityIds = state._freeEntityIds,
+                _entityCount = state._entityCount,
+                _freeEntityCount = state._freeEntityCount,
+
+            };
+
+            copiedState.ComponentPools = new IComponentPool[state.ComponentPools.Length];
+            Array.Copy(state.ComponentPools, copiedState.ComponentPools, state.ComponentPools.Length);
+ 
+            copiedState._entities = new EntityData[state._entities.Length];
+            Array.Copy(state._entities, copiedState._entities, state._entityCount);
+
+            copiedState._freeEntityIds = new int[state._freeEntityIds.Length];
+            Array.Copy(state._freeEntityIds, copiedState._freeEntityIds, state._freeEntityCount);
+
+            copiedState._queries = new AppendOnlyList<EntityQuery>(state._queries.Count);
+            for (int i = 0; i < state._queries.Count; i++)
+            {
+                copiedState._queries.Items[i] = state._queries.Items[i];
+            }
+
+            return copiedState;
+        }
+
         internal readonly EcsConfig Config;
 
-        internal Version GlobalSystemVersion;
-        internal Version LastSystemVersion;
-
-        internal IComponentPool[] ComponentPools;
-
-        private EntityData[] _entities;
-        private int[] _freeEntityIds;
-
-        private int _entityCount = 0;
-        private int _freeEntityCount = 0;
+        public WorldState State;
 
         private readonly Dictionary<int, AppendOnlyList<EntityQuery>> _includedComponentIdToEntityQueries;
         private readonly Dictionary<int, AppendOnlyList<EntityQuery>> _excludedComponentIdToEntityQueries;
 
-        private readonly AppendOnlyList<EntityQuery> _queries;
+
 
         public World(EcsConfig config)
         {
-            Config = config; 
+            Config = config;
 
-            ComponentPools = new IComponentPool[Config.InitialComponentPoolCapacity];
-            _entities = new EntityData[Config.InitialEntityPoolCapacity];
-            _freeEntityIds = new int[Config.InitialEntityPoolCapacity];
+            State.ComponentPools = new IComponentPool[Config.InitialComponentPoolCapacity];
+            State._entities = new EntityData[Config.InitialEntityPoolCapacity];
+            State._freeEntityIds = new int[Config.InitialEntityPoolCapacity];
 
             _includedComponentIdToEntityQueries = new Dictionary<int, AppendOnlyList<EntityQuery>>(Config.InitialComponentToEntityQueryMapCapacity);
             _excludedComponentIdToEntityQueries = new Dictionary<int, AppendOnlyList<EntityQuery>>(Config.InitialComponentToEntityQueryMapCapacity);
-            _queries = new AppendOnlyList<EntityQuery>(Config.InitialEntityQueryCapacity);
+            State._queries = new AppendOnlyList<EntityQuery>(Config.InitialEntityQueryCapacity);
 
-            GlobalSystemVersion = new Version();
-            LastSystemVersion = GlobalSystemVersion;
+            State.GlobalSystemVersion = new Version();
+            State.LastSystemVersion = State.GlobalSystemVersion;
         }
 
         public Entity NewEntity()
@@ -51,11 +89,11 @@ namespace Ecs.Core
                 World = this
             };
 
-            if (_freeEntityCount > 0)
+            if (State._freeEntityCount > 0)
             {
-                entity.Id = _freeEntityIds[--_freeEntityCount];
+                entity.Id = State._freeEntityIds[--State._freeEntityCount];
 
-                ref var entityData = ref _entities[entity.Id];
+                ref var entityData = ref State._entities[entity.Id];
                 entity.Generation = entityData.Generation;
                 entityData.ComponentCount = 0;
             }
@@ -63,7 +101,7 @@ namespace Ecs.Core
             {
                 entity.Id = GetNextEntityId();
 
-                ref var entityData = ref _entities[entity.Id];
+                ref var entityData = ref State._entities[entity.Id];
 
                 entityData.ComponentCount = 0;
                 entityData.Components = new EntityData.ComponentData[Config.InitialEntityComponentCapacity];
@@ -78,17 +116,17 @@ namespace Ecs.Core
         {
             entityData.ComponentCount = 0;
             entityData.Generation++;
-            _freeEntityIds[_freeEntityCount++] = id;
+            State._freeEntityIds[State._freeEntityCount++] = id;
         }
 
         public ref EntityData GetEntityData(in Entity entity)
         {
-            return ref _entities[entity.Id];
+            return ref State._entities[entity.Id];
         }
 
         public bool IsFreed(in Entity entity)
         {
-            ref var entityData = ref _entities[entity.Id];
+            ref var entityData = ref State._entities[entity.Id];
 
             return
                 entityData.Generation != entity.Generation ||
@@ -105,12 +143,12 @@ namespace Ecs.Core
         /// </summary>
         public EntityQuery GetEntityQuery(Type entityQueryType)
         {
-            for (int i = 0; i < _queries.Count; i++)
+            for (int i = 0; i < State._queries.Count; i++)
             {
-                if (_queries.Items[i].GetType() == entityQueryType)
+                if (State._queries.Items[i].GetType() == entityQueryType)
                 {
                     // Matching query exists.
-                    return _queries.Items[i];
+                    return State._queries.Items[i];
                 }
             }
 
@@ -122,7 +160,7 @@ namespace Ecs.Core
                 new[] { this }, 
                 CultureInfo.InvariantCulture);
 
-            _queries.Add(entityQuery);
+            State._queries.Add(entityQuery);
 
             // Add to included component->query list
             for (int i = 0; i < entityQuery.IncludedComponentTypeIndices.Length; i++)
@@ -226,24 +264,24 @@ namespace Ecs.Core
         {
             var poolIndex = ComponentType<T>.Index;
 
-            if (ComponentPools.Length < poolIndex)
+            if (State.ComponentPools.Length < poolIndex)
             {
-                var len = ComponentPools.Length * 2;
+                var len = State.ComponentPools.Length * 2;
 
                 while (len <= poolIndex)
                 {
                     len *= 2;
                 }
 
-                Array.Resize(ref ComponentPools, len);
+                Array.Resize(ref State.ComponentPools, len);
             }
 
-            var pool = (ComponentPool<T>)ComponentPools[poolIndex];
+            var pool = (ComponentPool<T>)State.ComponentPools[poolIndex];
 
             if (pool == null)
             {
                 pool = new ComponentPool<T>();
-                ComponentPools[poolIndex] = pool;
+                State.ComponentPools[poolIndex] = pool;
             }
 
             return pool;
@@ -251,17 +289,17 @@ namespace Ecs.Core
 
         private int GetNextEntityId()
         {
-            if (_freeEntityCount > 0)
+            if (State._freeEntityCount > 0)
             {
-                return _freeEntityIds[_freeEntityCount--];
+                return State._freeEntityIds[State._freeEntityCount--];
             }
 
-            if (_entityCount == _entities.Length)
+            if (State._entityCount == State._entities.Length)
             {
-                Array.Resize(ref _entities, _entityCount * 2);
+                Array.Resize(ref State._entities, State._entityCount * 2);
             }
 
-            return _entityCount++;
+            return State._entityCount++;
         }
 
 

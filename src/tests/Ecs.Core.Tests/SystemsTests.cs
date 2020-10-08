@@ -5,6 +5,39 @@ namespace Ecs.Core.Tests
     public class SystemsTests
     {
         [Fact]
+        public void TwoSystemsOneWorld()
+        {
+            var systemFoo = new SystemFoo();
+
+            var world = Helpers.NewWorld();
+            var systems1 =
+                new Systems(world)
+                    .Add(systemFoo);
+            systems1.Create();
+
+            var query = world.GetEntityQuery<EntityQuery<SampleStructs.Foo>>();
+
+            var systems2 =
+                new Systems(world)
+                    .Add(systemFoo);
+            systems2.Create();
+
+            var entity = world.NewEntity();
+            ref var comp = ref entity.GetComponent<SampleStructs.Foo>();
+            comp.x = 1;
+
+            systems1.Run(1);
+
+            Assert.Equal(2, comp.x);
+            Assert.Equal(1, query.GetEntityCount());
+
+            systems2.Run(1);
+
+            Assert.Equal(3, comp.x);
+            Assert.Equal(1, query.GetEntityCount());
+        }
+
+        [Fact]
         public void ActiveInactive()
         {
             var systemFoo = new SystemFoo();

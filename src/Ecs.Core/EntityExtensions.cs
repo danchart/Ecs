@@ -21,7 +21,7 @@ namespace Ecs.Core
                     return 
                         ((ComponentPool<T>) entity
                             .World
-                            .ComponentPools[componentTypeIndex])
+                            .State.ComponentPools[componentTypeIndex])
                         .GetItem(
                             entityData
                             .Components[i]
@@ -104,7 +104,7 @@ namespace Ecs.Core
                 {
                     entity.World.OnRemoveComponent(componentTypeIndex, entity, entityData);
 
-                    entity.World.ComponentPools[componentTypeIndex].Free(entityData.Components[i].ItemIndex);
+                    entity.World.State.ComponentPools[componentTypeIndex].Free(entityData.Components[i].ItemIndex);
 
                     if (i < entityData.ComponentCount - 1)
                     {
@@ -145,7 +145,7 @@ namespace Ecs.Core
                         entity, 
                         (ComponentPool<T>)entity
                             .World
-                            .ComponentPools[poolIndex], 
+                            .State.ComponentPools[poolIndex], 
                         entityData.Components[i].ItemIndex);
                     //return 
                     //    ((ComponentPool<T>)entity.World.ComponentPools[poolIndex])
@@ -167,7 +167,7 @@ namespace Ecs.Core
                 var componentTypeIndex = entityData.Components[i].TypeIndex;
 
                 entity.World.OnRemoveComponent(componentTypeIndex, entity, entityData);
-                entity.World.ComponentPools[componentTypeIndex].Free(entityData.Components[i].ItemIndex);
+                entity.World.State.ComponentPools[componentTypeIndex].Free(entityData.Components[i].ItemIndex);
                 entityData.ComponentCount--;
             }
 
@@ -203,12 +203,12 @@ namespace Ecs.Core
                     {
                         ((ComponentPool<T>)entity
                             .World
-                            .ComponentPools[componentTypeIndex])
+                            .State.ComponentPools[componentTypeIndex])
                         .GetItem(
                             entityData.Components[i]
                             .ItemIndex)
                         .Version = 
-                            entity.World.GlobalSystemVersion;
+                            entity.World.State.GlobalSystemVersion;
 
                         entity.World.OnChangeComponent(componentTypeIndex, entity, entityData);
                     }
@@ -216,7 +216,7 @@ namespace Ecs.Core
                     return ref 
                         ((ComponentPool<T>)entity
                             .World
-                            .ComponentPools[componentTypeIndex])
+                            .State.ComponentPools[componentTypeIndex])
                         .GetItem(
                             entityData.Components[i]
                             .ItemIndex);
@@ -242,7 +242,7 @@ namespace Ecs.Core
             entity.World.OnAddComponent(componentTypeIndex, entity, entityData);
 
             ref var componentItem = ref pool.GetItem(index);
-            componentItem.Version = entity.World.GlobalSystemVersion;
+            componentItem.Version = entity.World.State.GlobalSystemVersion;
 
             return ref componentItem;
         }

@@ -63,19 +63,19 @@ namespace Ecs.Core
                 {
                     var system = _systems.Items[i].System;
 
-                    World.GlobalSystemVersion = World.GlobalSystemVersion.GetNext();
+                    World.State.GlobalSystemVersion = World.State.GlobalSystemVersion.GetNext();
 
-                    system.GlobalSystemVersion = World.GlobalSystemVersion;
-                    system.LastSystemVersion = World.LastSystemVersion;
+                    system.GlobalSystemVersion = World.State.GlobalSystemVersion;
+                    system.LastSystemVersion = World.State.LastSystemVersion;
 
                     system.OnUpdate(deltaTime);
                 }
             }
 
-            World.LastSystemVersion = World.GlobalSystemVersion;
+            World.State.LastSystemVersion = World.State.GlobalSystemVersion;
 
             // Increment system version to handle any updates outside the Run() loop.
-            World.GlobalSystemVersion = World.GlobalSystemVersion.GetNext();
+            World.State.GlobalSystemVersion = World.State.GlobalSystemVersion.GetNext();
         }
 
         public void SetActive(SystemBase system, bool isActive)
