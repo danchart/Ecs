@@ -22,7 +22,7 @@ namespace Ecs.Core.Tests
             ref var input = ref entityInput.GetComponent<SingletonInputComponent>();
 
             var entityPlayer = world.NewEntity();            
-            entityPlayer.GetComponent<PlayerComponent>();
+            entityPlayer.GetComponent<SingletonPlayerComponent>();
             ref var movement = ref entityPlayer.GetComponent<MovementComponent>();
             ref var position = ref entityPlayer.GetComponent<PositionComponent>();
 
@@ -70,7 +70,7 @@ namespace Ecs.Core.Tests
 
             public override void OnUpdate(float deltaTime)
             {
-                foreach (var entity in QueryFoo)
+                foreach (var entity in SingletoneInputQuery)
                 {
                     ref var foo = ref entity.GetComponent<SampleStructs.Foo>();
 

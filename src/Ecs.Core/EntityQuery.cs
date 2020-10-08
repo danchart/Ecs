@@ -371,9 +371,18 @@ namespace Ecs.Core
 
     public class EntityQuery<IncType> : EntityQuery where IncType : struct
     {
+        private ComponentPool<IncType> _componentPool;
+
         protected EntityQuery(World world) : base(world)
         {
             this.IncludedComponentTypeIndices = new[] { ComponentType<IncType>.Index };
+
+            _componentPool = world.GetPool<IncType>();
+        }
+
+        public ref IncType Get()
+        {
+            return ref _componentPool.GetItem()
         }
 
         public Enumerator GetEnumerator()
