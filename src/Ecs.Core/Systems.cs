@@ -1,5 +1,7 @@
 ﻿using System;
 using System.Reflection;
+using System.Runtime.CompilerServices;
+using System.Runtime.InteropServices;
 
 namespace Ecs.Core
 {
@@ -9,11 +11,15 @@ namespace Ecs.Core
 
         public AppendOnlyList<SystemData> _systems = new AppendOnlyList<SystemData>(EcsConstants.InitialSystemsCapacity);
 
+        internal int _index;
+
         private bool _isInitialized = false;
 
         public Systems(World world)
         {
             World = world;
+
+            _index = World.NewSystems();
         }
 
         public void Create()
@@ -41,13 +47,14 @@ namespace Ecs.Core
             _systems.Add(new SystemData
             {
                 System = system,
-                Active = true,
+                IsActive = true,
             });
 
             return this;
         }
 
-        public Systems SingleFrame<T>() where T : struct
+        public Systems SingleFrame<T>() 
+            where T : unmanaged
         {
             return Add(new RemoveSingleFrames<T>());
         }
@@ -59,22 +66,23 @@ namespace Ecs.Core
         {
             for (int i = 0; i < _systems.Count; i++)
             {
-                if (_systems.Items[i].Active)
+                if (_systems.Items[i].IsActive)
                 {
                     var system = _systems.Items[i].System;
 
                     World.State.GlobalSystemVersion = World.State.GlobalSystemVersion.GetNext();
 
                     system.GlobalSystemVersion = World.State.GlobalSystemVersion;
-                    system.LastSystemVersion = World.State.LastSystemVersion;
+                    system.LastSystemVersion = World.State.LastSystemVersion.Items[_index];
 
                     system.OnUpdate(deltaTime);
                 }
             }
 
-            World.State.LastSystemVersion = World.State.GlobalSystemVersion;
+            // Update per-systems last version.
+            World.State.LastSystemVersion.Items[_index] = World.State.GlobalSystemVersion;
 
-            // Increment system version to handle any updates outside the Run() loop.
+            // Increment global system version here to handle updates outside the Run() loop.
             World.State.GlobalSystemVersion = World.State.GlobalSystemVersion.GetNext();
         }
 
@@ -86,7 +94,7 @@ namespace Ecs.Core
 
                 if (system == systemData.System)
                 {
-                    systemData.Active = isActive;
+                    systemData.IsActive = isActive;
 
                     return;
                 }
@@ -97,15 +105,24 @@ namespace Ecs.Core
         {
             for (int i = 0; i < _systems.Count; i++)
             {
-                InjectEntityQueriesToSystem(World, _systems.Items[i].System);
+                InjectEntityQueriesToSystem(
+                    World,
+                    _index,
+                    _systems.Items[i].System);
             }
         }
 
-        private static void InjectEntityQueriesToSystem(World world, SystemBase system)
+        private static void InjectEntityQueriesToSystem(
+            World world,
+            int systemsIndex,
+            SystemBase system)
         {
             var systemType = system.GetType();
             var worldType = world.GetType();
-            var entityQueryType = typeof(EntityQuery);
+
+            var perSystemEntityQueryType = typeof(PerSystemsEntityQuery);
+            var sharedEntityQueryType = typeof(SharedEntityQuery);
+
 
             foreach (var field in systemType.GetFields(BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance))
             {
@@ -118,12 +135,17 @@ namespace Ecs.Core
                 }
 
                 // Assign entity query
-                if (field.FieldType.IsSubclassOf(entityQueryType))
+                if (field.FieldType.IsSubclassOf(perSystemEntityQueryType))
                 {
-                    field.SetValue(system, world.GetEntityQuery(field.FieldType));
+                    field.SetValue(system, world.GetPerSystemsEntityQuery(field.FieldType, systemsIndex));
 
                     continue;
+                }
+                else if (field.FieldType.IsSubclassOf(sharedEntityQueryType))
+                {
+                    field.SetValue(system, world.GetSharedEntityQuery(field.FieldType));
 
+                    continue;
                 }
             }
         }
@@ -131,10 +153,11 @@ namespace Ecs.Core
         public struct SystemData
         {
             public SystemBase System;
-            public bool Active;
+            public bool IsActive;
         }
 
-        internal sealed class RemoveSingleFrames<T> : SystemBase where T : struct
+        internal sealed class RemoveSingleFrames<T> : SystemBase 
+            where T : unmanaged
         {
             readonly EntityQuery<T> Query = null;
 

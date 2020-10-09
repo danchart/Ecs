@@ -10,11 +10,11 @@ void Start () {
         new Systems(world);
             .Add(updateSystem);
     update.Create();    
-    
+
     _fixedUpdate = 
         new Systems(world)
             .Add (new FixedUpdateSystem());
-    _fixedUpdat.Init ();
+    _fixedUpdate.Init ();
 }
 
 void Update () {

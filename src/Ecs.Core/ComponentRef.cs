@@ -1,6 +1,7 @@
 ﻿namespace Ecs.Core
 {
-    public struct ComponentRef<T> where T : struct
+    public struct ComponentRef<T> 
+        where T : unmanaged
     {
         internal readonly int ItemIndex;
 

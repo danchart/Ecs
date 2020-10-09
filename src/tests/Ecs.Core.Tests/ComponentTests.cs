@@ -15,17 +15,17 @@ namespace Ecs.Core.Tests
 
             ref var foo = ref entity.GetComponent<SampleStructs.Foo>();
             foo.x = 1;
-            foo.text = "helo";
+            foo.y = 2;
 
             var fooRef = entity.Reference<SampleStructs.Foo>();
             ref var fooFromRef = ref fooRef.Unref();
 
-            fooFromRef.x = 2;
-            fooFromRef.text = "bye";
+            fooFromRef.x = -1;
+            fooFromRef.y = -2;
 
             Assert.Equal(foo, fooFromRef);
-            Assert.Equal(2, foo.x);
-            Assert.Equal("bye", foo.text);
+            Assert.Equal(-1, foo.x);
+            Assert.Equal(-2, foo.y);
         }
     }
 }

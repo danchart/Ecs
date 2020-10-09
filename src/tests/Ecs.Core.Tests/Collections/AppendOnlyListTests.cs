@@ -10,13 +10,16 @@ namespace Ecs.Core.Tests.Collections
         {
             var list = new AppendOnlyList<SampleStructs.Foo>(2);
 
-            list.Add(new SampleStructs.Foo { });
-            list.Add(new SampleStructs.Foo { });
-            list.Add(new SampleStructs.Foo { });
-            list.Add(new SampleStructs.Foo { text = "helo" });
+            list.Add(new SampleStructs.Foo { x = 1 });
+            list.Add(new SampleStructs.Foo { x = 2 });
+            list.Add(new SampleStructs.Foo { x = 3 });
+            list.Add(new SampleStructs.Foo { x = 4 });
 
             Assert.Equal(4, list.Count);
-            Assert.Equal("helo", list.Items[3].text);
+            Assert.Equal(1, list.Items[0].x);
+            Assert.Equal(2, list.Items[1].x);
+            Assert.Equal(3, list.Items[2].x);
+            Assert.Equal(4, list.Items[3].x);
         }
     }
 }

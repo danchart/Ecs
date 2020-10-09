@@ -65,6 +65,7 @@
     <Compile Include="Systems.cs" />
     <Compile Include="Version.cs" />
     <Compile Include="World.cs" />
+    <Compile Include="WorldState.cs" />
   </ItemGroup>
   <ItemGroup />
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />

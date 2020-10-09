@@ -5,7 +5,6 @@
         public struct Foo
         {
             public int x, y;
-            public string text;
         }
 
         public  struct Bar

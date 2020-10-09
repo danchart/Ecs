@@ -44,6 +44,9 @@ namespace Ecs.Core
 
     public static class VersionExtensions
     {
+        /// <summary>
+        /// Returns the next Version.
+        /// </summary>
         internal static Version GetNext(in this Version version)
         {
             return new Version(version.Value + 1);

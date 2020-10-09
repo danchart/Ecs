@@ -110,18 +110,18 @@ namespace Ecs.Core.Tests
             var entity = world.NewEntity();
             ref var value = ref entity.GetComponent<SampleStructs.Foo>();
             value.x = 1;
-            value.text = "helo";
+            value.y = 2;
 
             ref var value2 = ref entity.GetComponent<SampleStructs.Foo>();
 
             Assert.Equal(value, value2);
             Assert.Equal(1, value.x);
-            Assert.Equal("helo", value.text);
+            Assert.Equal(2, value.y);
 
             var newValue = new SampleStructs.Foo
             {
                 x = 7,
-                text = "bye"
+                y = 8
             };
 
             entity.ReplaceComponent(newValue);
@@ -130,7 +130,7 @@ namespace Ecs.Core.Tests
 
             Assert.Equal(value, value3);
             Assert.Equal(7, value.x);
-            Assert.Equal("bye", value.text);
+            Assert.Equal(8, value.y);
         }
 
         [Fact]
@@ -193,7 +193,8 @@ namespace Ecs.Core.Tests
             Assert.False(system.WasComponentModified);
         }
 
-        internal class GetVersionSystem<T> : SystemBase where T : struct
+        internal class GetVersionSystem<T> : SystemBase 
+            where T : unmanaged
         {
             public EntityQuery<T> Query = null;
 
@@ -225,7 +226,8 @@ namespace Ecs.Core.Tests
             }
         }
 
-        internal class GetComponentAndVersionSystem<T> : SystemBase where T : struct
+        internal class GetComponentAndVersionSystem<T> : SystemBase 
+            where T : unmanaged
         {
             public EntityQuery<T> Query = null;
 

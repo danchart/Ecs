@@ -3,7 +3,8 @@ using System.Threading;
 
 namespace Ecs.Core
 {
-    public class ComponentType<T> where T : struct
+    public class ComponentType<T> 
+        where T : unmanaged
     {
         static ComponentType()
         {

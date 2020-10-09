@@ -138,7 +138,7 @@ namespace Ecs.Core.Tests
             {
                 ref var component = ref entity1.GetComponent<SampleStructs.Foo>();
                 component.x = 17;
-                component.text = "bye";
+                component.y = 42;
             };
 
             systems.Run(1);
@@ -157,10 +157,11 @@ namespace Ecs.Core.Tests
             ref readonly var c1 = ref entity1.GetReadOnlyComponent<SampleStructs.Foo>();
 
             Assert.Equal(17, c1.x);
-            Assert.Equal("bye", c1.text);
+            Assert.Equal(42, c1.y);
         }
 
-        internal class ChangeFilterSystem<T> : SystemBase where T : struct
+        internal class ChangeFilterSystem<T> : SystemBase 
+            where T : unmanaged
         {
             public EntityQueryWithChangeFilter<T> QueryWithChangeFilter = null;
             public EntityQuery<T> Query = null;

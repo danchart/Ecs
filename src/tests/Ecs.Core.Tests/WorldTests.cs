@@ -23,7 +23,6 @@ namespace Ecs.Core.Tests
 
             e1CompFoo.x = 1;
             e1CompFoo.y = 2;
-            e1CompFoo.text = "helo";
 
             e1CompBar.a = 5;
             e1CompBar.b = 7;
@@ -31,7 +30,6 @@ namespace Ecs.Core.Tests
 
             e2CompFoo.x = 3;
             e2CompFoo.y = 4;
-            e2CompFoo.text = "bye";
 
             e2CompBar.a = 13;
             e2CompBar.b = 15;
@@ -39,7 +37,6 @@ namespace Ecs.Core.Tests
 
             Assert.Equal(1, e1CompFoo.x);
             Assert.Equal(2, e1CompFoo.y);
-            Assert.Equal("helo", e1CompFoo.text);
 
             Assert.Equal(e1CompFoo, e1CompFoo2);
             Assert.Equal(e1CompBar, e1CompBar2);
@@ -50,7 +47,6 @@ namespace Ecs.Core.Tests
 
             Assert.Equal(3, e2CompFoo.x);
             Assert.Equal(4, e2CompFoo.y);
-            Assert.Equal("bye", e2CompFoo.text);
 
             Assert.Equal(13, e2CompBar.a);
             Assert.Equal(15, e2CompBar.b);

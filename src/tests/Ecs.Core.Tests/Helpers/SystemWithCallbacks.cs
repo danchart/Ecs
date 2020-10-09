@@ -21,11 +21,13 @@ namespace Ecs.Core.Tests
         }
     }
 
-    internal class SystemWithCallbacksAndQuery<Comp> : SystemWithCallbacksAndQuery<object, Comp> where Comp : struct
+    internal class SystemWithCallbacksAndQuery<Comp> : SystemWithCallbacksAndQuery<object, Comp> 
+        where Comp : unmanaged
     {
     }
 
-    internal class SystemWithCallbacksAndQuery<T, Comp> : SystemBase where Comp : struct
+    internal class SystemWithCallbacksAndQuery<T, Comp> : SystemBase 
+        where Comp : unmanaged
     {
         public EntityQuery<Comp> Query = null;
 
@@ -45,7 +47,8 @@ namespace Ecs.Core.Tests
         }
     }
 
-    internal class SystemWithQueryAndCallbacks<T> : SystemBase where T : struct
+    internal class SystemWithQueryAndCallbacks<T> : SystemBase 
+        where T : unmanaged
     {
         public EntityQuery<T> Query = null;
 

@@ -5,7 +5,8 @@ namespace Ecs.Core
 {
     public static class EntityExtensions
     {
-        public static Version GetComponentVersion<T>(in this Entity entity) where T : struct
+        public static Version GetComponentVersion<T>(in this Entity entity) 
+            where T : unmanaged
         {
             ref readonly var entityData = ref entity.World.GetEntityData(entity);
 
@@ -33,7 +34,8 @@ namespace Ecs.Core
             return default;
         }
 
-        public static ref T GetComponentAndVersion<T>(in this Entity entity, out Version version) where T : struct
+        public static ref T GetComponentAndVersion<T>(in this Entity entity, out Version version) 
+            where T : unmanaged
         {
             ref var item = ref GetComponentItem<T>(entity, isReadonly: false);
 
@@ -44,7 +46,7 @@ namespace Ecs.Core
 
         public static ref readonly T GetReadonlyComponentAndVersion<T>(
             in this Entity entity, 
-            out Version version) where T : struct
+            out Version version) where T : unmanaged
         {
             ref var item = ref GetComponentItem<T>(entity, isReadonly: true);
 
@@ -54,22 +56,26 @@ namespace Ecs.Core
         }
 
 
-        public static ref T GetComponent<T>(in this Entity entity) where T : struct
+        public static ref T GetComponent<T>(in this Entity entity) 
+            where T : unmanaged
         {
             return ref GetComponentItem<T>(entity, isReadonly: false).Item;
         }
 
-        public static ref readonly T GetReadOnlyComponent<T>(in this Entity entity) where T : struct
+        public static ref readonly T GetReadOnlyComponent<T>(in this Entity entity) 
+            where T : unmanaged
         {
             return ref GetComponentItem<T>(entity, isReadonly: true).Item;
         }
 
-        public static void ReplaceComponent<T>(in this Entity entity, in T value) where T : struct
+        public static void ReplaceComponent<T>(in this Entity entity, in T value) 
+            where T : unmanaged
         {
             GetComponent<T>(entity) = value;
         }
 
-        public static bool HasComponent<T>(in this Entity entity) where T : struct
+        public static bool HasComponent<T>(in this Entity entity) 
+            where T : unmanaged
         {
             ref var entityData = ref entity.World.GetEntityData(entity);
 
@@ -88,7 +94,8 @@ namespace Ecs.Core
             return false;
         }
 
-        public static bool RemoveComponent<T>(in this Entity entity) where T : struct
+        public static bool RemoveComponent<T>(in this Entity entity) 
+            where T : unmanaged
         {
             bool wasRemoved = false;
 
@@ -129,7 +136,8 @@ namespace Ecs.Core
             return wasRemoved;
         }
 
-        public static ComponentRef<T> Reference<T>(in this Entity entity) where T : struct
+        public static ComponentRef<T> Reference<T>(in this Entity entity) 
+            where T : unmanaged
         {
             ref var entityData = ref entity.World.GetEntityData(entity);
 
@@ -185,7 +193,7 @@ namespace Ecs.Core
 
         private static ref ComponentPool<T>.ComponentItem<T> GetComponentItem<T>(
             Entity entity,
-            bool isReadonly) where T : struct
+            bool isReadonly) where T : unmanaged
         {
             ref var entityData = ref entity.World.GetEntityData(entity);
 

@@ -23,7 +23,7 @@
         {
             return 
                 version > this.LastSystemVersion ||
-                version == Version.Zero;
+                this.LastSystemVersion == Version.Zero;
         }
     }
 }

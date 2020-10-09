@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Globalization;
 using System.Reflection;
 
@@ -10,60 +11,12 @@ namespace Ecs.Core
     /// </summary>
     public class World
     {
-        public struct WorldState
-        {
-            internal Version GlobalSystemVersion;
-            internal Version LastSystemVersion;
-
-            internal IComponentPool[] ComponentPools;
-
-            internal World.EntityData[] _entities;
-            internal int[] _freeEntityIds;
-
-            internal int _entityCount;
-            internal int _freeEntityCount;
-
-            internal AppendOnlyList<EntityQuery> _queries;
-        }
-
-        public static WorldState CopyState(in WorldState state)
-        {
-            var copiedState = new WorldState
-            {
-                GlobalSystemVersion = state.GlobalSystemVersion,
-                LastSystemVersion = state.LastSystemVersion,
-
-                _freeEntityIds = state._freeEntityIds,
-                _entityCount = state._entityCount,
-                _freeEntityCount = state._freeEntityCount,
-            };
-
-            copiedState.ComponentPools = new IComponentPool[state.ComponentPools.Length];
-            Array.Copy(state.ComponentPools, copiedState.ComponentPools, state.ComponentPools.Length);
- 
-            copiedState._entities = new EntityData[state._entities.Length];
-            Array.Copy(state._entities, copiedState._entities, state._entityCount);
-
-            copiedState._freeEntityIds = new int[state._freeEntityIds.Length];
-            Array.Copy(state._freeEntityIds, copiedState._freeEntityIds, state._freeEntityCount);
-
-            copiedState._queries = new AppendOnlyList<EntityQuery>(state._queries.Count);
-            for (int i = 0; i < state._queries.Count; i++)
-            {
-                copiedState._queries.Items[i] = state._queries.Items[i];
-            }
-
-            return copiedState;
-        }
-
         internal readonly EcsConfig Config;
 
         public WorldState State;
 
-        private readonly Dictionary<int, AppendOnlyList<EntityQuery>> _includedComponentIdToEntityQueries;
-        private readonly Dictionary<int, AppendOnlyList<EntityQuery>> _excludedComponentIdToEntityQueries;
-
-
+        private readonly Dictionary<int, AppendOnlyList<EntityQueryBase>> _includedComponentIdToEntityQueries;
+        private readonly Dictionary<int, AppendOnlyList<EntityQueryBase>> _excludedComponentIdToEntityQueries;
 
         public World(EcsConfig config)
         {
@@ -73,12 +26,21 @@ namespace Ecs.Core
             State._entities = new EntityData[Config.InitialEntityPoolCapacity];
             State._freeEntityIds = new int[Config.InitialEntityPoolCapacity];
 
-            _includedComponentIdToEntityQueries = new Dictionary<int, AppendOnlyList<EntityQuery>>(Config.InitialComponentToEntityQueryMapCapacity);
-            _excludedComponentIdToEntityQueries = new Dictionary<int, AppendOnlyList<EntityQuery>>(Config.InitialComponentToEntityQueryMapCapacity);
-            State._queries = new AppendOnlyList<EntityQuery>(Config.InitialEntityQueryCapacity);
+            _includedComponentIdToEntityQueries = new Dictionary<int, AppendOnlyList<EntityQueryBase>>(Config.InitialComponentToEntityQueryMapCapacity);
+            _excludedComponentIdToEntityQueries = new Dictionary<int, AppendOnlyList<EntityQueryBase>>(Config.InitialComponentToEntityQueryMapCapacity);
+            State._sharedQueries = new AppendOnlyList<SharedEntityQuery>(Config.InitialEntityQueryCapacity);
+            State._perSystemsQueries = new AppendOnlyList<AppendOnlyList<PerSystemsEntityQuery>>(Config.InitialSystemsCapacity);
 
             State.GlobalSystemVersion = new Version();
-            State.LastSystemVersion = State.GlobalSystemVersion;
+            State.LastSystemVersion = new AppendOnlyList<Version>(Config.InitialSystemsCapacity); 
+        }
+
+        public int NewSystems()
+        {
+            this.State.LastSystemVersion.Add(this.State.GlobalSystemVersion);
+            this.State._perSystemsQueries.Add(new AppendOnlyList<PerSystemsEntityQuery>(Config.InitialEntityQueryCapacity));
+
+            return this.State.LastSystemVersion.Count - 1;
         }
 
         public Entity NewEntity()
@@ -111,18 +73,6 @@ namespace Ecs.Core
             return entity;
         }
 
-        public void FreeEntityData(int id, ref EntityData entityData)
-        {
-            entityData.ComponentCount = 0;
-            entityData.Generation++;
-            State._freeEntityIds[State._freeEntityCount++] = id;
-        }
-
-        public ref EntityData GetEntityData(in Entity entity)
-        {
-            return ref State._entities[entity.Id];
-        }
-
         public bool IsFreed(in Entity entity)
         {
             ref var entityData = ref State._entities[entity.Id];
@@ -132,41 +82,92 @@ namespace Ecs.Core
                 entityData.ComponentCount == 0;
         }
 
-        public EntityQuery GetEntityQuery<T>()
+        public EntityQueryBase GetEntityQuery<T>()
         {
-            return GetEntityQuery(typeof(T));
+            return GetSharedEntityQuery(typeof(T));
         }
 
-        /// <summary>
-        /// Returns a shared entity query of the matching type.
-        /// </summary>
-        public EntityQuery GetEntityQuery(Type entityQueryType)
+        internal void FreeEntityData(int id, ref EntityData entityData)
         {
-            for (int i = 0; i < State._queries.Count; i++)
+            entityData.ComponentCount = 0;
+            entityData.Generation++;
+            State._freeEntityIds[State._freeEntityCount++] = id;
+        }
+
+        internal ref EntityData GetEntityData(in Entity entity)
+        {
+            return ref State._entities[entity.Id];
+        }
+
+        internal EntityQueryBase GetPerSystemsEntityQuery(Type entityQueryType, int systemsIndex)
+        {
+            ref var queries = ref State._perSystemsQueries.Items[systemsIndex];
+
+            for (int i = 0; i < queries.Count; i++)
             {
-                if (State._queries.Items[i].GetType() == entityQueryType)
+                if (queries.Items[i].GetType() == entityQueryType)
                 {
                     // Matching query exists.
-                    return State._queries.Items[i];
+                    return queries.Items[i];
                 }
             }
 
             // Create query.
-            var entityQuery = (EntityQuery) Activator.CreateInstance(
-                entityQueryType, 
-                BindingFlags.NonPublic | BindingFlags.Instance, 
+            var entityQuery = (PerSystemsEntityQuery)Activator.CreateInstance(
+                entityQueryType,
+                BindingFlags.NonPublic | BindingFlags.Instance,
                 null,
-                new[] { this }, 
+                new object[] { this, systemsIndex }, // args: World, SystemsIndex
                 CultureInfo.InvariantCulture);
 
-            State._queries.Add(entityQuery);
+            queries.Add(entityQuery);
 
+            AddQueryToComponentIdMaps(entityQuery);
+
+            Invariants.ValidateEntityQuery(queries, entityQueryType);
+
+            return entityQuery;
+        }
+
+        /// <summary>
+        /// Returns the shared entity query of the matching type.
+        /// </summary>
+        internal EntityQueryBase GetSharedEntityQuery(Type entityQueryType)
+        {
+            for (int i = 0; i < State._sharedQueries.Count; i++)
+            {
+                if (State._sharedQueries.Items[i].GetType() == entityQueryType)
+                {
+                    // Matching query exists.
+                    return State._sharedQueries.Items[i];
+                }
+            }
+
+            // Create query.
+            var entityQuery = (SharedEntityQuery)Activator.CreateInstance(
+                entityQueryType,
+                BindingFlags.NonPublic | BindingFlags.Instance,
+                null,
+                new[] { this },
+                CultureInfo.InvariantCulture);
+
+            State._sharedQueries.Add(entityQuery);
+
+            AddQueryToComponentIdMaps(entityQuery);
+
+            Invariants.ValidateEntityQuery(State._sharedQueries, entityQueryType);
+
+            return entityQuery;
+        }
+
+        private void AddQueryToComponentIdMaps(EntityQueryBase entityQuery)
+        {
             // Add to included component->query list
             for (int i = 0; i < entityQuery.IncludedComponentTypeIndices.Length; i++)
             {
                 if (!_includedComponentIdToEntityQueries.ContainsKey(entityQuery.IncludedComponentTypeIndices[i]))
                 {
-                    _includedComponentIdToEntityQueries[entityQuery.IncludedComponentTypeIndices[i]] = new AppendOnlyList<EntityQuery>(EcsConstants.InitialEntityQueryEntityCapacity);
+                    _includedComponentIdToEntityQueries[entityQuery.IncludedComponentTypeIndices[i]] = new AppendOnlyList<EntityQueryBase>(EcsConstants.InitialEntityQueryEntityCapacity);
                 }
 
                 _includedComponentIdToEntityQueries[entityQuery.IncludedComponentTypeIndices[i]].Add(entityQuery);
@@ -179,17 +180,15 @@ namespace Ecs.Core
                 {
                     if (!_excludedComponentIdToEntityQueries.ContainsKey(entityQuery.ExcludedComponentTypeIndices[i]))
                     {
-                        _excludedComponentIdToEntityQueries[entityQuery.ExcludedComponentTypeIndices[i]] = new AppendOnlyList<EntityQuery>(EcsConstants.InitialEntityQueryEntityCapacity);
+                        _excludedComponentIdToEntityQueries[entityQuery.ExcludedComponentTypeIndices[i]] = new AppendOnlyList<EntityQueryBase>(EcsConstants.InitialEntityQueryEntityCapacity);
                     }
 
                     _excludedComponentIdToEntityQueries[entityQuery.ExcludedComponentTypeIndices[i]].Add(entityQuery);
                 }
             }
-
-            return entityQuery;
         }
 
-        public void OnAddComponent(
+        internal void OnAddComponent(
             int componentTypeIndex, 
             in Entity entity, 
             in EntityData entityData)
@@ -215,7 +214,7 @@ namespace Ecs.Core
             }
         }
 
-        public void OnChangeComponent(
+        internal void OnChangeComponent(
             int componentTypeIndex,
             in Entity entity, 
             in EntityData entityData)
@@ -233,7 +232,7 @@ namespace Ecs.Core
             // Changes do not effect exclusions.
         }
 
-        public void OnRemoveComponent(
+        internal void OnRemoveComponent(
             int componentTypeIndex,
             in Entity entity,
             in EntityData entityData)
@@ -259,7 +258,8 @@ namespace Ecs.Core
             }
         }
 
-        internal ComponentPool<T> GetPool<T>() where T : struct
+        internal ComponentPool<T> GetPool<T>() 
+            where T : unmanaged
         {
             var poolIndex = ComponentType<T>.Index;
 
@@ -301,7 +301,6 @@ namespace Ecs.Core
             return State._entityCount++;
         }
 
-
         public struct EntityData
         {
             public ComponentData[] Components;
@@ -312,6 +311,26 @@ namespace Ecs.Core
             {
                 public int TypeIndex;
                 public int ItemIndex;
+            }
+        }
+
+        private static class Invariants
+        {
+            [Conditional("DEBUG")]
+            public static void ValidateEntityQuery<QueryType>(AppendOnlyList<QueryType> queries, Type injectedQueryType)
+            {
+                var queryManifest = new HashSet<Type>();
+                for (int i = 0; i < queries.Count; i++)
+                {
+                    var itemType = queries.Items[i].GetType();
+
+                    if (queryManifest.Contains(itemType))
+                    {
+                        throw new Exception($"InvarianceViolation: Multiple copies of same query type detected. ConflictingType={itemType}, InjectedQueryType={injectedQueryType}");
+                    }
+
+                    queryManifest.Add(itemType);
+                }
             }
         }
     }

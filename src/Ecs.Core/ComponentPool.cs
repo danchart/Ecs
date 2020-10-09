@@ -15,10 +15,12 @@ namespace Ecs.Core
         Version GetItemVersion(int index);
     }
 
-    internal class ComponentPool<T> : IComponentPool where T : struct
+    internal sealed class ComponentPool<T> : IComponentPool 
+        where T : unmanaged
     {
-        private ComponentItem<T>[] _items = new ComponentItem<T>[128];
-        int[] _freeItemIndices = new int[128];
+        public ComponentItem<T>[] Items = new ComponentItem<T>[128];
+
+        private int[] _freeItemIndices = new int[128];
         private int _itemCount = 0;
         private int _freeItemCount = 0;
 
@@ -34,9 +36,9 @@ namespace Ecs.Core
             else
             {
                 // Resize pool when out-of-space
-                if (_itemCount == _items.Length)
+                if (_itemCount == Items.Length)
                 {
-                    Array.Resize(ref _items, _itemCount * 2);
+                    Array.Resize(ref Items, _itemCount * 2);
                 }
 
                 // Current count is new id, then increment.
@@ -49,7 +51,7 @@ namespace Ecs.Core
         public void Free(int index)
         {
             // Clear item data
-            _items[index] = default;
+            Items[index] = default;
 
             // Resize free item pool if out-of-space
             if (_freeItemCount == _freeItemIndices.Length)
@@ -73,15 +75,16 @@ namespace Ecs.Core
 
         public ref ComponentItem<T> GetItem(int index)
         {
-            return ref _items[index];
+            return ref Items[index];
         }
 
         object IComponentPool.GetItem(int index)
         {
-            return _items[index];
+            return Items[index];
         }
 
-        internal struct ComponentItem<TItem> where TItem : struct
+        internal struct ComponentItem<TItem> 
+            where TItem : unmanaged
         {
             public TItem Item;
             public Version Version;
