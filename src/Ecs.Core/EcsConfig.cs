@@ -3,6 +3,7 @@
     public struct EcsConfig
     {
         public int InitialEntityPoolCapacity;
+        public int InitialComponentPools;
         public int InitialComponentPoolCapacity;
         public int InitialEntityComponentCapacity;
         public int InitialEntityQueryCapacity;
@@ -13,7 +14,8 @@
         public static readonly EcsConfig Default = new EcsConfig
         {
             InitialEntityPoolCapacity = 256,
-            InitialComponentPoolCapacity = 256,
+            InitialComponentPools = 256,
+            InitialComponentPoolCapacity = 128,
             InitialEntityComponentCapacity = 8,
 
             InitialSystemsCapacity = 4, // Low # of Systems anticipated

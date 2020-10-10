@@ -1,8 +1,10 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.ComponentModel.Design;
 using System.Diagnostics;
 using System.Globalization;
 using System.Reflection;
+using System.Runtime.CompilerServices;
 
 namespace Ecs.Core
 {
@@ -22,7 +24,7 @@ namespace Ecs.Core
         {
             Config = config;
 
-            State.ComponentPools = new IComponentPool[Config.InitialComponentPoolCapacity];
+            State.ComponentPools = new IComponentPool[Config.InitialComponentPools];
             State._entities = new EntityData[Config.InitialEntityPoolCapacity];
             State._freeEntityIds = new int[Config.InitialEntityPoolCapacity];
 
@@ -279,7 +281,7 @@ namespace Ecs.Core
 
             if (pool == null)
             {
-                pool = new ComponentPool<T>();
+                pool = new ComponentPool<T>(Config.InitialComponentPoolCapacity);
                 State.ComponentPools[poolIndex] = pool;
             }
 
@@ -332,6 +334,22 @@ namespace Ecs.Core
                     queryManifest.Add(itemType);
                 }
             }
+        }
+    }
+
+    internal static class EntityDataExtensions
+    {
+        public static void CopyTo(in this World.EntityData srcData, ref World.EntityData dstData)
+        {
+            dstData.ComponentCount = srcData.ComponentCount;
+            dstData.Generation = srcData.Generation;
+
+            if (dstData.Components.Length < srcData.Components.Length)
+            {
+                Array.Resize(ref dstData.Components, srcData.Components.Length);
+            }
+
+            Array.Copy(srcData.Components, dstData.Components, srcData.Components.Length);
         }
     }
 }

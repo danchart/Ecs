@@ -13,16 +13,23 @@ namespace Ecs.Core
         void Free(int index);
         object GetItem(int index);
         Version GetItemVersion(int index);
+        void CopyTo(IComponentPool targetPool);
     }
 
     internal sealed class ComponentPool<T> : IComponentPool 
         where T : unmanaged
     {
-        public ComponentItem<T>[] Items = new ComponentItem<T>[128];
+        public ComponentItem<T>[] Items;
+        private int[] _freeItemIndices;
 
-        private int[] _freeItemIndices = new int[128];
         private int _itemCount = 0;
         private int _freeItemCount = 0;
+
+        internal ComponentPool(int capacity)
+        {
+            Items = new ComponentItem<T>[capacity];
+            _freeItemIndices = new int[capacity];
+        }
 
         public int New()
         {
@@ -81,6 +88,34 @@ namespace Ecs.Core
         object IComponentPool.GetItem(int index)
         {
             return Items[index];
+        }
+
+        public void CopyTo(IComponentPool targetPool)
+        {
+            CloneTo((ComponentPool<T>)targetPool);
+        }
+
+        /// <summary>
+        /// Clonse this component pool into the target pool.
+        /// </summary>
+        public void CloneTo(ComponentPool<T> targetPool)
+        {
+            if (targetPool.Items.Length < this._itemCount)
+            {
+                Array.Resize(ref targetPool.Items, this._itemCount);
+            }
+
+            Array.Copy(this.Items, targetPool.Items, this._itemCount);
+
+            if (targetPool._freeItemIndices.Length < this._freeItemCount)
+            {
+                Array.Resize(ref targetPool._freeItemIndices, this._freeItemCount);
+            }
+
+            Array.Copy(_freeItemIndices, targetPool._freeItemIndices, _freeItemCount);
+
+            targetPool._itemCount = this._itemCount;
+            targetPool._freeItemCount = this._freeItemCount;
         }
 
         internal struct ComponentItem<TItem> 

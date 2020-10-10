@@ -39,8 +39,18 @@ namespace Ecs.Core
             copiedState.ComponentPools = new IComponentPool[state.ComponentPools.Length];
             Array.Copy(state.ComponentPools, copiedState.ComponentPools, state.ComponentPools.Length);
 
+            for (int i = 0; i < state.ComponentPools.Length; i++)
+            {
+                state.ComponentPools[i].CopyTo(copiedState.ComponentPools[i]);
+            }
+
             copiedState._entities = new EntityData[state._entities.Length];
             Array.Copy(state._entities, copiedState._entities, state._entityCount);
+
+            for (int i = 0; i < state._entities.Length; i++)
+            {
+                state._entities[i].CopyTo(ref copiedState._entities[i]);
+            }
 
             copiedState._freeEntityIds = new int[state._freeEntityIds.Length];
             Array.Copy(state._freeEntityIds, copiedState._freeEntityIds, state._freeEntityCount);
@@ -54,6 +64,15 @@ namespace Ecs.Core
             for (int i = 0; i < state._sharedQueries.Count; i++)
             {
                 copiedState._sharedQueries.Items[i] = state._sharedQueries.Items[i];
+
+                // TODO: CopyTo()
+            }
+
+            for (int i = 0; i < state._perSystemsQueries.Count; i++)
+            {
+                copiedState._perSystemsQueries.Items[i] = state._perSystemsQueries.Items[i];
+
+                // TODO: CopyTo()
             }
 
             return copiedState;

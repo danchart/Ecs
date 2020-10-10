@@ -102,6 +102,9 @@ namespace Ecs.Core.Tests
             var entity3 = systems.World.NewEntity();
             entity3.GetComponent<SampleStructs.Foo>();
 
+            GC.Collect();
+            var cc1 = GC.CollectionCount(0);
+
             systems.Run(1);
 
             // All components dirty
@@ -158,6 +161,11 @@ namespace Ecs.Core.Tests
 
             Assert.Equal(17, c1.x);
             Assert.Equal(42, c1.y);
+
+            GC.Collect();
+            var cc2 = GC.CollectionCount(0);
+
+            int i = 0;
         }
 
         internal class ChangeFilterSystem<T> : SystemBase 

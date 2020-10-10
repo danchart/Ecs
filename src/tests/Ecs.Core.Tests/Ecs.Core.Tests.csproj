@@ -38,6 +38,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Collections\AppendOnlyListTests.cs" />
+    <Compile Include="ComponentPoolTests.cs" />
     <Compile Include="ComponentTests.cs" />
     <Compile Include="EntityQueryTests.cs" />
     <Compile Include="EntityTests.cs" />
