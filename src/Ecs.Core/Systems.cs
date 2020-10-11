@@ -121,7 +121,7 @@ namespace Ecs.Core
             var worldType = world.GetType();
 
             var perSystemEntityQueryType = typeof(PerSystemsEntityQuery);
-            var sharedEntityQueryType = typeof(SharedEntityQuery);
+            var globalEntityQueryType = typeof(GlobalEntityQuery);
 
 
             foreach (var field in systemType.GetFields(BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance))
@@ -141,9 +141,9 @@ namespace Ecs.Core
 
                     continue;
                 }
-                else if (field.FieldType.IsSubclassOf(sharedEntityQueryType))
+                else if (field.FieldType.IsSubclassOf(globalEntityQueryType))
                 {
-                    field.SetValue(system, world.GetSharedEntityQuery(field.FieldType));
+                    field.SetValue(system, world.GetGlobalEntityQuery(field.FieldType));
 
                     continue;
                 }

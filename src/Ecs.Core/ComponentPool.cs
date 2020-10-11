@@ -92,13 +92,13 @@ namespace Ecs.Core
 
         public void CopyTo(IComponentPool targetPool)
         {
-            CloneTo((ComponentPool<T>)targetPool);
+            CopyTo((ComponentPool<T>)targetPool);
         }
 
         /// <summary>
-        /// Clonse this component pool into the target pool.
+        /// Copies this component pool into the target pool.
         /// </summary>
-        public void CloneTo(ComponentPool<T> targetPool)
+        public void CopyTo(ComponentPool<T> targetPool)
         {
             if (targetPool.Items.Length < this._itemCount)
             {

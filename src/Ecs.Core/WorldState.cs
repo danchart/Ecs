@@ -15,7 +15,7 @@ namespace Ecs.Core
         internal int _entityCount;
         internal int _freeEntityCount;
 
-        internal AppendOnlyList<SharedEntityQuery> _sharedQueries;
+        internal AppendOnlyList<GlobalEntityQuery> _globalQueries;
 
         // Per-systems 
         internal AppendOnlyList<Version> LastSystemVersion;
@@ -24,55 +24,107 @@ namespace Ecs.Core
 
     public static class WorldStateExtensions
     {
-        public static WorldState CopyState(this in WorldState state)
+        /// <summary>
+        /// Copies state from one World reference to another.
+        /// </summary>
+        public static WorldState CopyState(this in WorldState source, ref WorldState copiedState)
         {
-            var copiedState = new WorldState
+            copiedState.GlobalSystemVersion = source.GlobalSystemVersion;
+            copiedState.LastSystemVersion = source.LastSystemVersion;
+
+            copiedState._freeEntityIds = source._freeEntityIds;
+            copiedState._entityCount = source._entityCount;
+            copiedState._freeEntityCount = source._freeEntityCount;
+
+            copiedState.ComponentPools = new IComponentPool[source.ComponentPools.Length];
+            Array.Copy(source.ComponentPools, copiedState.ComponentPools, source.ComponentPools.Length);
+
+            //for (int i = 0; i < source.ComponentPools.Length; i++)
+            for (int i = 0; i < ComponentPool.PoolCount; i++)
             {
-                GlobalSystemVersion = state.GlobalSystemVersion,
-                LastSystemVersion = state.LastSystemVersion,
-
-                _freeEntityIds = state._freeEntityIds,
-                _entityCount = state._entityCount,
-                _freeEntityCount = state._freeEntityCount,
-            };
-
-            copiedState.ComponentPools = new IComponentPool[state.ComponentPools.Length];
-            Array.Copy(state.ComponentPools, copiedState.ComponentPools, state.ComponentPools.Length);
-
-            for (int i = 0; i < state.ComponentPools.Length; i++)
-            {
-                state.ComponentPools[i].CopyTo(copiedState.ComponentPools[i]);
+                source.ComponentPools[i].CopyTo(copiedState.ComponentPools[i]);
             }
 
-            copiedState._entities = new EntityData[state._entities.Length];
-            Array.Copy(state._entities, copiedState._entities, state._entityCount);
+            copiedState._entities = new EntityData[source._entities.Length];
+            Array.Copy(source._entities, copiedState._entities, source._entityCount);
 
-            for (int i = 0; i < state._entities.Length; i++)
+            for (int i = 0; i < source._entityCount; i++)
             {
-                state._entities[i].CopyTo(ref copiedState._entities[i]);
+                source._entities[i].CopyTo(ref copiedState._entities[i]);
             }
 
-            copiedState._freeEntityIds = new int[state._freeEntityIds.Length];
-            Array.Copy(state._freeEntityIds, copiedState._freeEntityIds, state._freeEntityCount);
+            copiedState._freeEntityIds = new int[source._freeEntityIds.Length];
+            Array.Copy(source._freeEntityIds, copiedState._freeEntityIds, source._freeEntityCount);
 
-            copiedState._sharedQueries = new AppendOnlyList<SharedEntityQuery>(state._sharedQueries.Count);
-            Array.Copy(state._sharedQueries.Items, copiedState._sharedQueries.Items, copiedState._sharedQueries.Count);
+            // Queries are harder...
 
-            copiedState.LastSystemVersion = new AppendOnlyList<Version>(state.LastSystemVersion.Count);
-            Array.Copy(state.LastSystemVersion.Items, copiedState.LastSystemVersion.Items, copiedState.LastSystemVersion.Count);
-
-            for (int i = 0; i < state._sharedQueries.Count; i++)
+            if (copiedState._globalQueries == null)
             {
-                copiedState._sharedQueries.Items[i] = state._sharedQueries.Items[i];
+                // Allocate and copy list
 
-                // TODO: CopyTo()
+                copiedState._globalQueries = new AppendOnlyList<GlobalEntityQuery>(source._globalQueries.Items.Length);
+
+                for (int i = 0; i < source._globalQueries.Count; i++)
+                {
+                    copiedState._globalQueries.Add((GlobalEntityQuery)source._globalQueries.Items[i].Clone());
+                }
+            }
+            else
+            {
+                // Resize and copy list
+
+                copiedState._globalQueries.Resize(source._globalQueries.Count);
+
+                // Copy list
+                for (int i = 0; i < source._globalQueries.Count; i++)
+                {
+                    if (copiedState._globalQueries.Items[i] == null)
+                    {
+                        // ### Heap alloc
+                        copiedState._globalQueries.Items[i] = (GlobalEntityQuery)source._globalQueries.Items[i].Clone();
+                    }
+
+                    source._globalQueries.Items[i].CopyTo(copiedState._globalQueries.Items[i]);
+                }
             }
 
-            for (int i = 0; i < state._perSystemsQueries.Count; i++)
-            {
-                copiedState._perSystemsQueries.Items[i] = state._perSystemsQueries.Items[i];
+            copiedState.LastSystemVersion = copiedState.LastSystemVersion ?? new AppendOnlyList<Version>(source.LastSystemVersion.Count);
+            source.LastSystemVersion.ShallowCopyTo(copiedState.LastSystemVersion);
 
-                // TODO: CopyTo()
+            // Allocate and size systems list - this is fixed after Init();
+            if (copiedState._perSystemsQueries == null)
+            {
+                copiedState._perSystemsQueries = new AppendOnlyList<AppendOnlyList<PerSystemsEntityQuery>>(source._perSystemsQueries.Count);
+
+                // Copy list
+                for (int i = 0; i < source._perSystemsQueries.Count; i++)
+                {
+                    copiedState._perSystemsQueries.Add(new AppendOnlyList<PerSystemsEntityQuery>(source._perSystemsQueries.Items[i].Count));
+
+                    // Clone list
+
+                    for (int j = 0; j < source._perSystemsQueries.Items[i].Count; j++)
+                    {
+                        copiedState._perSystemsQueries.Items[i].Add((PerSystemsEntityQuery)source._perSystemsQueries.Items[i].Items[j]);
+                    }
+                }
+            }
+            else
+            {
+                // Copy per system query list
+                for (int i = 0; i < source._perSystemsQueries.Count; i++)
+                {
+                    var queryList = source._perSystemsQueries.Items[i];
+                    var copiedQueryList = copiedState._perSystemsQueries.Items[i];
+
+                    copiedQueryList.Resize(queryList.Count);
+
+                    // Copy list
+                    for (int j = 0; j < queryList.Count; j++)
+                    {
+                        queryList.Items[j].CopyTo(copiedQueryList.Items[j]);
+                    }
+                }
             }
 
             return copiedState;

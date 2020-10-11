@@ -5,7 +5,7 @@ namespace Ecs.Core.Tests
     public class ComponentPoolTests
     {
         [Fact]
-        public void CloneTo()
+        public void CopyTo()
         {
             var srcPool = new ComponentPool<SampleStructs.Foo>(2);
             IComponentPool dstPool = new ComponentPool<SampleStructs.Foo>(2); // Less than component count to test array resize.

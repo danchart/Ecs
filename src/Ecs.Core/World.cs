@@ -1,10 +1,9 @@
-﻿using System;
+﻿using Ecs.Core.Helpers;
+using System;
 using System.Collections.Generic;
-using System.ComponentModel.Design;
 using System.Diagnostics;
 using System.Globalization;
 using System.Reflection;
-using System.Runtime.CompilerServices;
 
 namespace Ecs.Core
 {
@@ -30,7 +29,7 @@ namespace Ecs.Core
 
             _includedComponentIdToEntityQueries = new Dictionary<int, AppendOnlyList<EntityQueryBase>>(Config.InitialComponentToEntityQueryMapCapacity);
             _excludedComponentIdToEntityQueries = new Dictionary<int, AppendOnlyList<EntityQueryBase>>(Config.InitialComponentToEntityQueryMapCapacity);
-            State._sharedQueries = new AppendOnlyList<SharedEntityQuery>(Config.InitialEntityQueryCapacity);
+            State._globalQueries = new AppendOnlyList<GlobalEntityQuery>(Config.InitialEntityQueryCapacity);
             State._perSystemsQueries = new AppendOnlyList<AppendOnlyList<PerSystemsEntityQuery>>(Config.InitialSystemsCapacity);
 
             State.GlobalSystemVersion = new Version();
@@ -86,7 +85,7 @@ namespace Ecs.Core
 
         public EntityQueryBase GetEntityQuery<T>()
         {
-            return GetSharedEntityQuery(typeof(T));
+            return GetGlobalEntityQuery(typeof(T));
         }
 
         internal void FreeEntityData(int id, ref EntityData entityData)
@@ -132,32 +131,32 @@ namespace Ecs.Core
         }
 
         /// <summary>
-        /// Returns the shared entity query of the matching type.
+        /// Returns the global entity query of the matching type.
         /// </summary>
-        internal EntityQueryBase GetSharedEntityQuery(Type entityQueryType)
+        internal EntityQueryBase GetGlobalEntityQuery(Type entityQueryType)
         {
-            for (int i = 0; i < State._sharedQueries.Count; i++)
+            for (int i = 0; i < State._globalQueries.Count; i++)
             {
-                if (State._sharedQueries.Items[i].GetType() == entityQueryType)
+                if (State._globalQueries.Items[i].GetType() == entityQueryType)
                 {
                     // Matching query exists.
-                    return State._sharedQueries.Items[i];
+                    return State._globalQueries.Items[i];
                 }
             }
 
             // Create query.
-            var entityQuery = (SharedEntityQuery)Activator.CreateInstance(
+            var entityQuery = (GlobalEntityQuery)Activator.CreateInstance(
                 entityQueryType,
                 BindingFlags.NonPublic | BindingFlags.Instance,
                 null,
                 new[] { this },
                 CultureInfo.InvariantCulture);
 
-            State._sharedQueries.Add(entityQuery);
+            State._globalQueries.Add(entityQuery);
 
             AddQueryToComponentIdMaps(entityQuery);
 
-            Invariants.ValidateEntityQuery(State._sharedQueries, entityQueryType);
+            Invariants.ValidateEntityQuery(State._globalQueries, entityQueryType);
 
             return entityQuery;
         }
@@ -343,13 +342,7 @@ namespace Ecs.Core
         {
             dstData.ComponentCount = srcData.ComponentCount;
             dstData.Generation = srcData.Generation;
-
-            if (dstData.Components.Length < srcData.Components.Length)
-            {
-                Array.Resize(ref dstData.Components, srcData.Components.Length);
-            }
-
-            Array.Copy(srcData.Components, dstData.Components, srcData.Components.Length);
+            srcData.Components.CopyToResize(dstData.Components);
         }
     }
 }

@@ -1,7 +1,7 @@
 ﻿using System.Threading;
 using Xunit;
 
-namespace Ecs.Core.Tests.Collections
+namespace Ecs.Core.Tests
 {
     public class AppendOnlyListTests
     {

@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Ecs.Core.Helpers;
+using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 
@@ -17,15 +18,15 @@ namespace Ecs.Core
         internal protected EntityItem[] _entityResults = new EntityItem[EcsConstants.InitialEntityQueryEntityCapacity];
         internal protected int _entityCount = 0;
 
-        private Dictionary<int, int> _entityIndexToQueryIndex = new Dictionary<int, int>(EcsConstants.InitialEntityQueryEntityCapacity);
+        protected Dictionary<int, int> _entityIndexToQueryIndex = new Dictionary<int, int>(EcsConstants.InitialEntityQueryEntityCapacity);
 
         internal protected int[] _componentIds = null;
 
         // Locking & Pending Changes 
-        private int _lockCount = 0;
+        protected int _lockCount = 0;
 
-        private PendingEntityUpdate[] _pendingEntityUpdates = new PendingEntityUpdate[EcsConstants.InitialEntityQueryEntityCapacity];
-        int _pendingUpdateCount = 0;
+        protected PendingEntityUpdate[] _pendingEntityUpdates = new PendingEntityUpdate[EcsConstants.InitialEntityQueryEntityCapacity];
+        protected int _pendingUpdateCount = 0;
 
         internal protected EntityQueryBase(World world)
         {
@@ -45,6 +46,61 @@ namespace Ecs.Core
         public bool IsEmpty()
         {
             return _entityCount == 0;
+        }
+
+        internal abstract EntityQueryBase Clone();
+
+        internal virtual void CopyTo(EntityQueryBase destQuery)
+        {
+            // REFERENCE
+            destQuery.World = this.World;
+
+            this.IncludedComponentTypeIndices.CopyToResize(destQuery.IncludedComponentTypeIndices);
+            if (this.ExcludedComponentTypeIndices == null)
+            {
+                destQuery.ExcludedComponentTypeIndices = null;
+            }
+            else
+            {
+                if (destQuery.ExcludedComponentTypeIndices == null)
+                {
+                    destQuery.ExcludedComponentTypeIndices = new int[this.ExcludedComponentTypeIndices.Length];
+                }
+                
+                this.ExcludedComponentTypeIndices.CopyToResize(destQuery.ExcludedComponentTypeIndices);
+            }
+
+            if (destQuery._entityResults.Length < this._entityResults.Length)
+            {
+                Array.Resize(ref destQuery._entityResults, this._entityResults.Length);
+            }
+
+            for (int i = 0; i < this._entityResults.Length; i++)
+            {
+                // Copy since only reference is World and it never changes.
+                this._entityResults[i].CopyTo(ref destQuery._entityResults[i]);
+            }
+
+            destQuery._entityCount = this._entityCount;
+
+            // ### HEAP ALLOCATION
+            destQuery._entityIndexToQueryIndex = new Dictionary<int, int>(this._entityIndexToQueryIndex);
+
+            this._componentIds.CopyToResize(destQuery._componentIds);
+
+            destQuery._lockCount = this._lockCount;
+
+            if (destQuery._pendingEntityUpdates.Length < this._pendingEntityUpdates.Length)
+            {
+                Array.Resize(ref destQuery._pendingEntityUpdates, this._pendingEntityUpdates.Length);
+            }
+
+            for (int i = 0; i < this._pendingEntityUpdates.Length; i++)
+            {
+                this._pendingEntityUpdates[i].CopyTo(ref destQuery._pendingEntityUpdates[i]);
+            }
+
+            destQuery._pendingUpdateCount = this._pendingUpdateCount;
         }
 
         internal void Lock()
@@ -395,20 +451,20 @@ namespace Ecs.Core
     }
 
     /// <summary>
-    /// Base class for shared entity queries.
+    /// Base class for globally shared (per world) entity queries.
     /// </summary>
-    public class SharedEntityQuery : EntityQueryBase
+    public abstract class GlobalEntityQuery : EntityQueryBase
     {
-        public SharedEntityQuery(World world) 
+        public GlobalEntityQuery(World world) 
             : base(world)
         {
         }
     }
 
-    public class EntityQuery<IncType> : SharedEntityQuery 
+    public class EntityQuery<IncType> : GlobalEntityQuery
         where IncType : unmanaged
     {
-        private readonly ComponentPool<IncType> _componentPool;
+        private ComponentPool<IncType> _componentPool;
 
         internal EntityQuery(World world) 
             : base(world)
@@ -497,9 +553,23 @@ namespace Ecs.Core
             }
         }
 
+        internal override EntityQueryBase Clone()
+        {
+            var query = new EntityQuery<IncType>(this.World);
 
+            CopyTo(query);
 
+            return query;
+        }
 
+        internal override void CopyTo(EntityQueryBase queryBase)
+        {
+            base.CopyTo(queryBase);
+
+            var entityQuery = (EntityQuery<IncType>)queryBase;
+
+            entityQuery._componentPool = this._componentPool;
+        }
 
         public struct EntityEnumerator : IDisposable
         {
@@ -561,7 +631,6 @@ namespace Ecs.Core
     {
         internal protected int _systemsIndex;
 
-
         public PerSystemsEntityQuery(World world, int systemsIndex) :
             base(world)
         {
@@ -572,7 +641,7 @@ namespace Ecs.Core
     public class EntityQueryWithChangeFilter<IncType> : PerSystemsEntityQuery 
         where IncType : unmanaged
     {
-        private readonly ComponentPool<IncType> _componentPool;
+        private ComponentPool<IncType> _componentPool;
 
         internal EntityQueryWithChangeFilter(World world, int systemsIndex) 
             : base(world, systemsIndex)
@@ -617,9 +686,29 @@ namespace Ecs.Core
         {
             return new ChangeFilteredEnumerator(
                 this,
-                //World.State.LastSystemVersion);
-                //_system.LastSystemVersion);
                 World.State.LastSystemVersion.Items[_systemsIndex]);
+        }
+
+        internal override EntityQueryBase Clone()
+        {
+            var query = new EntityQueryWithChangeFilter<IncType>(this.World, this._systemsIndex);
+
+            CopyTo(query);
+
+            return query;
+        }
+
+        internal override void CopyTo(EntityQueryBase queryBase)
+        {
+            base.CopyTo(queryBase);
+
+            var entityQuery = (EntityQueryWithChangeFilter<IncType>)queryBase;
+
+            // PerSystemsEntityQuery
+            entityQuery._systemsIndex = this._systemsIndex;
+
+            // EntityQueryWithChangeFilter
+            entityQuery._componentPool = this._componentPool;
         }
 
         public struct ChangeFilteredEnumerator : IDisposable

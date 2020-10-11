@@ -26,4 +26,31 @@ namespace Ecs.Core
             Items[Count++] = item;
         }
     }
+
+    public static class AppendOnlyListExtensions
+    {
+        /// <summary>
+        /// Resize the list. Internal call only!!
+        /// </summary>
+        internal static void Resize<T>(this AppendOnlyList<T> list, int count)
+        {
+            if (count > list.Items.Length)
+            {
+                Array.Resize(ref list.Items, count);
+            }
+
+            list.Count = count;
+        }
+
+        internal static void ShallowCopyTo<T>(this AppendOnlyList<T> source, AppendOnlyList<T> dest)
+            where T : struct
+        {
+            if (dest.Items.Length < source.Count)
+            {
+                Array.Resize(ref dest.Items, source.Count);
+            }
+
+            Array.Copy(source.Items, dest.Items, source.Count);
+        }
+    }
 }
