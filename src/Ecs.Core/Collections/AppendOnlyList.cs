@@ -51,6 +51,7 @@ namespace Ecs.Core
             }
 
             Array.Copy(source.Items, dest.Items, source.Count);
+            dest.Count = source.Count;
         }
     }
 }

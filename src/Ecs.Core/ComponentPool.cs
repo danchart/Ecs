@@ -14,6 +14,7 @@ namespace Ecs.Core
         object GetItem(int index);
         Version GetItemVersion(int index);
         void CopyTo(IComponentPool targetPool);
+        IComponentPool Clone();
     }
 
     internal sealed class ComponentPool<T> : IComponentPool 
@@ -93,6 +94,15 @@ namespace Ecs.Core
         public void CopyTo(IComponentPool targetPool)
         {
             CopyTo((ComponentPool<T>)targetPool);
+        }
+
+        public IComponentPool Clone()
+        {
+            var pool = new ComponentPool<T>(Items.Length);
+
+            CopyTo(pool);
+
+            return pool;
         }
 
         /// <summary>

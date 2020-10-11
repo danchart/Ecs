@@ -1,7 +1,5 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Diagnostics;
-using System.Runtime.CompilerServices;
 using Xunit;
 
 namespace Ecs.Core.Tests
@@ -70,7 +68,7 @@ namespace Ecs.Core.Tests
 
 
 
-
+            int frameNumber = 0;
 
             for (float time = 0; time < 2.0f; time += deltaTime)
             {
@@ -96,7 +94,7 @@ namespace Ecs.Core.Tests
                     input.isMoveRightDown |= inputs[i].Input.isMoveRightDown;
                 }
 
-                Debug.WriteLine($"{time:N1}: Left={input.isMoveLeftDown}, Right={input.isMoveRightDown}");
+                Debug.WriteLine($"{frameNumber++}:{time:N1}: Left={input.isMoveLeftDown}, Right={input.isMoveRightDown}");
 
                 game.Run(deltaTime);
 
@@ -109,11 +107,33 @@ namespace Ecs.Core.Tests
 
             world.State.CopyState(ref stateBackup);
 
+            var positionBefore = position; 
 
-            game.Rewind(10);
 
+            game.Rewind(5);
+            game.PlayForward(5);
 
-            int ii = 0;
+            var positionAfter1 = position;
+
+            Assert.True(positionBefore.x.AboutEquals(positionAfter1.x));
+
+            game.Rewind(7);
+            game.PlayForward(7);
+
+            var positionAfter2 = position;
+
+            Assert.True(positionBefore.x.AboutEquals(positionAfter2.x));
+
+            game.Rewind(5);
+
+            // Update position.
+            position.x += 5.0f;
+
+            game.PlayForward(5);
+
+            var positionAfter3 = position;
+
+            Assert.True((positionBefore.x + 5.0f).AboutEquals(positionAfter3.x));
         }
 
         private class GameManager
@@ -130,9 +150,9 @@ namespace Ecs.Core.Tests
             private float _lastFixedTime = 0;
             private float _time = 0;
 
-            private int _currentSnapShot = 0;
-            private SnapShot[] SnapShots = new SnapShot[SnapShotCount];
+            private SnapShots _snapShots;
 
+            private const float TickEpsilon = 0.000001f;
 
             public GameManager(
                 float fixedTick,
@@ -144,64 +164,76 @@ namespace Ecs.Core.Tests
                 World = world;
                 Update = update;
                 FixedUpdate = fixedUpdate;
+
+                _snapShots = new SnapShots(SnapShotCount);
             }
 
             public void Create()
             {
                 Update.Create();
                 FixedUpdate.Create();
-
-                for(int i = 0; i < SnapShots.Length; i++)
-                {
-                    SnapShots[i] = new SnapShot();
-                    SnapShots[i].Reset();
-                }
             }
 
             public void Rewind(int fixedFrameCount)
             {
-                // Rewind world state
-                _currentSnapShot = (_currentSnapShot + SnapShotCount - fixedFrameCount) % SnapShotCount;
-                SnapShots[_currentSnapShot].WorldState.CopyState(ref World.State);
+                // Rewind world state to snapshot
+                _snapShots.Seek(-fixedFrameCount);
+                _snapShots.Current()
+                    .WorldState
+                    .CopyState(ref World.State);
 
-                // Rewind clock
-                _time -= (fixedFrameCount * FixedTick);
+                // Rewind clock to snapshot 
+                _time = _snapShots.Current().Time;
+                _lastFixedTime = _time;
+            }
+
+            public void PlayForward(int fixedFrameCount)
+            {
+                // Clone the snapshot inputs
+                var clonedInputs = new AppendOnlyList<AppendOnlyList<SnapShot.InputFrame>>(fixedFrameCount);
+
+                for (int i = 0; i < fixedFrameCount; i++)
+                {
+                    SnapShot replaySnapShot = _snapShots.Peek(i);
+
+                    clonedInputs.Add(new AppendOnlyList<SnapShot.InputFrame>(replaySnapShot.Inputs.Count));
+
+                    replaySnapShot.Inputs.ShallowCopyTo(clonedInputs.Items[i]);
+                }
 
                 for (int i = 0; i < fixedFrameCount; i++)
                 {
                     // Replay inputs and simulate.
+
                     float tickRemaining = FixedTick;
 
-                    // Apply all inputs from between fixed frame updates.
                     var query = (EntityQuery<SingletonInputComponent>)World.GetEntityQuery<EntityQuery<SingletonInputComponent>>();
-                    foreach (var entity in query)
+                    ref var input = ref query.GetSingleton();
+
+                    // Apply all inputs for this fixed update
+                    for (int j = 0; j < clonedInputs.Items[i].Count; j++)
                     {
-                        ref var input = ref entity.GetComponent<SingletonInputComponent>();
+                        input = clonedInputs.Items[i].Items[j].Input;
 
-                        for (int j = 0; j < SnapShots[_currentSnapShot].Inputs.Count; j++)
-                        {
-                            input = SnapShots[_currentSnapShot].Inputs.Items[j].Input;
+                        float deltaTime = clonedInputs.Items[i].Items[j].Time - _time;
 
-                            float deltaTime = SnapShots[_currentSnapShot].Inputs.Items[j].Time - _time;
+                        Run(deltaTime);
 
-                            Run(deltaTime);
+                        // Advance time
+                        _time = clonedInputs.Items[i].Items[j].Time;
 
-                            // Advance time
-                            _time = SnapShots[_currentSnapShot].Inputs.Items[j].Time;
-
-                            tickRemaining -= deltaTime;
-                        }
-
-                        // singleton
-                        break;
+                        tickRemaining -= deltaTime;
                     }
 
-                    Run(tickRemaining);
+                    if (tickRemaining > TickEpsilon)
+                    {
+                        Run(tickRemaining);
+                    }
                 }
             }
 
             /// <summary>
-            ///  Simulated update loop.
+            /// Simulated update loop.
             /// </summary>
             public void Run(float deltaTime)
             {
@@ -209,47 +241,108 @@ namespace Ecs.Core.Tests
 
                 // Capture input to the current snapshot
                 var query = (EntityQuery<SingletonInputComponent>)World.GetEntityQuery<EntityQuery<SingletonInputComponent>>();
-                foreach (var entity in query)
-                {
-                    ref readonly var input = ref entity.GetReadOnlyComponent<SingletonInputComponent>();
+                ref readonly var input = ref query.GetSingletonComponentReadonly();
 
-                    SnapShots[_currentSnapShot]
-                        .Inputs
-                        .Add(new SnapShot.InputFrame
-                        {
-                            Time = _time,
-                            Input = input,
-                        });
-
-                    // Singleton
-                    break;
-                }
+                _snapShots.Current()
+                    .Inputs
+                    .Add(new SnapShot.InputFrame
+                    {
+                        Time = _time,
+                        Input = input,//entity.GetReadOnlyComponent<SingletonInputComponent>(),
+                    });
 
                 while (_time - _lastFixedTime >= FixedTick)
                 {
                     FixedUpdate.Run(FixedTick);
 
-                    _lastFixedTime += FixedTick;
+//Debug.WriteLine($"Saving snapshot # {_currentSnapShot}");
 
+                    _snapShots.Current().Time = _lastFixedTime;
                     // Copy World State to the current snapshot.
-                    World.State.CopyState(ref SnapShots[_currentSnapShot].WorldState);
+                    World.State.CopyState(ref _snapShots.Current().WorldState);
 
-                    // Move to next snapshot. Reset it.
-                    _currentSnapShot = (_currentSnapShot + 1) % SnapShotCount;
-                    SnapShots[_currentSnapShot].Reset();
+                    // Advance to next snapshot. Reset it.
+                    _snapShots.MoveNext();
+                    // Advance to next fixed time.
+                    _lastFixedTime += FixedTick;
                 }
 
                 Update.Run(deltaTime);
             }
 
+            /// <summary>
+            /// Circular buffer of World snapshots.
+            /// </summary>
+            private class SnapShots
+            {
+                private readonly int Count;
+
+                private int _current;
+                private SnapShot[] _snapShots;
+
+                public SnapShots(int count)
+                {
+                    Count = count;
+
+                    _current = 0;
+                    _snapShots = new SnapShot[Count];
+
+                    for (int i = 0; i < _snapShots.Length; i++)
+                    {
+                        _snapShots[i] = new SnapShot();
+                    }
+                }
+
+                /// <summary>
+                /// Returns the current snapshot.
+                /// </summary>
+                public SnapShot Current()
+                {
+                    return _snapShots[_current];
+                }
+
+                /// <summary>
+                /// Move to the next snapshot position. The snapshot will be reset.
+                /// </summary>
+                public void MoveNext()
+                {
+                    Seek(1);
+                    Current().Reset();
+                }
+
+                public void Seek(int frameCount)
+                {
+                    if (Math.Abs(frameCount) >= Count)
+                    {
+                        throw new InvalidOperationException($"Seek frame count too large. {nameof(frameCount)}={frameCount}, Count={Count}");
+                    }
+
+                    _current = (_current + SnapShotCount + frameCount) % SnapShotCount;
+                }
+
+                public SnapShot Peek(int frameCount)
+                {
+                    if (frameCount < 0 ||
+                        Math.Abs(frameCount) >= Count)
+                    {
+                        throw new InvalidOperationException($"Invalid Peek frame count. {nameof(frameCount)}={frameCount}, Count={Count}");
+                    }
+
+                    var peekPos = (_current + SnapShotCount + frameCount) % SnapShotCount;
+
+                    return _snapShots[peekPos];
+                }
+            }
+
             private class SnapShot
             {
-                public AppendOnlyList<InputFrame> Inputs;
+                public AppendOnlyList<InputFrame> Inputs = new AppendOnlyList<InputFrame>(capacity: 8);
                 public WorldState WorldState = new WorldState();
+                public float Time;
 
                 public void Reset()
                 {
-                    Inputs = new AppendOnlyList<InputFrame>(capacity: 8);
+                    Inputs.Resize(0);
                 }
 
                 public struct InputFrame
@@ -326,7 +419,7 @@ namespace Ecs.Core.Tests
 
             public override void OnUpdate(float deltaTime)
             {
-                ref readonly var input = ref SingletoneInputQuery.Get();
+                ref readonly var input = ref SingletoneInputQuery.GetSingletonComponentReadonly();
 
                 Entity playerEnt = default;
 

@@ -36,14 +36,30 @@ namespace Ecs.Core
             copiedState._entityCount = source._entityCount;
             copiedState._freeEntityCount = source._freeEntityCount;
 
-            copiedState.ComponentPools = new IComponentPool[source.ComponentPools.Length];
-            Array.Copy(source.ComponentPools, copiedState.ComponentPools, source.ComponentPools.Length);
-
-            //for (int i = 0; i < source.ComponentPools.Length; i++)
-            for (int i = 0; i < ComponentPool.PoolCount; i++)
+            if (copiedState.ComponentPools == null)
             {
-                source.ComponentPools[i].CopyTo(copiedState.ComponentPools[i]);
+                copiedState.ComponentPools = new IComponentPool[source.ComponentPools.Length];
+
+                for (int i = 0; i < ComponentPool.PoolCount; i++)
+                {
+                    copiedState.ComponentPools[i] = source.ComponentPools[i].Clone();
+                }
             }
+            else
+            {
+                for (int i = 0; i < ComponentPool.PoolCount; i++)
+                {
+                    source.ComponentPools[i].CopyTo(copiedState.ComponentPools[i]);
+                }
+            }
+
+            //copiedState.ComponentPools = new IComponentPool[source.ComponentPools.Length];
+            //Array.Copy(source.ComponentPools, copiedState.ComponentPools, source.ComponentPools.Length);
+
+            //for (int i = 0; i < ComponentPool.PoolCount; i++)
+            //{
+            //    source.ComponentPools[i].CopyTo(copiedState.ComponentPools[i]);
+            //}
 
             copiedState._entities = new EntityData[source._entities.Length];
             Array.Copy(source._entities, copiedState._entities, source._entityCount);

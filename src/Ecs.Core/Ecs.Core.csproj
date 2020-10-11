@@ -60,6 +60,7 @@
     <Compile Include="EntityQueryExtensions.cs" />
     <Compile Include="Hashing\HashingUtil.cs" />
     <Compile Include="Helpers\ArrayExtensions.cs" />
+    <Compile Include="Helpers\FloatExtensions.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="SystemBase.cs" />
     <Compile Include="SystemExtensions.cs" />

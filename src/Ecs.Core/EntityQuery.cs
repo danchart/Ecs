@@ -475,9 +475,17 @@ namespace Ecs.Core
             _componentIds = new int[EcsConstants.InitialEntityQueryEntityCapacity];
         }
 
-        public ref readonly IncType GetReadonly(int index)
+        public ref readonly IncType GetSingletonComponentReadonly()
         {
-            return ref _componentPool.Items[_componentIds[index]].Item;
+            return ref _componentPool.Items[_componentIds[0]].Item;
+        }
+
+        public ref IncType GetSingleton()
+        {
+            ref var item = ref _componentPool.Items[_componentIds[0]];
+            item.Version = this.World.State.GlobalSystemVersion;
+
+            return ref item.Item;
         }
 
         public ComponentEnumerable<IncType> GetComponents() 
