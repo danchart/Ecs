@@ -13,6 +13,10 @@ namespace Ecs.Core.Tests
             const float deltaTime = 1f / 10f; // Running 10 FPS
             const float fixedDeltaTime = 1f / 5f; // Fixed tick at 5 FPS
 
+            //const float deltaTime = 1f / 60f; // Running 10 FPS
+            //const float fixedDeltaTime = 1f / 30f; // Fixed tick at 5 FPS
+
+
             var world = Helpers.NewWorld();
 
             var inputSystem = new PlayerInputSystem();
@@ -23,8 +27,7 @@ namespace Ecs.Core.Tests
                 world: world,
                 update: 
                 new Systems(world)
-                    .Add(inputSystem)
-                    .Add(new ClearInputSystem()),
+                    .Add(inputSystem),
                 fixedUpdate:
                 new Systems(world)
                     .Add(movementSystem));
@@ -34,7 +37,7 @@ namespace Ecs.Core.Tests
             var query = world.GetEntityQuery<EntityQuery<SampleStructs.Foo>>();
 
             var entityInput = world.NewEntity();
-            ref var input = ref entityInput.GetComponent<SingletonInputComponent>();
+            //ref var input = ref entityInput.GetComponent<SingletonInputComponent>();
 
             var entityPlayer = world.NewEntity();
             entityPlayer.GetComponent<SingletonPlayerComponent>();
@@ -43,25 +46,39 @@ namespace Ecs.Core.Tests
 
 
 
-            var inputIdx = 0;
+            int inputIdx = 0;
             var inputs = new InputAtTime[]
             {
                 new InputAtTime
                 {
-                    StartTime = 0.2f,
-                    EndTime = 0.7f,
+                    Time = 0.2f,
                     Input = new SingletonInputComponent
                     {
-                        isMoveRightDown = true
+                        isRightDown = true
                     }
                 },
                 new InputAtTime
                 {
-                    StartTime = 1.0f,
-                    EndTime = 1.5f,
+                    Time = 0.7f,
                     Input = new SingletonInputComponent
                     {
-                        isMoveLeftDown = true
+                        isRightUp = true
+                    }
+                },
+                new InputAtTime
+                {
+                    Time = 1.1f,
+                    Input = new SingletonInputComponent
+                    {
+                        isLeftDown = true
+                    }
+                },
+                new InputAtTime
+                {
+                    Time = 1.6f,
+                    Input = new SingletonInputComponent
+                    {
+                        isLeftUp = true
                     }
                 },
             };
@@ -72,29 +89,24 @@ namespace Ecs.Core.Tests
 
             for (float time = 0; time < 2.0f; time += deltaTime)
             {
-                input.isMoveLeftDown = default;
-                input.isMoveRightDown = default;
+                // New input.
+                var input = new SingletonInputComponent();
 
                 const float timeSkew = 0.01f;
 
-                for (int i = inputIdx; i < inputs.Length; i++)
+                for (; inputIdx < inputs.Length; inputIdx++)
                 {
-                    if (inputs[i].StartTime - timeSkew > time)
+                    if (inputs[inputIdx].Time > time)
                     {
-                        continue;
+                        break;
                     }
 
-                    if (inputs[i].EndTime + timeSkew < time)
-                    {
-                        inputIdx++;
-                        continue;
-                    }
-
-                    input.isMoveLeftDown |= inputs[i].Input.isMoveLeftDown;
-                    input.isMoveRightDown |= inputs[i].Input.isMoveRightDown;
+                    input = inputs[inputIdx].Input;
                 }
 
-                Debug.WriteLine($"{frameNumber++}:{time:N1}: Left={input.isMoveLeftDown}, Right={input.isMoveRightDown}");
+                entityInput.GetComponent<SingletonInputComponent>() = input;
+
+                Debug.WriteLine($"{frameNumber++}:{time:N1}: Left={input.isLeftDown}, Right={input.isRightDown}");
 
                 game.Run(deltaTime);
 
@@ -359,8 +371,7 @@ namespace Ecs.Core.Tests
 
         internal struct InputAtTime
         {
-            public float StartTime;
-            public float EndTime;
+            public float Time;
             public SingletonInputComponent Input;
         }
 
@@ -386,31 +397,15 @@ namespace Ecs.Core.Tests
         internal struct SingletonInputComponent
         {
             public bool
-                isMoveRightDown,
-                isMoveLeftDown;
+                isRightDown,
+                isRightUp,
+                isLeftDown,
+                isLeftUp;
         }
 
         //
         // Systems
         //
-
-        /// <summary>
-        /// Reset inputs every update.
-        /// </summary>
-        private class ClearInputSystem : SystemBase
-        {
-            public EntityQuery<SingletonInputComponent> SingletoneInputQuery = null;
-
-            public override void OnUpdate(float deltaTime)
-            {
-                foreach (var entity in SingletoneInputQuery)
-                {
-                    ref var input = ref entity.GetComponent<SingletonInputComponent>();
-
-                    input = default;
-                }
-            }
-        }
 
         private class PlayerInputSystem : SystemBase
         {
@@ -430,14 +425,14 @@ namespace Ecs.Core.Tests
                     break;
                 }
 
-                if (input.isMoveLeftDown || input.isMoveRightDown)
+                if (input.isLeftDown || input.isRightDown)
                 {
                     ref var movement = ref playerEnt.GetComponent<MovementComponent>();
 
                     movement.velocity_x =
                         5.0f
                         * deltaTime
-                        * (input.isMoveLeftDown ? -1.0f : 1.0f);
+                        * (input.isLeftDown ? -1.0f : 1.0f);
 
                     //movement.velocity_x =
                     //    Math.Min(
