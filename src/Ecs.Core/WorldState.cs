@@ -42,14 +42,22 @@ namespace Ecs.Core
 
                 for (int i = 0; i < ComponentPool.PoolCount; i++)
                 {
-                    copiedState.ComponentPools[i] = source.ComponentPools[i].Clone();
+                    // Must check null since ComponentPool.PoolCount is for all components in the app domain.
+                    if (source.ComponentPools[i] != null)
+                    {
+                        copiedState.ComponentPools[i] = source.ComponentPools[i].Clone();
+                    }
                 }
             }
             else
             {
                 for (int i = 0; i < ComponentPool.PoolCount; i++)
                 {
-                    source.ComponentPools[i].CopyTo(copiedState.ComponentPools[i]);
+                    // Must check null since ComponentPool.PoolCount is for all components in the app domain.
+                    if (source.ComponentPools[i] != null)
+                    {
+                        source.ComponentPools[i].CopyTo(copiedState.ComponentPools[i]);
+                    }
                 }
             }
 
