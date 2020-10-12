@@ -27,7 +27,7 @@ namespace Ecs.Core
         /// <summary>
         /// Copies state from one World reference to another.
         /// </summary>
-        public static WorldState CopyState(this in WorldState source, ref WorldState copiedState)
+        public static WorldState CopyStateTo(this in WorldState source, ref WorldState copiedState)
         {
             copiedState.GlobalSystemVersion = source.GlobalSystemVersion;
             copiedState.LastSystemVersion = source.LastSystemVersion;

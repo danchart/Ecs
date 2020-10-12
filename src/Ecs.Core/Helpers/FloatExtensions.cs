@@ -21,7 +21,7 @@ namespace Ecs.Core
         public static bool AboutEquals(
             this float value1, 
             float value2, 
-            float precalculatedContextualEpsilon = 1E-6f)
+            float precalculatedContextualEpsilon = 1E-5f) // Reduced from 1E-6f
         {
             return Math.Abs(value1 - value2) <= precalculatedContextualEpsilon;
         }

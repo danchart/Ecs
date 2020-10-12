@@ -67,7 +67,7 @@ namespace Ecs.Core.Tests
                 },
                 new InputAtTime
                 {
-                    Time = 1.1f,
+                    Time = 1.0f,
                     Input = new SingletonInputComponent
                     {
                         isLeftDown = true
@@ -75,7 +75,7 @@ namespace Ecs.Core.Tests
                 },
                 new InputAtTime
                 {
-                    Time = 1.6f,
+                    Time = 1.5f,
                     Input = new SingletonInputComponent
                     {
                         isLeftUp = true
@@ -87,7 +87,7 @@ namespace Ecs.Core.Tests
 
             int frameNumber = 0;
 
-            for (float time = 0; time < 2.0f; time += deltaTime)
+            for (float time = 0; time <= 2.0f; time += deltaTime)
             {
                 // New input.
                 var input = new SingletonInputComponent();
@@ -104,7 +104,7 @@ namespace Ecs.Core.Tests
 
                 entityInput.GetComponent<SingletonInputComponent>() = input;
 
-                Debug.WriteLine($"{frameNumber++}:{time:N1}: Left={input.isLeftDown}, Right={input.isRightDown}");
+                Debug.WriteLine($"{frameNumber++}:{time:N1}: LDown={input.isLeftDown}, LUp={input.isLeftUp}, RDown={input.isRightDown}, RUp={input.isRightUp}");
 
                 game.Run(deltaTime);
 
@@ -115,20 +115,20 @@ namespace Ecs.Core.Tests
 
             WorldState stateBackup = new WorldState();
 
-            world.State.CopyState(ref stateBackup);
+            world.State.CopyStateTo(ref stateBackup);
 
             var positionBefore = position; 
 
 
             game.Rewind(5);
-            game.PlayForward(5);
+            game.PlayForward(5, ref position);
 
             var positionAfter1 = position;
 
             Assert.True(positionBefore.x.AboutEquals(positionAfter1.x));
 
-            game.Rewind(7);
-            game.PlayForward(7);
+            game.Rewind(3);
+            game.PlayForward(3, ref position);
 
             var positionAfter2 = position;
 
@@ -139,7 +139,7 @@ namespace Ecs.Core.Tests
             // Update position.
             position.x += 5.0f;
 
-            game.PlayForward(5);
+            game.PlayForward(5, ref position);
 
             var positionAfter3 = position;
 
@@ -152,15 +152,15 @@ namespace Ecs.Core.Tests
 
             internal readonly float FixedTick;
 
-            internal World World;
+            internal readonly World World;
 
-            internal Systems Update;
-            internal Systems FixedUpdate;
+            internal readonly Systems Update;
+            internal readonly Systems FixedUpdate;
 
             private float _lastFixedTime = 0;
             private float _time = 0;
 
-            private SnapShots _snapShots;
+            private readonly SnapShots _snapShots;
 
             private const float TickEpsilon = 0.000001f;
 
@@ -190,14 +190,14 @@ namespace Ecs.Core.Tests
                 _snapShots.Seek(-fixedFrameCount);
                 _snapShots.Current()
                     .WorldState
-                    .CopyState(ref World.State);
+                    .CopyStateTo(ref World.State);
 
-                // Rewind clock to snapshot 
+                // Rewind clocks to snapshot time (which is by definition always the fixed tick).
                 _time = _snapShots.Current().Time;
                 _lastFixedTime = _time;
             }
 
-            public void PlayForward(int fixedFrameCount)
+            public void PlayForward(int fixedFrameCount, ref PositionComponent position)
             {
                 // Clone the snapshot inputs
                 var clonedInputs = new AppendOnlyList<AppendOnlyList<SnapShot.InputFrame>>(fixedFrameCount);
@@ -208,7 +208,7 @@ namespace Ecs.Core.Tests
 
                     clonedInputs.Add(new AppendOnlyList<SnapShot.InputFrame>(replaySnapShot.Inputs.Count));
 
-                    replaySnapShot.Inputs.ShallowCopyTo(clonedInputs.Items[i]);
+                    replaySnapShot.MoveInputsTo(ref clonedInputs.Items[i]);
                 }
 
                 for (int i = 0; i < fixedFrameCount; i++)
@@ -227,15 +227,16 @@ namespace Ecs.Core.Tests
 
                         float deltaTime = clonedInputs.Items[i].Items[j].Time - _time;
 
+Debug.WriteLine($"{i}:{_time:N1}: LDown={input.isLeftDown}, LUp={input.isLeftUp}, RDown={input.isRightDown}, RUp={input.isRightUp}");
+
                         Run(deltaTime);
 
-                        // Advance time
-                        _time = clonedInputs.Items[i].Items[j].Time;
-
                         tickRemaining -= deltaTime;
+
+Debug.WriteLine($"Position={position.x}");
                     }
 
-                    if (tickRemaining > TickEpsilon)
+                    if (tickRemaining >- TickEpsilon)
                     {
                         Run(tickRemaining);
                     }
@@ -258,21 +259,17 @@ namespace Ecs.Core.Tests
                     .Add(new SnapShot.InputFrame
                     {
                         Time = _time,
-                        Input = input,//entity.GetReadOnlyComponent<SingletonInputComponent>(),
+                        Input = input,
                     });
 
                 while (_time - _lastFixedTime >= FixedTick)
                 {
                     FixedUpdate.Run(FixedTick);
 
-//Debug.WriteLine($"Saving snapshot # {_currentSnapShot}");
+Debug.WriteLine($"Saving snapshot # - T:{_lastFixedTime}");
 
-                    _snapShots.Current().Time = _lastFixedTime;
-                    // Copy World State to the current snapshot.
-                    World.State.CopyState(ref _snapShots.Current().WorldState);
+                    _snapShots.NextSnapshot(_lastFixedTime, World);
 
-                    // Advance to next snapshot. Reset it.
-                    _snapShots.MoveNext();
                     // Advance to next fixed time.
                     _lastFixedTime += FixedTick;
                 }
@@ -281,7 +278,7 @@ namespace Ecs.Core.Tests
             }
 
             /// <summary>
-            /// Circular buffer of World snapshots.
+            /// Ring buffer of World snapshots.
             /// </summary>
             private class SnapShots
             {
@@ -299,25 +296,32 @@ namespace Ecs.Core.Tests
 
                     for (int i = 0; i < _snapShots.Length; i++)
                     {
-                        _snapShots[i] = new SnapShot();
+                        _snapShots[i] = new SnapShot
+                        {
+                            Inputs = new AppendOnlyList<SnapShot.InputFrame>(capacity: 8)
+                        };
                     }
+                }
+
+                /// <summary>
+                /// Ends the current snapshot and begins the next.
+                /// </summary>
+                public void NextSnapshot(float fixedTime, World world)
+                {
+                    _snapShots[_current].Time = fixedTime;
+
+                    // Advance to next snapshot. Reset it.
+                    MoveNext();
+
+                    world.State.CopyStateTo(ref _snapShots[_current].WorldState);
                 }
 
                 /// <summary>
                 /// Returns the current snapshot.
                 /// </summary>
-                public SnapShot Current()
+                public ref readonly SnapShot Current()
                 {
-                    return _snapShots[_current];
-                }
-
-                /// <summary>
-                /// Move to the next snapshot position. The snapshot will be reset.
-                /// </summary>
-                public void MoveNext()
-                {
-                    Seek(1);
-                    Current().Reset();
+                    return ref _snapShots[_current];
                 }
 
                 public void Seek(int frameCount)
@@ -330,7 +334,7 @@ namespace Ecs.Core.Tests
                     _current = (_current + SnapShotCount + frameCount) % SnapShotCount;
                 }
 
-                public SnapShot Peek(int frameCount)
+                public ref readonly SnapShot Peek(int frameCount)
                 {
                     if (frameCount < 0 ||
                         Math.Abs(frameCount) >= Count)
@@ -340,19 +344,35 @@ namespace Ecs.Core.Tests
 
                     var peekPos = (_current + SnapShotCount + frameCount) % SnapShotCount;
 
-                    return _snapShots[peekPos];
+                    return ref _snapShots[peekPos];
+                }
+
+                /// <summary>
+                /// Move to the next snapshot position. The snapshot will be reset.
+                /// </summary>
+                private void MoveNext()
+                {
+                    Seek(1);
+                    Current().Reset();
                 }
             }
 
-            private class SnapShot
+            private struct SnapShot
             {
-                public AppendOnlyList<InputFrame> Inputs = new AppendOnlyList<InputFrame>(capacity: 8);
-                public WorldState WorldState = new WorldState();
+                public AppendOnlyList<InputFrame> Inputs;
+                public WorldState WorldState;
                 public float Time;
 
                 public void Reset()
                 {
                     Inputs.Resize(0);
+                }
+
+                public void MoveInputsTo(ref AppendOnlyList<InputFrame> inputs)
+                {
+                    this.Inputs.ShallowCopyTo(inputs);
+
+                    this.Inputs.Count = 0;
                 }
 
                 public struct InputFrame
@@ -443,7 +463,7 @@ namespace Ecs.Core.Tests
 
         private class MovementSystem : SystemBase
         {
-            public EntityQueryWithChangeFilter<MovementComponent> MovementQuery = null;
+            public EntityQuery<MovementComponent> MovementQuery = null;
 
             public override void OnUpdate(float deltaTime)
             {
