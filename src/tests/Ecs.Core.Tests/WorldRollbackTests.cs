@@ -4,6 +4,7 @@ using Xunit;
 
 namespace Ecs.Core.Tests
 {
+#if MOTHBALL // Moved to Ecs.Simulation.Tests
     public class WorldRollbackTests
     {
 
@@ -121,14 +122,14 @@ namespace Ecs.Core.Tests
 
 
             game.Rewind(5);
-            game.PlayForward(5, ref position);
+            game.PlayForward(5);
 
             var positionAfter1 = position;
 
             Assert.True(positionBefore.x.AboutEquals(positionAfter1.x));
 
             game.Rewind(3);
-            game.PlayForward(3, ref position);
+            game.PlayForward(3);
 
             var positionAfter2 = position;
 
@@ -139,7 +140,7 @@ namespace Ecs.Core.Tests
             // Update position.
             position.x += 5.0f;
 
-            game.PlayForward(5, ref position);
+            game.PlayForward(5);
 
             var positionAfter3 = position;
 
@@ -197,7 +198,7 @@ namespace Ecs.Core.Tests
                 _lastFixedTime = _time;
             }
 
-            public void PlayForward(int fixedFrameCount, ref PositionComponent position)
+            public void PlayForward(int fixedFrameCount)
             {
                 // Clone the snapshot inputs
                 var clonedInputs = new AppendOnlyList<AppendOnlyList<SnapShot.InputFrame>>(fixedFrameCount);
@@ -227,13 +228,13 @@ namespace Ecs.Core.Tests
 
                         float deltaTime = clonedInputs.Items[i].Items[j].Time - _time;
 
-Debug.WriteLine($"{i}:{_time:N1}: LDown={input.isLeftDown}, LUp={input.isLeftUp}, RDown={input.isRightDown}, RUp={input.isRightUp}");
+//Debug.WriteLine($"{i}:{_time:N1}: LDown={input.isLeftDown}, LUp={input.isLeftUp}, RDown={input.isRightDown}, RUp={input.isRightUp}");
 
                         Run(deltaTime);
 
                         tickRemaining -= deltaTime;
 
-Debug.WriteLine($"Position={position.x}");
+//Debug.WriteLine($"Position={position.x}");
                     }
 
                     if (tickRemaining >- TickEpsilon)
@@ -492,4 +493,5 @@ Debug.WriteLine($"Saving snapshot # - T:{_lastFixedTime}");
             }
         }
     }
+#endif //MOTHBALL
 }

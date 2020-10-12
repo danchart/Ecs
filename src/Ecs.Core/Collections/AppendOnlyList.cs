@@ -32,17 +32,19 @@ namespace Ecs.Core
         /// <summary>
         /// Resize the list. Internal call only!!
         /// </summary>
-        internal static void Resize<T>(this AppendOnlyList<T> list, int count)
+        public static void Resize<T>(this AppendOnlyList<T> list, int count)
         {
             if (count > list.Items.Length)
             {
                 Array.Resize(ref list.Items, count);
             }
 
+            // TODO: Shrink list if count < (Items.Length / 2)?
+
             list.Count = count;
         }
 
-        internal static void ShallowCopyTo<T>(this AppendOnlyList<T> source, AppendOnlyList<T> dest)
+        public static void ShallowCopyTo<T>(this AppendOnlyList<T> source, AppendOnlyList<T> dest)
             where T : struct
         {
             if (dest.Items.Length < source.Count)
