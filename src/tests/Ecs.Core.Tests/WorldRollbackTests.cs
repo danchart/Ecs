@@ -92,8 +92,6 @@ namespace Ecs.Core.Tests
                 // New input.
                 var input = new SingletonInputComponent();
 
-                const float timeSkew = 0.01f;
-
                 for (; inputIdx < inputs.Length; inputIdx++)
                 {
                     if (inputs[inputIdx].Time > time)
@@ -433,15 +431,12 @@ namespace Ecs.Core.Tests
                         5.0f
                         * deltaTime
                         * (input.isLeftDown ? -1.0f : 1.0f);
+                }
+                else if(input.isLeftUp || input.isRightUp)
+                {
+                    ref var movement = ref playerEnt.GetComponent<MovementComponent>();
 
-                    //movement.velocity_x =
-                    //    Math.Min(
-                    //        5.0f,
-                    //        movement.velocity_x
-                    //        +
-                    //            (5.0f
-                    //            * deltaTime
-                    //            * (input.isMoveLeftDown ? -1.0f : 1.0f)));
+                    movement.velocity_x = 0;
                 }
             }
         }
@@ -469,10 +464,10 @@ namespace Ecs.Core.Tests
                     position.x += movement.velocity_x;
 
                     // Decelerate velocity;
-                    movement.velocity_x -=
-                        Math.Sign(movement.velocity_x)
-                        * 2.5f
-                        * deltaTime;
+                    //movement.velocity_x -=
+                    //    Math.Sign(movement.velocity_x)
+                    //    * 2.5f
+                    //    * deltaTime;
                 }
             }
         }
