@@ -42,7 +42,12 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="SimulationManager.cs" />
+    <Compile Include="Components\ReplicateEntityComponent.cs" />
+    <Compile Include="ReplicateAttribute.cs" />
+    <Compile Include="Server\ServerSimulation.cs" />
+    <Compile Include="Server\ServerToClientReplication.cs" />
+    <Compile Include="SimulationConfig.cs" />
+    <Compile Include="Client\ClientSimulation.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="SnapShot.cs" />
     <Compile Include="SnapShots.cs" />

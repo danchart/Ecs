@@ -18,8 +18,11 @@ namespace Ecs.Simulation.Tests
             var inputSystem = new PlayerInputSystem();
             var movementSystem = new MovementSystem();
 
-            var game = new SimulationManager<SingletonInputComponent>(
-                fixedTick: fixedDeltaTime,
+            var config = SimulationConfig.Default;
+            config.FixedTick = fixedDeltaTime;
+
+            var simulation = new ClientSimulation<SingletonInputComponent>(
+                config: config,
                 world: world,
                 update:
                 new Systems(world)
@@ -28,7 +31,11 @@ namespace Ecs.Simulation.Tests
                 new Systems(world)
                     .Add(movementSystem));
 
-            game.Create();
+            simulation.Create();
+
+            var testDriver = new SimulationManagerTestDriver<SingletonInputComponent>(
+                simulation, 
+                fixedDeltaTime);
 
             // Singleton input entity
             var entityInput = world.NewEntity();
@@ -100,7 +107,7 @@ namespace Ecs.Simulation.Tests
 
                 Debug.WriteLine($"{frameNumber++}:{time:N1}: LDown={input.isLeftDown}, LUp={input.isLeftUp}, RDown={input.isRightDown}, RUp={input.isRightUp}");
 
-                game.Run(deltaTime);
+                testDriver.Run(deltaTime);
 
                 Debug.WriteLine($"Position={position.x}");
             }
@@ -114,32 +121,69 @@ namespace Ecs.Simulation.Tests
             var positionBefore = position;
 
 
-            game.Rewind(5);
-            game.PlayForward(5);
+            simulation.Rewind(5);
+            simulation.PlayForward(5);
 
             var positionAfter1 = position;
 
             Assert.True(positionBefore.x.AboutEquals(positionAfter1.x));
 
-            game.Rewind(3);
-            game.PlayForward(3);
+            simulation.Rewind(3);
+            simulation.PlayForward(3);
 
             var positionAfter2 = position;
 
             Assert.True(positionBefore.x.AboutEquals(positionAfter2.x));
 
-            game.Rewind(5);
+            simulation.Rewind(5);
 
             // Update position.
             position.x += 5.0f;
 
-            game.PlayForward(5);
+            simulation.PlayForward(5);
 
             var positionAfter3 = position;
 
             Assert.True((positionBefore.x + 5.0f).AboutEquals(positionAfter3.x));
         }
 
+        public class SimulationManagerTestDriver<TInput>
+            where TInput : unmanaged
+        {
+            private readonly float FixedTick;
+
+            private float _lastFixedTime = 0;
+            private float _time = 0;
+
+            private readonly ClientSimulation<TInput> _simulation;
+
+            public SimulationManagerTestDriver(
+                ClientSimulation<TInput> simulation,
+                float fixedTick)
+            {
+                _simulation = simulation;
+                FixedTick = fixedTick;
+            }
+
+            /// <summary>
+            /// Simulated update loop.
+            /// </summary>
+            public void Run(float deltaTime)
+            {
+                _time += deltaTime;
+
+                // Run any fixed updates.
+                while (_time - _lastFixedTime >= FixedTick)
+                {
+                    _simulation.FixedUpdate(FixedTick);
+
+                    // Advance to next fixed time.
+                    _lastFixedTime += FixedTick;
+                }
+
+                _simulation.Update(deltaTime);
+            }
+        }
 
         //
         // Misc

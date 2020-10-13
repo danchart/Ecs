@@ -459,44 +459,6 @@ namespace Ecs.Core
             : base(world)
         {
         }
-    }
-
-    public class EntityQuery<IncType> : GlobalEntityQuery
-        where IncType : unmanaged
-    {
-        private ComponentPool<IncType> _componentPool;
-
-        internal EntityQuery(World world) 
-            : base(world)
-        {
-            this.IncludedComponentTypeIndices = new[] { ComponentType<IncType>.Index };
-
-            _componentPool = world.GetPool<IncType>();
-            _componentIds = new int[EcsConstants.InitialEntityQueryEntityCapacity];
-        }
-
-        public ref readonly IncType GetSingletonComponentReadonly()
-        {
-            return ref _componentPool.Items[_componentIds[0]].Item;
-        }
-
-        public ref IncType GetSingleton()
-        {
-            ref var item = ref _componentPool.Items[_componentIds[0]];
-            item.Version = this.World.State.GlobalSystemVersion;
-
-            return ref item.Item;
-        }
-
-        public ComponentEnumerable<IncType> GetComponents() 
-        {
-            return new ComponentEnumerable<IncType>(this, _componentIds);
-        }
-
-        public EntityEnumerator GetEnumerator()
-        {
-            return new EntityEnumerator(this);
-        }
 
         public struct ComponentEnumerable<T>
             where T : unmanaged
@@ -541,7 +503,7 @@ namespace Ecs.Core
             public ref T Current
             {
                 get
-                { 
+                {
                     ref var item = ref _componentPool.Items[_componentIds[_current]];
 
                     item.Version = _globalSystemVersion;
@@ -559,6 +521,44 @@ namespace Ecs.Core
             {
                 return ++_current < _query._entityCount;
             }
+        }
+    }
+
+    public class EntityQuery<IncType> : GlobalEntityQuery
+        where IncType : unmanaged
+    {
+        private ComponentPool<IncType> _componentPool;
+
+        internal EntityQuery(World world) 
+            : base(world)
+        {
+            this.IncludedComponentTypeIndices = new[] { ComponentType<IncType>.Index };
+
+            _componentPool = world.GetPool<IncType>();
+            _componentIds = new int[EcsConstants.InitialEntityQueryEntityCapacity];
+        }
+
+        public ref readonly IncType GetSingletonComponentReadonly()
+        {
+            return ref _componentPool.Items[_componentIds[0]].Item;
+        }
+
+        public ref IncType GetSingleton()
+        {
+            ref var item = ref _componentPool.Items[_componentIds[0]];
+            item.Version = this.World.State.GlobalSystemVersion;
+
+            return ref item.Item;
+        }
+
+        public ComponentEnumerable<IncType> GetComponents() 
+        {
+            return new ComponentEnumerable<IncType>(this, _componentIds);
+        }
+
+        public EntityEnumerator GetEnumerator()
+        {
+            return new EntityEnumerator(this);
         }
 
         internal override EntityQueryBase Clone()

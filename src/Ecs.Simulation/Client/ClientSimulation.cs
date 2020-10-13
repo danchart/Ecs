@@ -1,45 +1,40 @@
 ﻿using Ecs.Core;
-using System.Diagnostics;
 
 namespace Ecs.Simulation
 {
-    public class SimulationManager<TInput>
+    public class ClientSimulation<TInput>
         where TInput : unmanaged
     {
-        public const int SnapShotCount = 10; // in fixed update frames.
-
-        internal readonly float FixedTick;
-
         internal readonly World World;
 
-        internal readonly Systems Update;
-        internal readonly Systems FixedUpdate;
+        internal readonly Systems _update;
+        internal readonly Systems _fixedUpdate;
+
+        private readonly SnapShots<TInput> _snapShots;
+
+        private readonly SimulationConfig _config;
 
         private float _lastFixedTime = 0;
         private float _time = 0;
 
-        private readonly SnapShots<TInput> _snapShots;
-
-        private const float TickEpsilon = 0.000001f;
-
-        public SimulationManager(
-            float fixedTick,
+        public ClientSimulation(
+            SimulationConfig config,
             World world,
             Systems update,
             Systems fixedUpdate)
         {
-            FixedTick = fixedTick;
+            _config = config;
             World = world;
-            Update = update;
-            FixedUpdate = fixedUpdate;
+            _update = update;
+            _fixedUpdate = fixedUpdate;
 
-            _snapShots = new SnapShots<TInput>(SnapShotCount);
+            _snapShots = new SnapShots<TInput>(config.SnapShotCount);
         }
 
         public void Create()
         {
-            Update.Create();
-            FixedUpdate.Create();
+            _update.Create();
+            _fixedUpdate.Create();
         }
 
         public void Rewind(int fixedFrameCount)
@@ -73,12 +68,12 @@ namespace Ecs.Simulation
             {
                 // Replay inputs and simulate.
 
-                float tickRemaining = FixedTick;
+                float tickRemaining = _config.FixedTick;
 
                 var query = (EntityQuery<TInput>)World.GetEntityQuery<EntityQuery<TInput>>();
                 ref var input = ref query.GetSingleton();
 
-                // Apply all inputs for this fixed update
+                // Apply all inputs before this fixed update
                 for (int j = 0; j < clonedInputs.Items[i].Count; j++)
                 {
                     input = clonedInputs.Items[i].Items[j].Input;
@@ -87,24 +82,34 @@ namespace Ecs.Simulation
 
                     //Debug.WriteLine($"{i}:{_time:N1}: LDown={input.isLeftDown}, LUp={input.isLeftUp}, RDown={input.isRightDown}, RUp={input.isRightUp}");
 
-                    Run(deltaTime);
+                    Update(deltaTime);
 
                     tickRemaining -= deltaTime;
 
                     //Debug.WriteLine($"Position={position.x}");
                 }
 
-                if (tickRemaining > -TickEpsilon)
-                {
-                    Run(tickRemaining);
-                }
+                // Run this snapshots fixed update.
+                FixedUpdate(_config.FixedTick);
             }
         }
 
+        public void FixedUpdate(float deltaTime)
+        {
+            _fixedUpdate.Run(deltaTime);
+
+            //Debug.WriteLine($"Saving snapshot # - T:{_lastFixedTime}");
+
+            _snapShots.NextSnapshot(_lastFixedTime, World);
+
+            // Advance to next fixed time.
+            _lastFixedTime += deltaTime;
+        }
+
         /// <summary>
-        /// Simulated update loop.
+        /// Update loop.
         /// </summary>
-        public void Run(float deltaTime)
+        public void Update(float deltaTime)
         {
             _time += deltaTime;
 
@@ -120,19 +125,7 @@ namespace Ecs.Simulation
                     Input = input,
                 });
 
-            while (_time - _lastFixedTime >= FixedTick)
-            {
-                FixedUpdate.Run(FixedTick);
-
-                Debug.WriteLine($"Saving snapshot # - T:{_lastFixedTime}");
-
-                _snapShots.NextSnapshot(_lastFixedTime, World);
-
-                // Advance to next fixed time.
-                _lastFixedTime += FixedTick;
-            }
-
-            Update.Run(deltaTime);
+            _update.Run(deltaTime);
         }
     }
 }
