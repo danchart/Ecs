@@ -36,7 +36,9 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="BitFieldTests.cs" />
     <Compile Include="PacketStreamExtensionsTests.cs" />
+    <Compile Include="PacketTests.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <ItemGroup>
