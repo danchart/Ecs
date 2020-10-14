@@ -42,10 +42,13 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="ComponentIdAttribute.cs" />
+    <Compile Include="ComponentId.cs" />
     <Compile Include="Components\PlayerInputComponent.cs" />
-    <Compile Include="Components\ReplicateEntityComponent.cs" />
+    <Compile Include="Components\Tags\ReplicationComponent.cs" />
     <Compile Include="Components\TransformComponent.cs" />
-    <Compile Include="ReplicateAttribute.cs" />
+    <Compile Include="Protocol\Packet.cs" />
+    <Compile Include="Protocol\PacketSerializer.cs" />
     <Compile Include="Server\ServerSimulation.cs" />
     <Compile Include="Server\ServerToClientReplication.cs" />
     <Compile Include="SimulationConfig.cs" />

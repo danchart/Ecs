@@ -1,14 +1,15 @@
 ﻿using Ecs.Core;
+using System.Collections.Generic;
 
 namespace Ecs.Simulation
 {
     public class GatherReplicatedDataSystem : SystemBase
     {
-        private EntityQueryWithChangeFilter<ReplicateEntityComponent, ReplicateEntityComponent> _foo;
+        public EntityQueryWithChangeFilter<ReplicationComponent, TransformComponent> _transformQuery = null;
 
         public override void OnUpdate(float deltaTime)
         {
-            
+            var entityToComponents = new Dictionary<Entity, Dictionary<ComponentId, string>>();
         }
     }
 }

@@ -1,5 +1,6 @@
 ﻿namespace Ecs.Simulation
 {
+    [ComponentId(ComponentId.Transform)]
     public struct TransformComponent
     {
         public float pos_x;

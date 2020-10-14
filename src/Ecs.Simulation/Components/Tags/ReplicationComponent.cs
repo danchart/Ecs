@@ -1,6 +1,6 @@
 ﻿namespace Ecs.Simulation
 {
-    public struct ReplicateEntityComponent
+    public struct ReplicationComponent
     {
     }
 }

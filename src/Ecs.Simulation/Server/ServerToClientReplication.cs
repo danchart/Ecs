@@ -10,9 +10,6 @@ namespace Ecs.Simulation.Server
 
         private World World;
 
-        private EntityQuery<ReplicateEntityComponent> _replicateEntityQuery;
-        
-
         public ServerToClientReplication(World world)
         {
             World = world ?? throw new ArgumentNullException(nameof(world));
