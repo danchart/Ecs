@@ -16,41 +16,81 @@ namespace Ecs.Simulation
             var replicationData = new Dictionary<Entity, AppendOnlyList<ComponentData>>();
 
             // TransformComponent
-
-            foreach (int index in _transformQuery.GetIndices())
-            {
-                var entity = _transformQuery.GetEntity(index);
-
-                if (!replicationData.ContainsKey(entity))
-                {
-                    replicationData[entity] = new AppendOnlyList<ComponentData>(8);
-                }
-
-                replicationData[entity].Add(
+            Gather(
+                _transformQuery,
+                (query, index) =>
                     new ComponentData
                     {
-                        Transform = _transformQuery.Ref2(index)
-                    });
-            }
+                        Transform = query.Ref2(index)
+                    },
+                replicationData);
 
             // MovementComponent
 
-            foreach (int index in _movementQuery.GetIndices())
+            Gather(
+                _movementQuery,
+                (query, index) =>
+                    new ComponentData
+                    {
+                        Movement = query.Ref2(index)
+                    }
+                ,
+                replicationData);
+
+
+            //foreach (int index in _transformQuery.GetIndices())
+            //{
+            //    var entity = _transformQuery.GetEntity(index);
+
+            //    if (!replicationData.ContainsKey(entity))
+            //    {
+            //        replicationData[entity] = new AppendOnlyList<ComponentData>(8);
+            //    }
+
+            //    replicationData[entity].Add(
+            //        new ComponentData
+            //        {
+            //            Transform = _transformQuery.Ref2(index)
+            //        });
+            //}
+
+            // MovementComponent
+
+            //foreach (int index in _movementQuery.GetIndices())
+            //{
+            //    var entity = _movementQuery.GetEntity(index);
+
+            //    if (!replicationData.ContainsKey(entity))
+            //    {
+            //        replicationData[entity] = new AppendOnlyList<ComponentData>(8);
+            //    }
+
+            //    replicationData[entity].Add(
+            //        new ComponentData
+            //        {
+            //            Movement = _movementQuery.Ref2(index)
+            //        });
+            //}
+
+        }
+
+        private static void Gather<T>(
+            EntityQueryWithChangeFilter<ReplicationTagComponent, T> query, 
+            Func<EntityQueryWithChangeFilter<ReplicationTagComponent, T>, int, ComponentData> createComponentDataFunc,
+            Dictionary<Entity, AppendOnlyList<ComponentData>> replicationData)
+            where T : unmanaged
+        {
+            foreach (int index in query.GetIndices())
             {
-                var entity = _movementQuery.GetEntity(index);
+                var entity = query.GetEntity(index);
 
                 if (!replicationData.ContainsKey(entity))
                 {
                     replicationData[entity] = new AppendOnlyList<ComponentData>(8);
                 }
 
-                replicationData[entity].Add(
-                    new ComponentData
-                    {
-                        Movement = _movementQuery.Ref2(index)
-                    });
+                replicationData[entity].Add(createComponentDataFunc(query, index));
             }
-
         }
 
         [StructLayout(LayoutKind.Explicit, Pack = 1)]
