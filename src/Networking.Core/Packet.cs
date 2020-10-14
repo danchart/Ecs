@@ -1,7 +1,7 @@
 ﻿using System.IO;
 using System.Runtime.InteropServices;
 
-namespace Ecs.Simulation.Protocol
+namespace Networking.Core
 {
     [StructLayout(LayoutKind.Explicit, Pack = 1)]
     public struct PacketBase
@@ -59,17 +59,24 @@ namespace Ecs.Simulation.Protocol
 
         public struct TransformData
         {
-            float x, y;
+            // 0
+            float x;
+            // 1
+            float y;
+            // 2
             float rotation;
 
             public bool Serialize(Stream stream)
             {
+                stream.PacketWriteByte(0);
+                stream.PacketWriteFloat(x);
 
+                return true;
             }
 
             public bool Deserialize(Stream stream)
             {
-
+                return true;
             }
 
         }

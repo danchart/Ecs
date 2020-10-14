@@ -11,6 +11,10 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Ecs.Simulation", "Ecs.Simul
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Ecs.Simulation.Tests", "tests\Ecs.Simulation.Tests\Ecs.Simulation.Tests.csproj", "{3EACC74D-4AFD-428C-9A48-D204B8066D44}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Networking.Core", "Networking.Core\Networking.Core.csproj", "{B19A0428-3713-43B2-81A5-1F228CE19489}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Networking.Core.Tests", "Networking.Core.Tests\Networking.Core.Tests.csproj", "{FE03A7B7-6303-46C2-A14B-D8D4F032130F}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -33,6 +37,14 @@ Global
 		{3EACC74D-4AFD-428C-9A48-D204B8066D44}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{3EACC74D-4AFD-428C-9A48-D204B8066D44}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{3EACC74D-4AFD-428C-9A48-D204B8066D44}.Release|Any CPU.Build.0 = Release|Any CPU
+		{B19A0428-3713-43B2-81A5-1F228CE19489}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{B19A0428-3713-43B2-81A5-1F228CE19489}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{B19A0428-3713-43B2-81A5-1F228CE19489}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{B19A0428-3713-43B2-81A5-1F228CE19489}.Release|Any CPU.Build.0 = Release|Any CPU
+		{FE03A7B7-6303-46C2-A14B-D8D4F032130F}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{FE03A7B7-6303-46C2-A14B-D8D4F032130F}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{FE03A7B7-6303-46C2-A14B-D8D4F032130F}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{FE03A7B7-6303-46C2-A14B-D8D4F032130F}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

@@ -47,8 +47,6 @@
     <Compile Include="Components\PlayerInputComponent.cs" />
     <Compile Include="Components\Tags\ReplicationComponent.cs" />
     <Compile Include="Components\TransformComponent.cs" />
-    <Compile Include="Protocol\Packet.cs" />
-    <Compile Include="Protocol\PacketSerializer.cs" />
     <Compile Include="Server\ServerSimulation.cs" />
     <Compile Include="Server\ServerToClientReplication.cs" />
     <Compile Include="SimulationConfig.cs" />
