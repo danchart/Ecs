@@ -61,6 +61,54 @@ namespace Networking.Core
             get => IsSet(8);
         }
 
+        public bool Bit9
+        {
+            set => Set(9, value);
+            get => IsSet(9);
+        }
+
+        public bool Bit10
+        {
+            set => Set(10, value);
+            get => IsSet(10);
+        }
+
+        public bool Bit11
+        {
+            set => Set(11, value);
+            get => IsSet(11);
+        }
+
+        public bool Bit12
+        {
+            set => Set(12, value);
+            get => IsSet(12);
+        }
+
+        public bool Bit13
+        {
+            set => Set(13, value);
+            get => IsSet(13);
+        }
+
+        public bool Bit14
+        {
+            set => Set(14, value);
+            get => IsSet(14);
+        }
+
+        public bool Bit15
+        {
+            set => Set(15, value);
+            get => IsSet(15);
+        }
+
+        public bool Bit16
+        {
+            set => Set(16, value);
+            get => IsSet(16);
+        }
+
         public ushort Count()
         {
             ushort count = 0;

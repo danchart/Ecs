@@ -1,6 +1,6 @@
 ﻿namespace Ecs.Simulation
 {
-    public struct ReplicationComponent
+    public struct ReplicationTagComponent
     {
     }
 }

@@ -39,6 +39,26 @@ namespace Networking.Core
             return true;
         }
 
+        public static bool PacketWriteUInt(this Stream stream, uint value)
+        {
+            var bytes = BitConverter.GetBytes(value);
+
+            stream.Write(bytes, 0, bytes.Length);
+
+            return true;
+        }
+
+        public static bool PacketReadUInt(this Stream stream, out uint value)
+        {
+            var bytes = new byte[sizeof(uint)];
+
+            stream.Read(bytes, 0, bytes.Length);
+
+            value = BitConverter.ToUInt32(bytes, 0);
+
+            return true;
+        }
+
         public static bool PacketWriteInt(this Stream stream, int value)
         {
             var bytes = BitConverter.GetBytes(value);

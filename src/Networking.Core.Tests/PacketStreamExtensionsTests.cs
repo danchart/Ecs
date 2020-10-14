@@ -17,8 +17,11 @@ namespace Networking.Core.Tests
             const ushort ushortValue = 4800;
             ushort ushortResult;
 
-            const int intValue = 65000;
+            const int intValue = 128000;
             int intResult;
+
+            const uint uintValue = 256000;
+            uint uintResult;
 
             const byte byteValue = 13;
             byte byteResult;
@@ -28,6 +31,7 @@ namespace Networking.Core.Tests
                 writeStream.PacketWriteByte(byteValue);
                 writeStream.PacketWriteUShort(ushortValue);
                 writeStream.PacketWriteInt(intValue);
+                writeStream.PacketWriteUInt(uintValue);
                 writeStream.PacketWriteFloat(floatValue);
 
                 var bytes = writeStream.ToArray();
@@ -37,6 +41,7 @@ namespace Networking.Core.Tests
                     readStream.PacketReadByte(out byteResult);
                     readStream.PacketReadUShort(out ushortResult);
                     readStream.PacketReadInt(out intResult);
+                    readStream.PacketReadUInt(out uintResult);
                     readStream.PacketReadFloat(out floatResult);
                 }
             }

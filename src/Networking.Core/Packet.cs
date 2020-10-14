@@ -19,18 +19,16 @@ namespace Networking.Core
         Management = 1,
     }
 
-    //[StructLayout(LayoutKind.Explicit, Pack=1)]
     public struct SimulationPacket
     {
-        //[FieldOffset(0)]
+        public uint Frame;
         public byte EntityCount;
-        //[FieldOffset(1)]
         public EntityPacketData[] EntityData;
 
         public bool Serialize(Stream stream)
         {
-            // packet type
-            //stream.PacketWriteByte((byte) PacketTypeEnum.Simulation);
+            // frame #
+            stream.PacketWriteUInt(Frame);
             // entity count
             stream.PacketWriteByte(EntityCount);
             
@@ -44,6 +42,8 @@ namespace Networking.Core
 
         public bool Deserialize(Stream stream)
         {
+            // frame #
+            stream.PacketReadUInt(out Frame);
             // packet count
             stream.PacketReadByte(out EntityCount);
 
@@ -58,13 +58,9 @@ namespace Networking.Core
         }
     }
 
-    //[StructLayout(LayoutKind.Explicit, Pack = 1)]
     public struct EntityPacketData
     {
-        //[FieldOffset(0)]
         public byte ItemCount;
-
-        //[FieldOffset(1)]
         public PacketDataItem[] Items;
 
         public bool Serialize(Stream stream)
@@ -107,22 +103,25 @@ namespace Networking.Core
 
         [FieldOffset(0)]
         ushort Type; // value of "TypeEnum"
+        [FieldOffset(2)]
+        public BitField HasFields;
 
-        [FieldOffset(2)]
+        [FieldOffset(6)]
         public TransformData Transform;
-        [FieldOffset(2)]
+        [FieldOffset(6)]
         public PlayerInputData PlayerInput;
 
         public bool Serialize(Stream stream)
         {
-            // item type
             stream.PacketWriteUShort(Type);
+            byte fieldCount = (byte)HasFields.Count();
+            stream.PacketWriteByte(fieldCount);
 
             switch ((TypeEnum)Type)
             {
                 case TypeEnum.Transform:
 
-                    Transform.Serialize(stream);
+                    Transform.Serialize(HasFields, stream);
                     break;
             }
 
@@ -139,11 +138,16 @@ namespace Networking.Core
                 return false;
             }
 
+            HasFields = new BitField();
+
+            byte fieldCount;
+            stream.PacketReadByte(out fieldCount);
+
             switch ((TypeEnum)Type)
             {
                 case TypeEnum.Transform:
 
-                    Transform.Deserialize(stream);
+                    Transform.Deserialize(fieldCount, ref HasFields, stream);
                     break;
             }
 
@@ -152,8 +156,6 @@ namespace Networking.Core
 
         public struct TransformData
         {
-            public BitField HasData;
-
             // 0
             public float x;
             // 1
@@ -161,36 +163,37 @@ namespace Networking.Core
             // 2
             public float rotation;
 
-            public bool Serialize(Stream stream)
+            public bool Serialize(BitField hasFields, Stream stream)
             {
-                byte fieldCount = (byte) HasData.Count();
-                stream.PacketWriteByte(fieldCount);
+                if (hasFields.IsSet(0))
+                {
+                    stream.PacketWriteByte(0);
+                    stream.PacketWriteFloat(x);
+                }
 
-                stream.PacketWriteByte(0);
-                stream.PacketWriteFloat(x);
+                if (hasFields.IsSet(1))
+                {
+                    stream.PacketWriteByte(1);
+                    stream.PacketWriteFloat(y);
+                }
 
-                stream.PacketWriteByte(1);
-                stream.PacketWriteFloat(y);
-
-                stream.PacketWriteByte(2);
-                stream.PacketWriteFloat(rotation);
+                if (hasFields.IsSet(2))
+                {
+                    stream.PacketWriteByte(2);
+                    stream.PacketWriteFloat(rotation);
+                }
 
                 return true;
             }
 
-            public bool Deserialize(Stream stream)
+            public bool Deserialize(byte fieldCount, ref BitField hasFields, Stream stream)
             {
-                HasData = new BitField();
-
-                byte fieldCount;
-                stream.PacketReadByte(out fieldCount);
-
                 for(int i = 0; i < fieldCount; i++)
                 {
                     byte fieldIndex;
                     stream.PacketReadByte(out fieldIndex);
 
-                    HasData.Set(fieldIndex);
+                    hasFields.Set(fieldIndex);
 
                     switch (fieldIndex)
                     {
@@ -217,5 +220,4 @@ namespace Networking.Core
 
         }
     }
-
 }

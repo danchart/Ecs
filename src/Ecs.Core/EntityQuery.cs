@@ -764,6 +764,24 @@ namespace Ecs.Core
             }
         }
 
+        public struct IndexEnumerable<T>
+            where T : unmanaged
+        {
+            private readonly EntityQueryBase _query;
+            private readonly Version _lastSystemVersion;
+
+            public IndexEnumerable(EntityQueryBase query, Version lastSystemVersion)
+            {
+                this._query = query;
+                this._lastSystemVersion = lastSystemVersion;
+            }
+
+            public IndexEnumerator<T> GetEnumerator()
+            {
+                return new IndexEnumerator<T>(this._query, this._lastSystemVersion);
+            }
+        }
+
         public struct IndexEnumerator<IncType1> : IDisposable
             where IncType1 : unmanaged
         {
@@ -1101,9 +1119,9 @@ namespace Ecs.Core
                 this.World.State.LastSystemVersion.Items[this._systemsIndex]);
         }
 
-        public IndexEnumerator<IncType1> GetIndices()
+        public IndexEnumerable<IncType1> GetIndices()
         {
-            return new IndexEnumerator<IncType1>(
+            return new IndexEnumerable<IncType1>(
                 this,
                 this.World.State.LastSystemVersion.Items[this._systemsIndex]);
         }
@@ -1136,12 +1154,6 @@ namespace Ecs.Core
             return ref this._componentPool.Items[_componentIds1[index]].Item;
         }
 
-
-
-        protected override void AddComponentsToResult(Entity entity, int index)
-        {
-            EntityQueryHelper.AddComponentsToResult<IncType1>(entity, index, _componentIds1);
-        }
 
 
 #if MOTHBALL
@@ -1196,6 +1208,11 @@ namespace Ecs.Core
 
             // EntityQueryWithChangeFilter
             entityQuery._componentPool = this._componentPool;
+        }
+
+        protected override void AddComponentsToResult(Entity entity, int index)
+        {
+            EntityQueryHelper.AddComponentsToResult<IncType1>(entity, index, _componentIds1);
         }
 
         public class Exclude<ExcType> : EntityQueryWithChangeFilter<IncType1> 
@@ -1305,20 +1322,16 @@ namespace Ecs.Core
             return ref this._componentPool2.Items[_componentIds2[index]].Item;
         }
 
-
-        protected override void AddComponentsToResult(Entity entity, int index)
-        {
-            EntityQueryHelper.AddComponentsToResult<IncType1, IncType2>(
-                entity,
-                index,
-                this._componentIds1,
-                this._componentIds2);
-        }
-
-
         public EntityEnumerator<IncType1, IncType2> GetEnumerator()
         {
             return new EntityEnumerator<IncType1, IncType2>(
+                this,
+                this.World.State.LastSystemVersion.Items[this._systemsIndex]);
+        }
+
+        public IndexEnumerable<IncType1> GetIndices()
+        {
+            return new IndexEnumerable<IncType1>(
                 this,
                 this.World.State.LastSystemVersion.Items[this._systemsIndex]);
         }
@@ -1344,6 +1357,15 @@ namespace Ecs.Core
             // EntityQueryWithChangeFilter
             entityQuery._componentPool1 = this._componentPool1;
             entityQuery._componentPool2 = this._componentPool2;
+        }
+
+        protected override void AddComponentsToResult(Entity entity, int index)
+        {
+            EntityQueryHelper.AddComponentsToResult<IncType1, IncType2>(
+                entity,
+                index,
+                this._componentIds1,
+                this._componentIds2);
         }
 
         public class Exclude<ExcType> : EntityQueryWithChangeFilter<IncType1>

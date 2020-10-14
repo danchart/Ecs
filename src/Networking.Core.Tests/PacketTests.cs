@@ -1,6 +1,4 @@
 ﻿using System.IO;
-using System.Xml;
-using System.Xml.XPath;
 using Xunit;
 
 namespace Networking.Core.Tests
@@ -22,15 +20,14 @@ namespace Networking.Core.Tests
                         {
                             new PacketDataItem
                             {
+                                HasFields = new BitField
+                                {
+                                    Bit0 = true,
+                                    Bit1 = true,
+                                    Bit2 = true
+                                },
                                 Transform = new PacketDataItem.TransformData
                                 {
-                                    HasData = new BitField
-                                    {
-                                        Bit0 = true,
-                                        Bit1 = true,
-                                        Bit2 = true
-                                    },
-
                                     x = 5.5f,
                                     y = 7.7f,
                                     rotation = 9.9f
