@@ -867,7 +867,6 @@ namespace Ecs.Core
             private readonly EntityQueryBase _query;
             private readonly ComponentPool<T> _componentPool;
             private readonly int[] _componentIds;
-            private readonly Version _globalSystemVersion;
             private readonly Version _lastSystemVersion;
 
             private int _current;
@@ -881,8 +880,6 @@ namespace Ecs.Core
                 this._componentPool = _query.World.GetPool<T>();
                 this._componentIds = componentIds;
                 this._lastSystemVersion = lastSystemVersion;
-
-                this._globalSystemVersion = query.World.State.GlobalSystemVersion;
 
                 this._current = -1;
 

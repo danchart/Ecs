@@ -42,7 +42,9 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Components\PlayerInputComponent.cs" />
     <Compile Include="Components\ReplicateEntityComponent.cs" />
+    <Compile Include="Components\TransformComponent.cs" />
     <Compile Include="ReplicateAttribute.cs" />
     <Compile Include="Server\ServerSimulation.cs" />
     <Compile Include="Server\ServerToClientReplication.cs" />
