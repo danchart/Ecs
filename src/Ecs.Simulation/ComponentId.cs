@@ -3,5 +3,6 @@
     public enum ComponentId
     {
         Transform = 1,
+        Movement,
     }
 }

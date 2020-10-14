@@ -60,11 +60,14 @@ namespace Networking.Core
 
     public struct EntityPacketData
     {
+        public uint EntityId;
         public byte ItemCount;
         public PacketDataItem[] Items;
 
         public bool Serialize(Stream stream)
         {
+            // entity id
+            stream.PacketWriteUInt(EntityId);
             // item count
             stream.PacketWriteByte(ItemCount);
 
@@ -78,6 +81,8 @@ namespace Networking.Core
 
         public bool Deserialize(Stream stream)
         {
+            // entity id
+            stream.PacketReadUInt(out EntityId);
             // item count
             stream.PacketReadByte(out ItemCount);
 

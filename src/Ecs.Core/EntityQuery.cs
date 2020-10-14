@@ -1300,8 +1300,6 @@ namespace Ecs.Core
                 this.World.State.LastSystemVersion.Items[this._systemsIndex]);
         }
 
-
-
         public ref readonly IncType1 GetReadonly1(int index)
         {
             return ref this._componentPool1.Items[_componentIds1[index]].Item;
@@ -1320,6 +1318,22 @@ namespace Ecs.Core
         public ref IncType2 Get2(int index)
         {
             return ref this._componentPool2.Items[_componentIds2[index]].Item;
+        }
+
+        public ComponentRef<IncType1> Ref1(int index)
+        {
+            return new ComponentRef<IncType1>(
+                this._entities[index],
+                _componentPool1,
+                _componentIds1[index]);
+        }
+
+        public ComponentRef<IncType2> Ref2(int index)
+        {
+            return new ComponentRef<IncType2>(
+                this._entities[index],
+                _componentPool2,
+                _componentIds2[index]);
         }
 
         public EntityEnumerator<IncType1, IncType2> GetEnumerator()

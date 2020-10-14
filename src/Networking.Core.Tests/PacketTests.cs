@@ -15,6 +15,7 @@ namespace Networking.Core.Tests
                 {
                     new EntityPacketData
                     {
+                        EntityId = 31,
                         ItemCount = 1,
                         Items = new PacketDataItem[]
                         {
@@ -50,11 +51,12 @@ namespace Networking.Core.Tests
                 }
             }
 
-            Assert.Equal(1, resultPacket.EntityCount);
-            Assert.Equal(1, resultPacket.EntityData[0].ItemCount);
-            Assert.Equal(5.5f, resultPacket.EntityData[0].Items[0].Transform.x);
-            Assert.Equal(7.7f, resultPacket.EntityData[0].Items[0].Transform.y);
-            Assert.Equal(9.9f, resultPacket.EntityData[0].Items[0].Transform.rotation);
+            Assert.Equal(packet.EntityCount, resultPacket.EntityCount);
+            Assert.Equal(packet.EntityData[0].EntityId, resultPacket.EntityData[0].EntityId);
+            Assert.Equal(packet.EntityData[0].ItemCount, resultPacket.EntityData[0].ItemCount);
+            Assert.Equal(packet.EntityData[0].Items[0].Transform.x, resultPacket.EntityData[0].Items[0].Transform.x);
+            Assert.Equal(packet.EntityData[0].Items[0].Transform.y, resultPacket.EntityData[0].Items[0].Transform.y);
+            Assert.Equal(packet.EntityData[0].Items[0].Transform.rotation, resultPacket.EntityData[0].Items[0].Transform.rotation);
         }
     }
 }

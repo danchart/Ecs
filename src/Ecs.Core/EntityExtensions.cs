@@ -155,9 +155,6 @@ namespace Ecs.Core
                             .World
                             .State.ComponentPools[poolIndex], 
                         entityData.Components[i].ItemIndex);
-                    //return 
-                    //    ((ComponentPool<T>)entity.World.ComponentPools[poolIndex])
-                    //    .Reference(entityData.Components[i].ItemIndex);
                 }
             }
 
