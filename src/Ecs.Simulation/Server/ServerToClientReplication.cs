@@ -11,7 +11,7 @@ namespace Ecs.Simulation.Server
         private World World;
 
         private EntityQuery<ReplicateEntityComponent> _replicateEntityQuery;
-        private EntityQueryWithChangeFilter<ReplicateEntityComponent, ReplicateEntityComponent> _foo;
+        
 
         public ServerToClientReplication(World world)
         {

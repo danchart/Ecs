@@ -215,24 +215,6 @@ namespace Ecs.Core
             }
         }
 
-        internal void OnChangeComponent(
-            int componentTypeIndex,
-            in Entity entity, 
-            in EntityData entityData)
-        {
-            if (_includedComponentIdToEntityQueries.TryGetValue(componentTypeIndex, out var entityQueries))
-            {
-                for (int i = 0; i < entityQueries.Count; i++)
-                {
-                    var entityQuery = entityQueries.Items[i];
-
-                    entityQuery.OnChangeIncludeComponent(entity, entityData, componentTypeIndex);
-                }
-            }
-
-            // Changes do not effect exclusions.
-        }
-
         internal void OnRemoveComponent(
             int componentTypeIndex,
             in Entity entity,

@@ -207,27 +207,20 @@ namespace Ecs.Core
                 {
                     // Found component
 
-                    if (!isReadonly)
-                    {
-                        ((ComponentPool<T>)entity
-                            .World
-                            .State.ComponentPools[componentTypeIndex])
-                        .GetItem(
-                            entityData.Components[i]
-                            .ItemIndex)
-                        .Version = 
-                            entity.World.State.GlobalSystemVersion;
-
-                        entity.World.OnChangeComponent(componentTypeIndex, entity, entityData);
-                    }
-
-                    return ref 
+                    ref var item = ref 
                         ((ComponentPool<T>)entity
                             .World
                             .State.ComponentPools[componentTypeIndex])
                         .GetItem(
                             entityData.Components[i]
                             .ItemIndex);
+
+                    item.Version =
+                        isReadonly
+                        ? item.Version
+                        : entity.World.State.GlobalSystemVersion;
+
+                    return ref item;
                 }
             }
 

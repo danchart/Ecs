@@ -1,9 +1,34 @@
-﻿using Xunit;
+﻿using System.Collections.Generic;
+using Xunit;
 
 namespace Ecs.Core.Tests
 {
     public class SystemsTests
     {
+        /// <summary>
+        /// Validates custom dependency injection.
+        /// </summary>
+        [Fact]
+        public void DependencyInjection()
+        {
+            HashSet<int> set = new HashSet<int>();
+
+            var world = Helpers.NewWorld();
+            var systems =
+                new Systems(world)
+                    .Add(new SystemDependencyInjection())
+                    .Inject(new SystemDependencyInjection.FooClass(set));
+
+            systems.Create();
+
+            Assert.DoesNotContain(2, set);
+
+            systems.Run(1);
+
+            Assert.Contains(2, set);
+        }
+
+
         [Fact]
         public void TwoSystemsOneWorld()
         {
@@ -154,7 +179,7 @@ namespace Ecs.Core.Tests
             var systems = new Systems(Helpers.NewWorld());
             systems
                 .Add(
-                    new SystemWithCallbacksAndQuery<Entity, SampleStructs.Foo> 
+                    new SystemWithCallbacksAndQuery<Entity, SampleStructs.Foo>
                     {
                         OnCreateAction = (system) =>
                         {
@@ -198,7 +223,6 @@ namespace Ecs.Core.Tests
             systems.Run(1);
             // Single frame component now removed.
             Assert.False(hadSingleFrameComponent);
-
         }
 
         private class SystemFoo : SystemBase
@@ -227,6 +251,32 @@ namespace Ecs.Core.Tests
                     ref var bar = ref entity.GetComponent<SampleStructs.Bar>();
 
                     bar.a++;
+                }
+            }
+        }
+
+        private class SystemDependencyInjection : SystemBase
+        {
+            public EntityQuery<SampleStructs.Foo> QueryFoo = null;
+            public FooClass Foo = null;
+
+            public override void OnUpdate(float deltaTime)
+            {
+                Foo.Set(2);
+            }
+
+            public class FooClass
+            {
+                readonly HashSet<int> _set;
+
+                public FooClass(HashSet<int> set)
+                {
+                    _set = set;
+                }
+
+                public void Set(int index)
+                {
+                    _set.Add(index);
                 }
             }
         }

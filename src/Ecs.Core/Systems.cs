@@ -1,7 +1,6 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Reflection;
-using System.Runtime.CompilerServices;
-using System.Runtime.InteropServices;
 
 namespace Ecs.Core
 {
@@ -9,11 +8,12 @@ namespace Ecs.Core
     {
         public readonly World World;
 
-        public AppendOnlyList<SystemData> _systems = new AppendOnlyList<SystemData>(EcsConstants.InitialSystemsCapacity);
-
         internal int _index;
 
         private bool _isInitialized = false;
+
+        private readonly AppendOnlyList<SystemData> _systems = new AppendOnlyList<SystemData>(EcsConstants.InitialSystemsCapacity);
+        private readonly Dictionary<Type, object> _injectedObjects = new Dictionary<Type, object>(32);
 
         public Systems(World world)
         {
@@ -24,12 +24,9 @@ namespace Ecs.Core
 
         public void Create()
         {
-            if (_isInitialized)
-            {
-                throw new InvalidOperationException($"{nameof(System)} already initialized.");
-            }
+            ThrowIfInitialized();
 
-            InjectEntityQueries();
+            InjectDependencies();
 
             for (int i = 0; i < _systems.Count; i++)
             {
@@ -39,16 +36,45 @@ namespace Ecs.Core
 
         public Systems Add(SystemBase system)
         {
-            if (_isInitialized)
-            {
-                throw new InvalidOperationException("Cannot add system after intialization.");
-            }
+            ThrowIfInitialized();
 
             _systems.Add(new SystemData
             {
                 System = system,
                 IsActive = true,
             });
+
+            return this;
+        }
+
+        private void ThrowIfInitialized()
+        {
+            if (_isInitialized)
+            {
+                throw new InvalidOperationException("Invalid operation after intialization.");
+            }
+        }
+
+        public Systems Inject(object obj, Type type = null)
+        {
+            ThrowIfInitialized();
+
+            if (obj == null)
+            {
+                throw new InvalidOperationException($"Cannot inject null object.");
+            }
+
+            if (type?.IsInstanceOfType(obj) ?? false)
+            {
+                throw new InvalidOperationException($"{nameof(obj)} of type {obj.GetType()} is not an instance of type {type}.");
+            }
+
+            if (type == null)
+            {
+                type = obj.GetType();
+            }
+
+            _injectedObjects[type] = obj;
 
             return this;
         }
@@ -101,21 +127,23 @@ namespace Ecs.Core
             }
         }
 
-        private void InjectEntityQueries()
+        private void InjectDependencies()
         {
             for (int i = 0; i < _systems.Count; i++)
             {
-                InjectEntityQueriesToSystem(
+                InjectDependenciesToSystem(
                     World,
                     _index,
-                    _systems.Items[i].System);
+                    _systems.Items[i].System,
+                    _injectedObjects);
             }
         }
 
-        private static void InjectEntityQueriesToSystem(
+        private static void InjectDependenciesToSystem(
             World world,
             int systemsIndex,
-            SystemBase system)
+            SystemBase system,
+            Dictionary<Type, object> injectedObjects)
         {
             var systemType = system.GetType();
             var worldType = world.GetType();
@@ -146,6 +174,16 @@ namespace Ecs.Core
                     field.SetValue(system, world.GetGlobalEntityQuery(field.FieldType));
 
                     continue;
+                }
+
+                // Custom injections.
+                foreach (var kv in injectedObjects)
+                {
+                    if (field.FieldType.IsAssignableFrom(kv.Key))
+                    {
+                        field.SetValue(system, kv.Value);
+                        break;
+                    }
                 }
             }
         }

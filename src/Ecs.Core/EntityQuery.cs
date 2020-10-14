@@ -15,12 +15,13 @@ namespace Ecs.Core
         internal int[] ExcludedComponentTypeIndices;
 
         // Query Results
-        internal protected EntityItem[] _entityResults = new EntityItem[EcsConstants.InitialEntityQueryEntityCapacity];
+        internal protected Entity[] _entities = new Entity[EcsConstants.InitialEntityQueryEntityCapacity];
         internal protected int _entityCount = 0;
 
         protected Dictionary<int, int> _entityIndexToQueryIndex = new Dictionary<int, int>(EcsConstants.InitialEntityQueryEntityCapacity);
 
-        internal protected int[] _componentIds = null;
+        internal protected int[] _componentIds1 = null;
+        internal protected int[] _componentIds2 = null;
 
         // Locking & Pending Changes 
         protected int _lockCount = 0;
@@ -35,7 +36,7 @@ namespace Ecs.Core
 
         public Entity GetEntity(int index)
         {
-            return _entityResults[index].Entity;
+            return _entities[index];
         }
 
         public int GetEntityCount()
@@ -70,15 +71,15 @@ namespace Ecs.Core
                 this.ExcludedComponentTypeIndices.CopyToResize(destQuery.ExcludedComponentTypeIndices);
             }
 
-            if (destQuery._entityResults.Length < this._entityResults.Length)
+            if (destQuery._entities.Length < this._entities.Length)
             {
-                Array.Resize(ref destQuery._entityResults, this._entityResults.Length);
+                Array.Resize(ref destQuery._entities, this._entities.Length);
             }
 
-            for (int i = 0; i < this._entityResults.Length; i++)
+            for (int i = 0; i < this._entities.Length; i++)
             {
                 // Copy since only reference is World and it never changes.
-                this._entityResults[i].CopyTo(ref destQuery._entityResults[i]);
+                destQuery._entities[i] = this._entities[i];
             }
 
             destQuery._entityCount = this._entityCount;
@@ -86,7 +87,12 @@ namespace Ecs.Core
             // ### HEAP ALLOCATION
             destQuery._entityIndexToQueryIndex = new Dictionary<int, int>(this._entityIndexToQueryIndex);
 
-            this._componentIds.CopyToResize(destQuery._componentIds);
+            this._componentIds1.CopyToResize(destQuery._componentIds1);
+
+            if (this._componentIds2 != null)
+            {
+                this._componentIds2.CopyToResize(destQuery._componentIds2);
+            }
 
             destQuery._lockCount = this._lockCount;
 
@@ -105,21 +111,21 @@ namespace Ecs.Core
 
         internal void Lock()
         {
-            _lockCount++;
+            this._lockCount++;
         }
 
         internal void Unlock()
         {
 #if DEBUG
-            if (_lockCount == 0)
+            if (this._lockCount == 0)
             {
                 throw new InvalidOperationException($"Tried to unlock filter with no locks. Type={GetType().Name}");
             }
 #endif
 
-            _lockCount--;
+            this._lockCount--;
 
-            if (_lockCount == 0 && _pendingUpdateCount > 0)
+            if (this._lockCount == 0 && this._pendingUpdateCount > 0)
             {
                 ProcessPendingUpdates();
             }
@@ -130,29 +136,46 @@ namespace Ecs.Core
             in World.EntityData entityData,
             int componentTypeIndex)
         {
-            if (_entityIndexToQueryIndex.ContainsKey(entity.Id))
+            if (this._entityIndexToQueryIndex.ContainsKey(entity.Id))
             {
                 return;
             }
 
-            Version componentVersion;
-            int componentIndex;
-            FindComponentInEntity(entityData, componentTypeIndex, out componentVersion, out componentIndex);
+            for (int i = 0; i < this.IncludedComponentTypeIndices.Length; i++)
+            {
+                if (this.IncludedComponentTypeIndices[i] == componentTypeIndex)
+                {
+                    continue;
+                }
+
+                int entityComponentIndex;
+
+                for (entityComponentIndex = entityData.ComponentCount - 1; entityComponentIndex >= 0; entityComponentIndex--)
+                {
+                    if (entityData.Components[entityComponentIndex].TypeIndex == this.IncludedComponentTypeIndices[i])
+                    {
+                        break;
+                    }
+                }
+
+                if (entityComponentIndex < 0)
+                {
+                    // One or more included components required to match the filter.
+                    return;
+                }
+            }
 
             if (QueueEntityUpdate(
                 new PendingEntityUpdate
                 {
                     Entity = entity,
-                    ComponentIndex = componentIndex,
-                    ComponentTypeIndex = componentTypeIndex,
-                    ComponentVersion = componentVersion,
                     Operation = PendingEntityUpdate.OperationType.Add,
                 }))
             {
                 return;
             }
 
-            AddEntityToQueryResults(entity, componentVersion, componentIndex);
+            AddEntityToQueryResults(entity);
         }
 
         internal virtual void OnAddExcludeComponent(
@@ -160,21 +183,21 @@ namespace Ecs.Core
             in World.EntityData entityData,
             int componentTypeIndex)
         {
-            if (!_entityIndexToQueryIndex.ContainsKey(entity.Id))
+            if (!this._entityIndexToQueryIndex.ContainsKey(entity.Id))
             {
                 return;
             }
 
-            for (int i = 0; i < ExcludedComponentTypeIndices.Length; i++)
+            for (int i = 0; i < this.ExcludedComponentTypeIndices.Length; i++)
             {
-                if (ExcludedComponentTypeIndices[i] == componentTypeIndex)
+                if (this.ExcludedComponentTypeIndices[i] == componentTypeIndex)
                 {
                     continue;
                 }
 
                 for (int j = 0; j < entityData.ComponentCount; j++)
                 {
-                    if (entityData.Components[j].TypeIndex == ExcludedComponentTypeIndices[i])
+                    if (entityData.Components[j].TypeIndex == this.ExcludedComponentTypeIndices[i])
                     {
                         // At least one excluded component already exists.
                         return;
@@ -188,7 +211,6 @@ namespace Ecs.Core
                 new PendingEntityUpdate
                 {
                     Entity = entity,
-                    ComponentTypeIndex = componentTypeIndex,
                     Operation = PendingEntityUpdate.OperationType.Remove,
                 }))
             {
@@ -198,44 +220,12 @@ namespace Ecs.Core
             RemoveEntityFromQueryResults(entity);
         }
 
-        internal virtual void OnChangeIncludeComponent(
-            in Entity entity,
-            in World.EntityData entityData,
-            int componentTypeIndex)
-        {
-#if DEBUG
-            if (!_entityIndexToQueryIndex.ContainsKey(entity.Id))
-            {
-                throw new InvalidOperationException($"Called {nameof(OnChangeIncludeComponent)} on component not found in the include list.");
-            }
-#endif
-
-            Version componentVersion;
-            int componentIndex;
-            FindComponentInEntity(entityData, componentTypeIndex, out componentVersion, out componentIndex);
-
-            if (QueueEntityUpdate(
-                new PendingEntityUpdate
-                {
-                    Entity = entity,
-                    ComponentIndex = componentIndex,
-                    ComponentTypeIndex = componentTypeIndex,
-                    ComponentVersion = componentVersion,
-                    Operation = PendingEntityUpdate.OperationType.Change,
-                }))
-            {
-                return;
-            }
-
-            DirtyEntityInQueryResults(entity, componentVersion);
-        }
-
         internal virtual void OnRemoveIncludeComponent(
             in Entity entity,
             in World.EntityData entityData,
             int componentTypeIndex)
         {
-            if (!_entityIndexToQueryIndex.ContainsKey(entity.Id))
+            if (!this._entityIndexToQueryIndex.ContainsKey(entity.Id))
             {
                 return;
             }
@@ -244,7 +234,6 @@ namespace Ecs.Core
                 new PendingEntityUpdate
                 {
                     Entity = entity,
-                    ComponentTypeIndex = componentTypeIndex,
                     Operation = PendingEntityUpdate.OperationType.Remove,
                 }))
             {
@@ -259,18 +248,18 @@ namespace Ecs.Core
             in World.EntityData entityData,
             int componentTypeIndex)
         {
-            Debug.Assert(!_entityIndexToQueryIndex.ContainsKey(entity.Id));
+            Debug.Assert(!this._entityIndexToQueryIndex.ContainsKey(entity.Id));
 
-            for (int i = 0; i < ExcludedComponentTypeIndices.Length; i++)
+            for (int i = 0; i < this.ExcludedComponentTypeIndices.Length; i++)
             {
-                if (ExcludedComponentTypeIndices[i] == componentTypeIndex)
+                if (this.ExcludedComponentTypeIndices[i] == componentTypeIndex)
                 {
                     continue;
                 }
 
                 for (int j = 0; j < entityData.ComponentCount; j++)
                 {
-                    if (entityData.Components[j].TypeIndex == ExcludedComponentTypeIndices[i])
+                    if (entityData.Components[j].TypeIndex == this.ExcludedComponentTypeIndices[i])
                     {
                         // At least one excluded component remains.
                         return;
@@ -280,27 +269,27 @@ namespace Ecs.Core
 
             // Add this entity from results. No excluded components are attached to the entity.
 
-            Version componentVersion;
-            int componentIndex;
-            FindComponentInEntity(entityData, componentTypeIndex, out componentVersion, out componentIndex);
-
             if (QueueEntityUpdate(
                 new PendingEntityUpdate
                 {
                     Entity = entity,
-                    ComponentIndex = componentIndex,
-                    ComponentTypeIndex = componentTypeIndex,
-                    ComponentVersion = componentVersion,
                     Operation = PendingEntityUpdate.OperationType.Add,
                 }))
             {
                 return;
             }
 
-            AddEntityToQueryResults(entity, componentVersion, componentIndex);
+            AddEntityToQueryResults(entity);
         }
 
-        private bool FindComponentInEntity(in World.EntityData entityData, int componentTypeIndex, out Version version, out int componentIndex)
+        protected abstract void AddComponentsToResult(Entity entity, int index);
+
+#if MOTHBALL
+        private bool FindComponentInEntity(
+            in World.EntityData entityData, 
+            int componentTypeIndex, 
+            out Version version, 
+            out int componentIndex)
         {
             version = default;
 
@@ -321,7 +310,7 @@ namespace Ecs.Core
 
             return false;
         }
-
+#endif
         private bool QueueEntityUpdate(in PendingEntityUpdate pendingUpdate)
         {
             if (_lockCount == 0)
@@ -329,88 +318,69 @@ namespace Ecs.Core
                 return false;
             }
 
-            if (_pendingEntityUpdates.Length == _pendingUpdateCount)
+            if (this._pendingEntityUpdates.Length == this._pendingUpdateCount)
             {
-                Array.Resize(ref _pendingEntityUpdates, 2 * _pendingUpdateCount);
+                Array.Resize(ref this._pendingEntityUpdates, 2 * this._pendingUpdateCount);
             }
 
-            _pendingEntityUpdates[_pendingUpdateCount++] = pendingUpdate;
+            this._pendingEntityUpdates[this._pendingUpdateCount++] = pendingUpdate;
 
             return true;
         }
 
-        private void DirtyEntityInQueryResults(in Entity entity, Version version)
+        private void AddEntityToQueryResults(in Entity entity)
         {
-            var queryEntityIndex = _entityIndexToQueryIndex[entity.Id];
-
-            // Update the component version.
-            _entityResults[queryEntityIndex].LatestComponentVersion =
-                _entityResults[queryEntityIndex].LatestComponentVersion > version
-                ? _entityResults[queryEntityIndex].LatestComponentVersion
-                : version;
-        }
-
-        private void AddEntityToQueryResults(in Entity entity, Version lastVersion, int componentIndex)
-        {
-            if (_entityResults.Length == _entityCount)
+            if (this._entities.Length == this._entityCount)
             {
-                Array.Resize(ref _entityResults, 2 * _entityCount);
+                Array.Resize(ref this._entities, 2 * this._entityCount);
+                Array.Resize(ref this._componentIds1, 2 * this._entityCount);
 
-                if (_componentIds != null)
+                if (this._componentIds2 != null)
                 {
-                    Array.Resize(ref _componentIds, 2 * _entityCount);
+                    Array.Resize(ref this._componentIds2, 2 * this._entityCount);
                 }
             }
 
-            _entityIndexToQueryIndex[entity.Id] = _entityCount;
-            _entityResults[_entityCount] = new EntityItem
-            {
-                Entity = entity,
-                LatestComponentVersion = lastVersion,
-            };
+            this._entityIndexToQueryIndex[entity.Id] = this._entityCount;
+            this._entities[this._entityCount] = entity;
 
-            if (_componentIds != null)
-            {
-                _componentIds[_entityCount] = componentIndex;
-            }
+            AddComponentsToResult(entity, this._entityCount);
 
-            _entityCount++;
+            this._entityCount++;
         }
 
         private void RemoveEntityFromQueryResults(in Entity entity)
         {
-            var queryEntityIndex = _entityIndexToQueryIndex[entity.Id];
+            var queryEntityIndex = this._entityIndexToQueryIndex[entity.Id];
 
             // Move the last item to removed position.
-            if (queryEntityIndex < _entityCount - 1)
+            if (queryEntityIndex < this._entityCount - 1)
             {
-                _entityResults[queryEntityIndex] = _entityResults[_entityCount - 1];
+                this._entities[queryEntityIndex] = this._entities[this._entityCount - 1];
 
-                if (_componentIds != null)
+                this._componentIds1[queryEntityIndex] = this._componentIds1[this._entityCount - 1];
+
+                if (this._componentIds2 != null)
                 {
-                    _componentIds[queryEntityIndex] = _componentIds[_entityCount - 1];
+                    this._componentIds2[queryEntityIndex] = this._componentIds2[this._entityCount - 1];
                 }
             }
 
-            _entityIndexToQueryIndex.Remove(entity.Id);
+            this._entityIndexToQueryIndex.Remove(entity.Id);
 
-            _entityCount--;
+            this._entityCount--;
         }
 
         private void ProcessPendingUpdates()
         {
-            for (int i = 0; i < _pendingUpdateCount; i++)
+            for (int i = 0; i < this._pendingUpdateCount; i++)
             {
-                ref readonly var pendingUpdate = ref _pendingEntityUpdates[i];
-                ref readonly var entityData = ref World.GetEntityData(pendingUpdate.Entity);
+                ref readonly var pendingUpdate = ref this._pendingEntityUpdates[i];
+                ref readonly var entityData = ref this.World.GetEntityData(pendingUpdate.Entity);
 
                 if (pendingUpdate.Operation == PendingEntityUpdate.OperationType.Add)
                 {
-                    AddEntityToQueryResults(in pendingUpdate.Entity, pendingUpdate.ComponentVersion, pendingUpdate.ComponentIndex);
-                }
-                else if (pendingUpdate.Operation == PendingEntityUpdate.OperationType.Change)
-                {
-                    DirtyEntityInQueryResults(in pendingUpdate.Entity, pendingUpdate.ComponentVersion);
+                    AddEntityToQueryResults(in pendingUpdate.Entity);
                 }
                 else if (pendingUpdate.Operation == PendingEntityUpdate.OperationType.Remove)
                 {
@@ -424,21 +394,12 @@ namespace Ecs.Core
 #endif
             }
 
-            _pendingUpdateCount = 0;
-        }
-
-        internal protected struct EntityItem
-        {
-            public Entity Entity;
-            public Version LatestComponentVersion;
+            this._pendingUpdateCount = 0;
         }
 
         internal protected struct PendingEntityUpdate
         {
             public Entity Entity;
-            public int ComponentTypeIndex;
-            public int ComponentIndex;
-            public Version ComponentVersion;
             public OperationType Operation;
 
             public enum OperationType
@@ -467,22 +428,22 @@ namespace Ecs.Core
 
             internal EntityEnumerator(EntityQueryBase query)
             {
-                _query = query ?? throw new ArgumentNullException(nameof(query));
-                _current = -1;
+                this._query = query ?? throw new ArgumentNullException(nameof(query));
+                this._current = -1;
 
-                _query.Lock();
+                this._query.Lock();
             }
 
-            public Entity Current => _query._entityResults[_current].Entity;
+            public Entity Current => _query._entities[_current];
 
             public void Dispose()
             {
-                _query.Unlock();
+                this._query.Unlock();
             }
 
             public bool MoveNext()
             {
-                return ++_current < _query._entityCount;
+                return ++this._current < this._query._entityCount;
             }
         }
 
@@ -494,13 +455,13 @@ namespace Ecs.Core
 
             public ComponentEnumerable(EntityQueryBase query, int[] componentIds)
             {
-                _query = query;
-                _componentIds = componentIds;
+                this._query = query;
+                this._componentIds = componentIds;
             }
 
             public ComponentEnumerator<T> GetEnumerator()
             {
-                return new ComponentEnumerator<T>(_query, _componentIds);
+                return new ComponentEnumerator<T>(this._query, this._componentIds);
             }
         }
 
@@ -516,23 +477,23 @@ namespace Ecs.Core
 
             internal ComponentEnumerator(EntityQueryBase query, int[] componentIds)
             {
-                _query = query ?? throw new ArgumentNullException(nameof(query));
-                _componentPool = _query.World.GetPool<T>();
-                _componentIds = componentIds;
-                _globalSystemVersion = query.World.State.GlobalSystemVersion;
+                this._query = query ?? throw new ArgumentNullException(nameof(query));
+                this._componentPool = _query.World.GetPool<T>();
+                this._componentIds = componentIds;
+                this._globalSystemVersion = query.World.State.GlobalSystemVersion;
 
-                _current = -1;
+                this._current = -1;
 
-                _query.Lock();
+                this._query.Lock();
             }
 
             public ref T Current
             {
                 get
                 {
-                    ref var item = ref _componentPool.Items[_componentIds[_current]];
+                    ref var item = ref this._componentPool.Items[this._componentIds[this._current]];
 
-                    item.Version = _globalSystemVersion;
+                    item.Version = this._globalSystemVersion;
 
                     return ref item.Item;
                 }
@@ -540,46 +501,49 @@ namespace Ecs.Core
 
             public void Dispose()
             {
-                _query.Unlock();
+                this._query.Unlock();
             }
 
             public bool MoveNext()
             {
-                return ++_current < _query._entityCount;
+                return ++this._current < this._query._entityCount;
             }
         }
     }
 
-    public class EntityQuery<IncType> : GlobalEntityQuery
-        where IncType : unmanaged
+    public class EntityQuery<IncType1> : GlobalEntityQuery
+        where IncType1 : unmanaged
     {
-        private ComponentPool<IncType> _componentPool;
+        private ComponentPool<IncType1> _componentPool;
 
         internal EntityQuery(World world) 
             : base(world)
         {
-            this.IncludedComponentTypeIndices = new[] { ComponentType<IncType>.Index };
+            this.IncludedComponentTypeIndices = new[] 
+            { 
+                ComponentType<IncType1>.Index 
+            };
 
-            _componentPool = world.GetPool<IncType>();
-            _componentIds = new int[EcsConstants.InitialEntityQueryEntityCapacity];
+            this._componentPool = world.GetPool<IncType1>();
+            this._componentIds1 = new int[EcsConstants.InitialEntityQueryEntityCapacity];
         }
 
-        public ref readonly IncType GetSingletonComponentReadonly()
+        public ref readonly IncType1 GetSingletonComponentReadonly()
         {
-            return ref _componentPool.Items[_componentIds[0]].Item;
+            return ref this._componentPool.Items[this._componentIds1[0]].Item;
         }
 
-        public ref IncType GetSingleton()
+        public ref IncType1 GetSingleton()
         {
-            ref var item = ref _componentPool.Items[_componentIds[0]];
+            ref var item = ref this._componentPool.Items[_componentIds1[0]];
             item.Version = this.World.State.GlobalSystemVersion;
 
             return ref item.Item;
         }
 
-        public ComponentEnumerable<IncType> GetComponents() 
+        public ComponentEnumerable<IncType1> GetComponents() 
         {
-            return new ComponentEnumerable<IncType>(this, _componentIds);
+            return new ComponentEnumerable<IncType1>(this, this._componentIds1);
         }
 
         public EntityEnumerator GetEnumerator()
@@ -589,7 +553,7 @@ namespace Ecs.Core
 
         internal override EntityQueryBase Clone()
         {
-            var query = new EntityQuery<IncType>(this.World);
+            var query = new EntityQuery<IncType1>(this.World);
 
             CopyTo(query);
 
@@ -600,30 +564,140 @@ namespace Ecs.Core
         {
             base.CopyTo(queryBase);
 
-            var entityQuery = (EntityQuery<IncType>)queryBase;
+            var entityQuery = (EntityQuery<IncType1>)queryBase;
 
             entityQuery._componentPool = this._componentPool;
         }
 
-        public class Exclude<ExcType> : EntityQuery<IncType> 
+        protected override void AddComponentsToResult(Entity entity, int index)
+        {
+            EntityQueryHelper.AddComponentsToResult<IncType1>(entity, index, _componentIds1);
+        }
+
+        public class Exclude<ExcType> : EntityQuery<IncType1> 
             where ExcType : unmanaged
         {
             internal Exclude(World world) : base(world)
             {
-                ExcludedComponentTypeIndices = new[]
+                this.ExcludedComponentTypeIndices = new[]
                 {
                     ComponentType<ExcType>.Index,
                 };
             }
         }
 
-        public class Exclude<ExcType1, ExcType2> : EntityQuery<IncType>
+        public class Exclude<ExcType1, ExcType2> : EntityQuery<IncType1>
             where ExcType1 : unmanaged
             where ExcType2 : unmanaged
         {
             protected Exclude(World world) : base(world)
             {
-                ExcludedComponentTypeIndices = new[]
+                this.ExcludedComponentTypeIndices = new[]
+                {
+                    ComponentType<ExcType1>.Index,
+                    ComponentType<ExcType2>.Index,
+                };
+            }
+        }
+    }
+
+    public class EntityQuery<IncType1, IncType2> : GlobalEntityQuery
+        where IncType1 : unmanaged
+        where IncType2 : unmanaged
+    {
+        private ComponentPool<IncType1> _componentPool1;
+        private ComponentPool<IncType2> _componentPool2;
+
+        internal EntityQuery(World world) 
+            : base(world)
+        {
+            this.IncludedComponentTypeIndices = new[] 
+            { 
+                ComponentType<IncType1>.Index,
+                ComponentType<IncType2>.Index,
+            };
+
+            this._componentPool1 = world.GetPool<IncType1>();
+            this._componentPool2 = world.GetPool<IncType2>();
+            this._componentIds1 = new int[EcsConstants.InitialEntityQueryEntityCapacity];
+            this._componentIds2 = new int[EcsConstants.InitialEntityQueryEntityCapacity];
+        }
+
+        public ref readonly IncType1 GetSingletonComponentReadonly()
+        {
+            return ref this._componentPool1.Items[_componentIds1[0]].Item;
+        }
+
+        public ref IncType1 GetSingleton()
+        {
+            ref var item = ref this._componentPool1.Items[this._componentIds1[0]];
+            item.Version = this.World.State.GlobalSystemVersion;
+
+            return ref item.Item;
+        }
+
+        public ComponentEnumerable<IncType1> GetComponents1() 
+        {
+            return new ComponentEnumerable<IncType1>(this, this._componentIds1);
+        }
+
+        public ComponentEnumerable<IncType2> GetComponents2()
+        {
+            return new ComponentEnumerable<IncType2>(this, this._componentIds2);
+        }
+
+        public EntityEnumerator GetEnumerator()
+        {
+            return new EntityEnumerator(this);
+        }
+
+        internal override EntityQueryBase Clone()
+        {
+            var query = new EntityQuery<IncType1>(this.World);
+
+            CopyTo(query);
+
+            return query;
+        }
+
+        internal override void CopyTo(EntityQueryBase queryBase)
+        {
+            base.CopyTo(queryBase);
+
+            var entityQuery = (EntityQuery<IncType1, IncType2>)queryBase;
+
+            entityQuery._componentPool1 = this._componentPool1;
+            entityQuery._componentPool2 = this._componentPool2;
+        }
+
+        protected override void AddComponentsToResult(Entity entity, int index)
+        {
+            EntityQueryHelper.AddComponentsToResult<IncType1, IncType2>(
+                entity,
+                index,
+                this._componentIds1,
+                this._componentIds2);
+        }
+
+        public class Exclude<ExcType> : EntityQuery<IncType1> 
+            where ExcType : unmanaged
+        {
+            internal Exclude(World world) : base(world)
+            {
+                this.ExcludedComponentTypeIndices = new[]
+                {
+                    ComponentType<ExcType>.Index,
+                };
+            }
+        }
+
+        public class Exclude<ExcType1, ExcType2> : EntityQuery<IncType1>
+            where ExcType1 : unmanaged
+            where ExcType2 : unmanaged
+        {
+            protected Exclude(World world) : base(world)
+            {
+                this.ExcludedComponentTypeIndices = new[]
                 {
                     ComponentType<ExcType1>.Index,
                     ComponentType<ExcType2>.Index,
@@ -642,41 +716,90 @@ namespace Ecs.Core
         public PerSystemsEntityQuery(World world, int systemsIndex) :
             base(world)
         {
-            _systemsIndex = systemsIndex;
+            this._systemsIndex = systemsIndex;
         }
 
-        public struct ChangeFilteredEnumerator : IDisposable
+        public struct EntityEnumerator<IncType1> : IDisposable
+            where IncType1 : unmanaged
         {
             private EntityQueryBase _query;
             private int _current;
 
             private Version _lastSystemVersion;
 
-            internal ChangeFilteredEnumerator(
+            private readonly ComponentPool<IncType1> _componentPool;
+
+            internal EntityEnumerator(
                 EntityQueryBase query,
                 Version lastSystemVersion)
             {
-                _query = query ?? throw new ArgumentNullException(nameof(query));
-                _current = -1;
+                this._query = query ?? throw new ArgumentNullException(nameof(query));
+                this._current = -1;
 
-                _query.Lock();
+                this._query.Lock();
 
-                _lastSystemVersion = lastSystemVersion;
+                this._lastSystemVersion = lastSystemVersion;
+                this._componentPool = _query.World.GetPool<IncType1>();
             }
 
-            public Entity Current => _query._entityResults[_current].Entity;
+            public Entity Current => this._query._entities[this._current];
 
             public void Dispose()
             {
-                _query.Unlock();
+                this._query.Unlock();
             }
 
             public bool MoveNext()
             {
-                while (++_current < _query._entityCount)
+                while (++this._current < this._query._entityCount)
                 {
-                    if (_lastSystemVersion < _query._entityResults[_current].LatestComponentVersion ||
-                        _lastSystemVersion == Version.Zero)
+                    if (this._lastSystemVersion < _componentPool.GetItemVersion(_query._componentIds1[_current]) ||
+                        this._lastSystemVersion == Version.Zero)
+                    {
+                        return true;
+                    }
+                }
+
+                return false;
+            }
+        }
+
+        public struct IndexEnumerator<IncType1> : IDisposable
+            where IncType1 : unmanaged
+        {
+            private EntityQueryBase _query;
+            private int _current;
+
+            private Version _lastSystemVersion;
+
+            private readonly ComponentPool<IncType1> _componentPool;
+
+            internal IndexEnumerator(
+                EntityQueryBase query,
+                Version lastSystemVersion)
+            {
+                this._query = query ?? throw new ArgumentNullException(nameof(query));
+                this._current = -1;
+
+                this._query.Lock();
+
+                this._lastSystemVersion = lastSystemVersion;
+                this._componentPool = _query.World.GetPool<IncType1>();
+            }
+
+            public int Current => this._current;
+
+            public void Dispose()
+            {
+                this._query.Unlock();
+            }
+
+            public bool MoveNext()
+            {
+                while (++this._current < this._query._entityCount)
+                {
+                    if (this._lastSystemVersion < _componentPool.GetItemVersion(_query._componentIds1[_current]) ||
+                        this._lastSystemVersion == Version.Zero)
                     {
                         return true;
                     }
@@ -698,14 +821,17 @@ namespace Ecs.Core
                 int[] componentIds,
                 Version lastSystemVersion)
             {
-                _query = query;
-                _componentIds = componentIds;
-                _lastSystemVersion = lastSystemVersion;
+                this._query = query;
+                this._componentIds = componentIds;
+                this._lastSystemVersion = lastSystemVersion;
             }
 
             public ComponentEnumeratorReadonly<T> GetEnumerator()
             {
-                return new ComponentEnumeratorReadonly<T>(_query, _componentIds, _lastSystemVersion);
+                return new ComponentEnumeratorReadonly<T>(
+                    this._query, 
+                    this._componentIds, 
+                    this._lastSystemVersion);
             }
         }
 
@@ -721,14 +847,17 @@ namespace Ecs.Core
                 int[] componentIds,
                 Version lastSystemVersion)
             {
-                _query = query;
-                _componentIds = componentIds;
-                _lastSystemVersion = lastSystemVersion;
+                this._query = query;
+                this._componentIds = componentIds;
+                this._lastSystemVersion = lastSystemVersion;
             }
 
             public ComponentEnumerator<T> GetEnumerator()
             {
-                return new ComponentEnumerator<T>(_query, _componentIds, _lastSystemVersion);
+                return new ComponentEnumerator<T>(
+                    this._query,
+                    this._componentIds,
+                    this._lastSystemVersion);
             }
         }
 
@@ -748,24 +877,24 @@ namespace Ecs.Core
                 int[] componentIds,
                 Version lastSystemVersion)
             {
-                _query = query ?? throw new ArgumentNullException(nameof(query));
-                _componentPool = _query.World.GetPool<T>();
-                _componentIds = componentIds;
-                _lastSystemVersion = lastSystemVersion;
+                this._query = query ?? throw new ArgumentNullException(nameof(query));
+                this._componentPool = _query.World.GetPool<T>();
+                this._componentIds = componentIds;
+                this._lastSystemVersion = lastSystemVersion;
 
-                _globalSystemVersion = query.World.State.GlobalSystemVersion;
+                this._globalSystemVersion = query.World.State.GlobalSystemVersion;
 
-                _current = -1;
+                this._current = -1;
 
-                _query.Lock();
+                this._query.Lock();
             }
 
             public ref readonly T Current
             {
                 get
                 {
-                    return ref 
-                        _componentPool
+                    return ref
+                        this._componentPool
                         .Items[_componentIds[_current]]
                         .Item;
                 }
@@ -773,15 +902,15 @@ namespace Ecs.Core
 
             public void Dispose()
             {
-                _query.Unlock();
+                this._query.Unlock();
             }
 
             public bool MoveNext()
             {
-                while (++_current < _query._entityCount)
+                while (++this._current < this._query._entityCount)
                 {
-                    if (_lastSystemVersion < _query._entityResults[_current].LatestComponentVersion ||
-                        _lastSystemVersion == Version.Zero)
+                    if (this._lastSystemVersion < _componentPool.GetItemVersion(_query._componentIds1[_current]) ||
+                        this._lastSystemVersion == Version.Zero)
                     {
                         return true;
                     }
@@ -807,25 +936,25 @@ namespace Ecs.Core
                 int[] componentIds,
                 Version lastSystemVersion)
             {
-                _query = query ?? throw new ArgumentNullException(nameof(query));
-                _componentPool = _query.World.GetPool<T>();
-                _componentIds = componentIds;
-                _lastSystemVersion = lastSystemVersion;
+                this._query = query ?? throw new ArgumentNullException(nameof(query));
+                this._componentPool = _query.World.GetPool<T>();
+                this._componentIds = componentIds;
+                this._lastSystemVersion = lastSystemVersion;
 
-                _globalSystemVersion = query.World.State.GlobalSystemVersion;
+                this._globalSystemVersion = query.World.State.GlobalSystemVersion;
 
-                _current = -1;
+                this._current = -1;
 
-                _query.Lock();
+                this._query.Lock();
             }
 
             public ref T Current
             {
                 get
                 {
-                    ref var item = ref _componentPool.Items[_componentIds[_current]];
+                    ref var item = ref this._componentPool.Items[this._componentIds[this._current]];
 
-                    item.Version = _globalSystemVersion;
+                    item.Version = this._globalSystemVersion;
 
                     return ref item.Item;
                 }
@@ -833,15 +962,114 @@ namespace Ecs.Core
 
             public void Dispose()
             {
-                _query.Unlock();
+                this._query.Unlock();
             }
 
             public bool MoveNext()
             {
-                while (++_current < _query._entityCount)
+                while (++this._current < this._query._entityCount)
                 {
-                    if (_lastSystemVersion < _query._entityResults[_current].LatestComponentVersion ||
-                        _lastSystemVersion == Version.Zero)
+                    if (this._lastSystemVersion < _componentPool.GetItemVersion(_query._componentIds1[_current]) ||
+                        this._lastSystemVersion == Version.Zero)
+                    {
+                        return true;
+                    }
+                }
+
+                return false;
+            }
+        }
+
+
+        public struct EntityEnumerator<IncType1, IncType2> : IDisposable
+            where IncType1 : unmanaged
+            where IncType2 : unmanaged
+        {
+            private EntityQueryBase _query;
+            private int _current;
+
+            private Version _lastSystemVersion;
+
+            private readonly ComponentPool<IncType1> _componentPool1;
+            private readonly ComponentPool<IncType2> _componentPool2;
+
+            internal EntityEnumerator(
+                EntityQueryBase query,
+                Version lastSystemVersion)
+            {
+                this._query = query ?? throw new ArgumentNullException(nameof(query));
+                this._current = -1;
+
+                this._query.Lock();
+
+                this._lastSystemVersion = lastSystemVersion;
+                this._componentPool1 = _query.World.GetPool<IncType1>();
+                this._componentPool2 = _query.World.GetPool<IncType2>();
+            }
+
+            public Entity Current => this._query._entities[this._current];
+
+            public void Dispose()
+            {
+                this._query.Unlock();
+            }
+
+            public bool MoveNext()
+            {
+                while (++this._current < this._query._entityCount)
+                {
+                    if ((this._lastSystemVersion < _componentPool1.GetItemVersion(_query._componentIds1[_current]) &&
+                        this._lastSystemVersion < _componentPool2.GetItemVersion(_query._componentIds2[_current])) ||
+                        this._lastSystemVersion == Version.Zero)
+                    {
+                        return true;
+                    }
+                }
+
+                return false;
+            }
+        }
+
+        public struct IndexEnumerator<IncType1, IncType2> : IDisposable
+            where IncType1 : unmanaged
+            where IncType2 : unmanaged
+        {
+            private EntityQueryBase _query;
+            private int _current;
+
+            private Version _lastSystemVersion;
+
+            private readonly ComponentPool<IncType1> _componentPool1;
+            private readonly ComponentPool<IncType2> _componentPool2;
+
+            internal IndexEnumerator(
+                EntityQueryBase query,
+                Version lastSystemVersion)
+            {
+                this._query = query ?? throw new ArgumentNullException(nameof(query));
+                this._current = -1;
+
+                this._query.Lock();
+
+                this._lastSystemVersion = lastSystemVersion;
+                this._componentPool1 = _query.World.GetPool<IncType1>();
+                this._componentPool2 = _query.World.GetPool<IncType2>();
+            }
+
+            public int Current => this._current;
+
+            public void Dispose()
+            {
+                this._query.Unlock();
+            }
+
+            public bool MoveNext()
+            {
+                while (++this._current < this._query._entityCount)
+                {
+                    if ((this._lastSystemVersion < _componentPool1.GetItemVersion(_query._componentIds1[_current]) &&
+                        this._lastSystemVersion < _componentPool2.GetItemVersion(_query._componentIds2[_current])) ||
+                        this._lastSystemVersion == Version.Zero)
                     {
                         return true;
                     }
@@ -866,14 +1094,28 @@ namespace Ecs.Core
             };
 
             this._componentPool = world.GetPool<IncType1>();
-            this._componentIds = new int[EcsConstants.InitialEntityQueryEntityCapacity];
+            this._componentIds1 = new int[EcsConstants.InitialEntityQueryEntityCapacity];
+        }
+
+        public EntityEnumerator<IncType1> GetEnumerator()
+        {
+            return new EntityEnumerator<IncType1>(
+                this,
+                this.World.State.LastSystemVersion.Items[this._systemsIndex]);
+        }
+
+        public IndexEnumerator<IncType1> GetIndices()
+        {
+            return new IndexEnumerator<IncType1>(
+                this,
+                this.World.State.LastSystemVersion.Items[this._systemsIndex]);
         }
 
         public ComponentEnumerableReadonly<IncType1> GetComponentsReadonly()
         {
             return new ComponentEnumerableReadonly<IncType1>(
                 this,
-                this._componentIds,
+                this._componentIds1,
                 this.World.State.LastSystemVersion.Items[this._systemsIndex]);
         }
 
@@ -881,9 +1123,29 @@ namespace Ecs.Core
         {
             return new ComponentEnumerable<IncType1>(
                 this,
-                this._componentIds,
+                this._componentIds1,
                 this.World.State.LastSystemVersion.Items[this._systemsIndex]);
         }
+
+
+
+        public ref readonly IncType1 GetReadonly(int index)
+        {
+            return ref this._componentPool.Items[_componentIds1[index]].Item;
+        }
+
+        public ref IncType1 Get(int index)
+        {
+            return ref this._componentPool.Items[_componentIds1[index]].Item;
+        }
+
+
+
+        protected override void AddComponentsToResult(Entity entity, int index)
+        {
+            EntityQueryHelper.AddComponentsToResult<IncType1>(entity, index, _componentIds1);
+        }
+
 
 #if MOTHBALL
         public ref readonly IncType GetReadonly(int index)
@@ -917,13 +1179,6 @@ namespace Ecs.Core
         }
 #endif //MOTHBALL
 
-        public ChangeFilteredEnumerator GetEnumerator()
-        {
-            return new ChangeFilteredEnumerator(
-                this,
-                this.World.State.LastSystemVersion.Items[_systemsIndex]);
-        }
-
         internal override EntityQueryBase Clone()
         {
             var query = new EntityQueryWithChangeFilter<IncType1>(this.World, this._systemsIndex);
@@ -952,7 +1207,7 @@ namespace Ecs.Core
             internal Exclude(World world, int systemsIndex)
                 : base(world, systemsIndex)
             {
-                ExcludedComponentTypeIndices = new[]
+                this.ExcludedComponentTypeIndices = new[]
                 {
                     ComponentType<ExcType>.Index,
                 };
@@ -966,7 +1221,7 @@ namespace Ecs.Core
             protected Exclude(World world, int systemsIndex)
                 : base(world, systemsIndex)
             {
-                ExcludedComponentTypeIndices = new[]
+                this.ExcludedComponentTypeIndices = new[]
                 {
                     ComponentType<ExcType1>.Index,
                     ComponentType<ExcType2>.Index,
@@ -995,7 +1250,7 @@ namespace Ecs.Core
 
             this._componentPool1 = world.GetPool<IncType1>();
             this._componentPool2 = world.GetPool<IncType2>();
-            this._componentIds = new int[EcsConstants.InitialEntityQueryEntityCapacity];
+            this._componentIds1 = new int[EcsConstants.InitialEntityQueryEntityCapacity];
             this._componentIds2 = new int[EcsConstants.InitialEntityQueryEntityCapacity];
         }
 
@@ -1003,7 +1258,7 @@ namespace Ecs.Core
         {
             return new ComponentEnumerableReadonly<IncType1>(
                 this,
-                this._componentIds,
+                this._componentIds1,
                 this.World.State.LastSystemVersion.Items[this._systemsIndex]);
         }
 
@@ -1011,7 +1266,7 @@ namespace Ecs.Core
         {
             return new ComponentEnumerable<IncType1>(
                 this,
-                this._componentIds,
+                this._componentIds1,
                 this.World.State.LastSystemVersion.Items[this._systemsIndex]);
         }
 
@@ -1031,9 +1286,42 @@ namespace Ecs.Core
                 this.World.State.LastSystemVersion.Items[this._systemsIndex]);
         }
 
-        public ChangeFilteredEnumerator GetEnumerator()
+
+
+        public ref readonly IncType1 GetReadonly1(int index)
         {
-            return new ChangeFilteredEnumerator(
+            return ref this._componentPool1.Items[_componentIds1[index]].Item;
+        }
+
+        public ref IncType1 Get1(int index)
+        {
+            return ref this._componentPool1.Items[_componentIds1[index]].Item;
+        }
+
+        public ref readonly IncType2 GetReadonly2(int index)
+        {
+            return ref this._componentPool2.Items[_componentIds2[index]].Item;
+        }
+
+        public ref IncType2 Get2(int index)
+        {
+            return ref this._componentPool2.Items[_componentIds2[index]].Item;
+        }
+
+
+        protected override void AddComponentsToResult(Entity entity, int index)
+        {
+            EntityQueryHelper.AddComponentsToResult<IncType1, IncType2>(
+                entity,
+                index,
+                this._componentIds1,
+                this._componentIds2);
+        }
+
+
+        public EntityEnumerator<IncType1, IncType2> GetEnumerator()
+        {
+            return new EntityEnumerator<IncType1, IncType2>(
                 this,
                 this.World.State.LastSystemVersion.Items[this._systemsIndex]);
         }
@@ -1067,7 +1355,7 @@ namespace Ecs.Core
             internal Exclude(World world, int systemsIndex)
                 : base(world, systemsIndex)
             {
-                ExcludedComponentTypeIndices = new[]
+                this.ExcludedComponentTypeIndices = new[]
                 {
                     ComponentType<ExcType>.Index,
                 };
@@ -1081,11 +1369,60 @@ namespace Ecs.Core
             protected Exclude(World world, int systemsIndex)
                 : base(world, systemsIndex)
             {
-                ExcludedComponentTypeIndices = new[]
+                this.ExcludedComponentTypeIndices = new[]
                 {
                     ComponentType<ExcType1>.Index,
                     ComponentType<ExcType2>.Index,
                 };
+            }
+        }
+    }
+
+    internal static class EntityQueryHelper
+    {
+        public static void AddComponentsToResult<IncType1>(
+            in Entity entity,
+            int index,
+            int[] componentIds1)
+            where IncType1 : unmanaged
+        {
+            var entityData = entity.World.GetEntityData(entity);
+
+            for (int i = 0; i < entityData.ComponentCount; i++)
+            {
+                if (entityData.Components[i].TypeIndex == ComponentType<IncType1>.Index)
+                {
+                    componentIds1[index] = entityData.Components[i].ItemIndex;
+
+                    break;
+                }
+            }
+        }
+
+        public static void AddComponentsToResult<IncType1, IncType2>(
+            in Entity entity, 
+            int index, 
+            int[] componentIds1, 
+            int[] componentIds2)
+            where IncType1 : unmanaged
+            where IncType2 : unmanaged
+        {
+            var entityData = entity.World.GetEntityData(entity);
+
+            for (int i = 0; i < entityData.ComponentCount; i++)
+            {
+                if (entityData.Components[i].TypeIndex == ComponentType<IncType1>.Index)
+                {
+                    componentIds1[index] = entityData.Components[i].ItemIndex;
+
+                    break;
+                }
+                else if (entityData.Components[i].TypeIndex == ComponentType<IncType2>.Index)
+                {
+                    componentIds2[index] = entityData.Components[i].ItemIndex;
+
+                    break;
+                }
             }
         }
     }

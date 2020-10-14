@@ -8,42 +8,66 @@ namespace Ecs.Core.Tests
         [Fact]
         public void EntityQuery()
         {
+            // No system Add's
             var systems = new Systems(Helpers.NewWorld());
 
-            systems
-                // No system Add's
-                .Create();
+            systems.Create();
 
-            var query =
+            var querySingleInclude =
                 systems.World
                 .GetEntityQuery<EntityQuery<SampleStructs.Foo>>();
 
-            // Create 2 entities
+            // Create test entities
             var entity1 = systems.World.NewEntity();
             var entity2 = systems.World.NewEntity();
 
-            Assert.Equal(0, query.GetEntityCount());
+            Assert.Equal(0, querySingleInclude.GetEntityCount());
 
             // Add inclusion #1
             entity1.GetComponent<SampleStructs.Foo>();
 
-            Assert.Equal(1, query.GetEntityCount());
+            Assert.Equal(1, querySingleInclude.GetEntityCount());
 
             // Add inclusion #2
             entity2.GetComponent<SampleStructs.Foo>();
 
-            Assert.Equal(2, query.GetEntityCount());
+            Assert.Equal(2, querySingleInclude.GetEntityCount());
 
             // Remove inclusion #1 
             entity1.RemoveComponent<SampleStructs.Foo>();
 
-            Assert.Equal(1, query.GetEntityCount());
+            Assert.Equal(1, querySingleInclude.GetEntityCount());
 
             // Remove inclusion #2 - should place entity in query results.
             entity2.RemoveComponent<SampleStructs.Foo>();
 
-            Assert.Equal(0, query.GetEntityCount());
+            Assert.Equal(0, querySingleInclude.GetEntityCount());
         }
+
+        [Fact]
+        public void EntityQueryMultiType()
+        {
+            // No system Add's
+            var systems = 
+                new Systems(Helpers.NewWorld());
+
+            systems.Create();
+
+            var query =
+                systems.World
+                .GetEntityQuery<EntityQuery<SampleStructs.Foo, SampleStructs.Bar>>();
+
+            var entity3 = systems.World.NewEntity();
+
+            entity3.GetComponent<SampleStructs.Foo>();
+
+            Assert.Equal(0, query.GetEntityCount());
+
+            entity3.GetComponent<SampleStructs.Bar>();
+
+            Assert.Equal(1, query.GetEntityCount());
+        }
+
         [Fact]
         public void EntityQuery_IncludeExclude()
         {
