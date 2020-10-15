@@ -49,7 +49,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Collections\AppendOnlyList.cs" />
-    <Compile Include="Collections\EntityCollection.cs" />
+    <Compile Include="Collections\EntityListValueCollection.cs" />
     <Compile Include="ComponentRef.cs" />
     <Compile Include="ComponentPool.cs" />
     <Compile Include="ComponentType.cs" />
