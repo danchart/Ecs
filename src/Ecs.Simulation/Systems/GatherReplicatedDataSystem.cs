@@ -14,7 +14,7 @@ namespace Ecs.Simulation.Server
         public override void OnUpdate(float deltaTime)
         {
             // Gen 0 heap
-            var entityToindex = new Dictionary<Entity, int>();
+            var entityToIndex = new Dictionary<Entity, int>();
             var replicatedData = new AppendOnlyList<AppendOnlyList<ReplicatedComponentData>>(256);
 
             // TransformComponent
@@ -25,6 +25,7 @@ namespace Ecs.Simulation.Server
                     {
                         Transform = query.Ref2(index)
                     },
+                entityToIndex,
                 replicatedData);
 
             // MovementComponent
@@ -36,6 +37,7 @@ namespace Ecs.Simulation.Server
                         Movement = query.Ref2(index)
                     }
                 ,
+                entityToIndex,
                 replicatedData);
 
             ReplicationManager.Sync(replicatedData);

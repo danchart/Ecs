@@ -49,6 +49,8 @@
     <Compile Include="Components\MovementComponent.cs" />
     <Compile Include="Components\TransformComponent.cs" />
     <Compile Include="ReplicatedComponentData.cs" />
+    <Compile Include="Server\PlayerConnection.cs" />
+    <Compile Include="Server\PlayerConnectionManager.cs" />
     <Compile Include="Server\ServerSimulation.cs" />
     <Compile Include="Server\ReplicationManager.cs" />
     <Compile Include="SimulationConfig.cs" />

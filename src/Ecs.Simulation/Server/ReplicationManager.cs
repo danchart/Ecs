@@ -1,26 +1,28 @@
 ﻿using Ecs.Core;
 using System;
-using System.Collections.Generic;
 
 namespace Ecs.Simulation.Server
 {
     public interface IReplicationManager
     {
-        void Sync(Dictionary<Entity, AppendOnlyList<ReplicatedComponentData>> replicatedData);
+        void Sync(AppendOnlyList<AppendOnlyList<ReplicatedComponentData>> replicatedData);
     }
 
     public class ReplicationManager : IReplicationManager
     {
-        private Dictionary<Entity, int> _clients = new Dictionary<Entity, int>();
+        private readonly PlayerConnectionManager PlayerConnectionManager;
 
         private readonly World World;
 
-        public ReplicationManager(World world)
+        public ReplicationManager(
+            World world,
+            PlayerConnectionManager playerConnectionManager)
         {
             World = world ?? throw new ArgumentNullException(nameof(world));
+            PlayerConnectionManager = playerConnectionManager ?? throw new ArgumentNullException(nameof(playerConnectionManager));
         }
 
-        public void Sync(Dictionary<Entity, AppendOnlyList<ReplicatedComponentData>> replicatedData)
+        public void Sync(AppendOnlyList<AppendOnlyList<ReplicatedComponentData>> replicatedData)
         {
             throw new NotImplementedException();
         }
