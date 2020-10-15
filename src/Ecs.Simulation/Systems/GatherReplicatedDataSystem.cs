@@ -1,6 +1,5 @@
 ﻿using Ecs.Core;
 using System;
-using System.Collections.Generic;
 
 namespace Ecs.Simulation.Server
 {
@@ -13,12 +12,8 @@ namespace Ecs.Simulation.Server
 
         public override void OnUpdate(float deltaTime)
         {
-            // Gen 0 heap
-            var entityToIndex = new Dictionary<Entity, int>();
-
-            var replicatedData = new ReplicatedEntityData(
-                entityCapacity: ReplicationManager.Config.InitialReplicatedEntityCapacity, 
-                componentCapacity: ReplicationManager.Config.InitialReplicatedComponentCapacity);
+            var entityComponents = ReplicationManager.EntityComponents;
+            entityComponents.Clear();
 
             // TransformComponent
             Gather(
@@ -28,8 +23,7 @@ namespace Ecs.Simulation.Server
                     {
                         Transform = query.Ref2(index)
                     },
-                entityToIndex,
-                ref replicatedData);
+                entityComponents);
 
             // MovementComponent
             Gather(
@@ -40,34 +34,26 @@ namespace Ecs.Simulation.Server
                         Movement = query.Ref2(index)
                     }
                 ,
-                entityToIndex,
-                ref replicatedData);
+                entityComponents);
 
-            ReplicationManager.Sync(replicatedData);
+            ReplicationManager.Sync();
         }
 
         private static void Gather<T>(
             EntityQueryWithChangeFilter<ReplicationTagComponent, T> query, 
-            Func<EntityQueryWithChangeFilter<ReplicationTagComponent, T>, int, ReplicatedComponentData> createComponentDataFunc,
-            Dictionary<Entity, int> entityToIndex,
-            ref ReplicatedEntityData replicatedEntityData)
+            // TODO: This Func<> probably prevents an important inlining opportunity.
+            //      Using it for now as it saves a lot of typing and code duplication.
+            Func<EntityQueryWithChangeFilter<ReplicationTagComponent, T>, int, ReplicatedComponentData> newComponentDataFunc,
+            ReplicatedEntities replicatedEntityData)
             where T : unmanaged
         {
             foreach (int index in query.GetIndices())
             {
                 var entity = query.GetEntity(index);
 
-                if (!entityToIndex.ContainsKey(entity))
-                {
-                    replicationData.Add(new AppendOnlyList<ReplicatedComponentData>(8));
-
-                    entityToIndex[entity] = replicationData.Count - 1;
-                }
-
-                replicationData
-                    .Items[entityToIndex[entity]]
+                replicatedEntityData[entity]
                     .Add(
-                        createComponentDataFunc(
+                        newComponentDataFunc(
                             query, 
                             index));
             }

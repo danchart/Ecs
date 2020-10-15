@@ -46,32 +46,33 @@ namespace Ecs.Core
 
         public Entity NewEntity()
         {
-            var entity = new Entity
-            {
-                World = this
-            };
-
             if (State._freeEntityCount > 0)
             {
-                entity.Id = State._freeEntityIds[--State._freeEntityCount];
+                // Reuse freed entity slot
 
-                ref var entityData = ref State._entities[entity.Id];
-                entity.Generation = entityData.Generation;
+                int id = State._freeEntityIds[--State._freeEntityCount];
+
+                ref var entityData = ref State._entities[id];
+                uint generation = entityData.Generation;
                 entityData.ComponentCount = 0;
+
+                return new Entity(this, id, generation);
             }
             else
             {
-                entity.Id = GetNextEntityId();
+                // Use new entity slot
 
-                ref var entityData = ref State._entities[entity.Id];
+                int id = GetNextEntityId();
+
+                ref var entityData = ref State._entities[id];
 
                 entityData.ComponentCount = 0;
                 entityData.Components = new EntityData.ComponentData[Config.InitialEntityComponentCapacity];
                 entityData.Generation = EcsConstants.InitialEntityVersion;
-                entity.Generation = entityData.Generation;
-            }
+                uint generation = entityData.Generation;
 
-            return entity;
+                return new Entity(this, id, generation);
+            }
         }
 
         public bool IsFreed(in Entity entity)

@@ -2,6 +2,9 @@
 
 namespace Ecs.Simulation
 {
+    /// <summary>
+    /// Replication ID
+    /// </summary>
     [AttributeUsage(AttributeTargets.Struct)]
     public class ComponentIdAttribute : Attribute
     {

@@ -30,6 +30,14 @@ namespace Ecs.Core
     public static class AppendOnlyListExtensions
     {
         /// <summary>
+        /// Resets count to 0.
+        /// </summary>
+        public static void Clear<T>(this AppendOnlyList<T> list)
+        {
+            list.Count = 0;
+        }
+
+        /// <summary>
         /// Resize the list. Internal call only!!
         /// </summary>
         public static void Resize<T>(this AppendOnlyList<T> list, int count)

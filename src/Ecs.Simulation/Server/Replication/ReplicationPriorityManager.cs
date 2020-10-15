@@ -1,20 +1,23 @@
 ﻿using Ecs.Core;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace Ecs.Simulation.Server
 {
     public interface IReplicationPriorityManager
     {
-        ReplicationPriority GetPriority(Entity player, )
+        ReplicationPriority[] GetPriorities(Entity player, ReplicatedEntities replicatedEntities);
     }
 
     public class ReplicationPriorityManager : IReplicationPriorityManager
     {
+        public ReplicationPriority[] GetPriorities(Entity player, ReplicatedEntities replicatedEntities)
+        {
+            ref readonly var position = ref player.GetReadOnlyComponent<TransformComponent>();
 
+            foreach (var components in replicatedEntities)
+            {
+
+            }
+        }
     }
 
     public struct ReplicationPriority

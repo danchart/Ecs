@@ -1,5 +1,6 @@
 ﻿using Ecs.Core;
 using System;
+using System.Collections.Generic;
 
 namespace Ecs.Simulation.Server
 {
@@ -7,16 +8,18 @@ namespace Ecs.Simulation.Server
     {
         ReplicationConfig Config { get; }
 
-        void Sync(AppendOnlyList<AppendOnlyList<ReplicatedComponentData>> replicatedData);
+        ReplicatedEntities EntityComponents { get;  }
+
+        void Sync();
     }
 
     public class ReplicationManager : IReplicationManager
     {
-        private readonly IPlayerConnectionManager PlayerConnectionManager;
+        private readonly IPlayerConnectionManager _playerConnectionManager;
 
-        private readonly World World;
+        private readonly World _world;
 
-        private readonly AppendOnlyList<ReplicatedEntityData> _replicatedEntityData;
+        private ReplicatedEntities _entityComponents;
 
         public ReplicationManager(
             ReplicationConfig config,
@@ -24,20 +27,24 @@ namespace Ecs.Simulation.Server
             IPlayerConnectionManager playerConnectionManager)
         {
             this.Config = config;
-            this.World = world ?? throw new ArgumentNullException(nameof(world));
-            this.PlayerConnectionManager = playerConnectionManager ?? throw new ArgumentNullException(nameof(playerConnectionManager));
+            this._world = world ?? throw new ArgumentNullException(nameof(world));
+            this._playerConnectionManager = playerConnectionManager ?? throw new ArgumentNullException(nameof(playerConnectionManager));
 
-            _replicatedEntityData = new AppendOnlyList<ReplicatedEntityData>()
+            _entityComponents = new ReplicatedEntities(
+                entityCapacity: config.InitialReplicatedEntityCapacity,
+                componentCapacity: config.InitialReplicatedComponentCapacity);
         }
 
         public ReplicationConfig Config { get; private set; }
 
-        public void Sync(AppendOnlyList<AppendOnlyList<ReplicatedComponentData>> replicatedData)
+        public ReplicatedEntities EntityComponents => _entityComponents;
+
+        public void Sync()
         {
             // 1) Determinee priority per-entity for every player - O(E * P) 
             // 2) Create replication packet. Delta with last packet.
 
-            foreach (var pair in this.PlayerConnectionManager.Connections)
+            foreach (var pair in this._playerConnectionManager.Connections)
             {
                 var playerEntity = pair.Value.Entity;
 

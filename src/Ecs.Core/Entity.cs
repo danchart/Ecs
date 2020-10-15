@@ -4,9 +4,16 @@ namespace Ecs.Core
 {
     public struct Entity : IEquatable<Entity>
     {
-        internal World World;
-        internal int Id;
+        internal readonly World World;
+        internal readonly int Id;
         internal uint Generation;
+
+        internal Entity(World world, int id, uint generation)
+        {
+            World = world;
+            Id = id;
+            Generation = generation;
+        }
 
         public static bool operator ==(in Entity lhs, in Entity rhs)
         {

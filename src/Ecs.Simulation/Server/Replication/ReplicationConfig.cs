@@ -2,7 +2,7 @@
 {
     public class ReplicationConfig
     {
-        public int InitialReplicatedEntityCapacity = 256;
+        public int InitialReplicatedEntityCapacity = 1024;
         public int InitialReplicatedComponentCapacity = 6;
     }
 }
