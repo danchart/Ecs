@@ -4,20 +4,20 @@ using System.Collections.Generic;
 namespace Ecs.Core
 {
 
-    public class EntityCollection<T>
+    public class EntityListValueCollection<T>
         where T : class
     {
         internal int[] _entityIds;
-        internal AppendOnlyList<T> _values;
+        internal AppendOnlyList<T>[] _values;
 
         internal Dictionary<int, int> _entityMap;
 
         private int _count;
 
-        public EntityCollection(int capacity)
+        public EntityListValueCollection(int capacity)
         {
             _entityIds = new int[capacity];
-            _values = new AppendOnlyList<T>(capacity);
+            _values = new AppendOnlyList<T>[capacity];
             _entityMap = new Dictionary<int, int>(capacity);
 
             _count = 0;
@@ -28,69 +28,83 @@ namespace Ecs.Core
             return _entityMap.ContainsKey(entity.Id);
         }
 
-        public T this[Entity entity]
+        public AppendOnlyList<T> this[Entity entity]
         {
             get
             {
                 if (!_entityMap.ContainsKey(entity.Id))
                 {
-                    return null;
-                }
-
-                return _values.Items[_entityMap[entity.Id]];
-            }
-
-            set
-            {
-                if (_entityMap.ContainsKey(entity.Id))
-                {
-                    _values.Items[_entityMap[entity.Id]] = value;
-                }
-                else
-                {
                     if (_entityIds.Length == _count)
                     {
                         Array.Resize(ref _entityIds, 2 * _entityIds.Length);
+                        Array.Resize(ref _values, 2 * _values.Length);
                     }
 
                     _entityMap[entity.Id] = _count;
-                    _values.Add(value);
                     _entityIds[_count] = _count;
+
+                    if (_values[_count] == null)
+                    {
+                        _values[_count] = new AppendOnlyList<T>(8);
+                    }
+                    else
+                    {
+                        _values[_count].Clear();
+                    }
 
                     _count++;
                 }
+
+                return _values[_entityMap[entity.Id]];
             }
+
+            //set
+            //{
+            //    if (_entityMap.ContainsKey(entity.Id))
+            //    {
+            //        _values.Items[_entityMap[entity.Id]] = value;
+            //    }
+            //    else
+            //    {
+            //        if (_entityIds.Length == _count)
+            //        {
+            //            Array.Resize(ref _entityIds, 2 * _entityIds.Length);
+            //        }
+
+            //        _entityMap[entity.Id] = _count;
+            //        _values.Add(value);
+            //        _entityIds[_count] = _count;
+
+            //        _count++;
+            //    }
+            //}
         }
 
         public void Clear()
         {
-            for (int i = 0; i < _values.Count; i++)
-            {
-
-            }
-
-            this._hasValue.Clear();
+            this._entityMap.Clear();
+            this._count = 0;
         }
 
-        public IndexEnumerator<T> GetEnumerator()
+        public Enumerator<T> GetEnumerator()
         {
-            return new IndexEnumerator<T>(this);
+            return new Enumerator<T>(this);
         }
 
-        public struct IndexEnumerator<T>
+        public struct Enumerator<T>
             where T : class
         {
-            private readonly EntityCollection<T> _collection;
+            private readonly EntityListValueCollection<T> _collection;
 
             private int _current;
 
-            internal IndexEnumerator(EntityCollection<T> collection)
+            internal Enumerator(EntityListValueCollection<T> collection)
             {
                 this._collection = collection;
                 this._current = -1;
             }
 
-            public T Current => this._collection._values.Items[_current];
+            public AppendOnlyList<T> Current => this._collection._values.Items[_current];
 
 
             public bool MoveNext()

@@ -4,7 +4,7 @@ namespace Ecs.Simulation.Server
 {
     public class ReplicatedEntities
     {
-        private readonly EntityCollection<AppendOnlyList<ReplicatedComponentData>> EntityComponents;
+        private readonly EntityListValueCollection<AppendOnlyList<ReplicatedComponentData>> EntityComponents;
 
         private readonly int _componentCapacity;
 
@@ -12,7 +12,7 @@ namespace Ecs.Simulation.Server
         {
             _componentCapacity = componentCapacity;
                  
-            EntityComponents = new EntityCollection<AppendOnlyList<ReplicatedComponentData>>(entityCapacity);
+            EntityComponents = new EntityListValueCollection<AppendOnlyList<ReplicatedComponentData>>(entityCapacity);
         }
 
         public void Clear()
