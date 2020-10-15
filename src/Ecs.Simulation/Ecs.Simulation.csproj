@@ -48,8 +48,9 @@
     <Compile Include="Components\Tags\ReplicationTagComponent.cs" />
     <Compile Include="Components\MovementComponent.cs" />
     <Compile Include="Components\TransformComponent.cs" />
+    <Compile Include="ReplicatedComponentData.cs" />
     <Compile Include="Server\ServerSimulation.cs" />
-    <Compile Include="Server\ServerToClientReplication.cs" />
+    <Compile Include="Server\ReplicationManager.cs" />
     <Compile Include="SimulationConfig.cs" />
     <Compile Include="Client\ClientSimulation.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
