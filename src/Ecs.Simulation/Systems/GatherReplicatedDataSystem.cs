@@ -15,7 +15,10 @@ namespace Ecs.Simulation.Server
         {
             // Gen 0 heap
             var entityToIndex = new Dictionary<Entity, int>();
-            var replicatedData = new AppendOnlyList<AppendOnlyList<ReplicatedComponentData>>(256);
+
+            var replicatedData = new ReplicatedEntityData(
+                entityCapacity: ReplicationManager.Config.InitialReplicatedEntityCapacity, 
+                componentCapacity: ReplicationManager.Config.InitialReplicatedComponentCapacity);
 
             // TransformComponent
             Gather(
@@ -26,7 +29,7 @@ namespace Ecs.Simulation.Server
                         Transform = query.Ref2(index)
                     },
                 entityToIndex,
-                replicatedData);
+                ref replicatedData);
 
             // MovementComponent
             Gather(
@@ -38,7 +41,7 @@ namespace Ecs.Simulation.Server
                     }
                 ,
                 entityToIndex,
-                replicatedData);
+                ref replicatedData);
 
             ReplicationManager.Sync(replicatedData);
         }
@@ -47,7 +50,7 @@ namespace Ecs.Simulation.Server
             EntityQueryWithChangeFilter<ReplicationTagComponent, T> query, 
             Func<EntityQueryWithChangeFilter<ReplicationTagComponent, T>, int, ReplicatedComponentData> createComponentDataFunc,
             Dictionary<Entity, int> entityToIndex,
-            AppendOnlyList<AppendOnlyList<ReplicatedComponentData>> replicationData)
+            ref ReplicatedEntityData replicatedEntityData)
             where T : unmanaged
         {
             foreach (int index in query.GetIndices())

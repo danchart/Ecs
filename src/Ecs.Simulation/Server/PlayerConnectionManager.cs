@@ -9,8 +9,6 @@ namespace Ecs.Simulation.Server
 
     public class PlayerConnectionManager : IPlayerConnectionManager
     {
-        private readonly Dictionary<int, PlayerConnection> _connections = new Dictionary<int, PlayerConnection>();
-
-        public Dictionary<int, PlayerConnection> Connections => _connections;
+        public Dictionary<int, PlayerConnection> Connections { get; } = new Dictionary<int, PlayerConnection>();
     }
 }

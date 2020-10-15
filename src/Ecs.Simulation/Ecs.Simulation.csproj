@@ -48,11 +48,14 @@
     <Compile Include="Components\Tags\ReplicationTagComponent.cs" />
     <Compile Include="Components\MovementComponent.cs" />
     <Compile Include="Components\TransformComponent.cs" />
-    <Compile Include="ReplicatedComponentData.cs" />
+    <Compile Include="Server\Replication\ReplicatedComponentData.cs" />
     <Compile Include="Server\PlayerConnection.cs" />
     <Compile Include="Server\PlayerConnectionManager.cs" />
+    <Compile Include="Server\Replication\ReplicatedEntityData.cs" />
+    <Compile Include="Server\Replication\ReplicationConfig.cs" />
+    <Compile Include="Server\Replication\ReplicationPriorityManager.cs" />
     <Compile Include="Server\ServerSimulation.cs" />
-    <Compile Include="Server\ReplicationManager.cs" />
+    <Compile Include="Server\Replication\ReplicationManager.cs" />
     <Compile Include="SimulationConfig.cs" />
     <Compile Include="Client\ClientSimulation.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
