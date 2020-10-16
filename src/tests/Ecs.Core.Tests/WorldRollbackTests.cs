@@ -4,7 +4,7 @@ using Xunit;
 
 namespace Ecs.Core.Tests
 {
-#if MOTHBALL // Moved to Ecs.Simulation.Tests
+#if MOTHBALL // Moved to Simulation.Core.Tests
     public class WorldRollbackTests
     {
 
