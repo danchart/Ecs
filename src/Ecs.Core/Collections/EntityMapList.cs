@@ -3,76 +3,100 @@ using System.Collections.Generic;
 
 namespace Ecs.Core.Collections
 {
-    /// <summary>
-    /// Provides a pooled map-list of entities. Trades more memory for less allocations.
-    /// </summary>
     public class EntityMapList<T>
         where T : struct
     {
-        internal AppendOnlyList<T>[] _listPool;
-        internal int _count;
+        private EntityItem[] _entityItems;
 
-        internal Dictionary<Entity, AppendOnlyList<T>> _entityMapToList;
+        private Dictionary<int, int> _entityIndexToDataIndex;
+
+        private int _count;
 
         private readonly int ListCapacity;
 
-        public EntityMapList(int entityCapacity, int listPoolCapacity, int listCapacity)
+        public EntityMapList(int entityCapacity, int listCapacity)
         {
-            ListCapacity = listCapacity;
-
-            this._entityMapToList = new Dictionary<Entity, AppendOnlyList<T>>(entityCapacity);
-            this._listPool = new AppendOnlyList<T>[listPoolCapacity];
-
-            AllocateListPool(this._listPool, start: 0, length: this._listPool.Length);
+            this._entityItems = new EntityItem[entityCapacity];
+            this._entityIndexToDataIndex = new Dictionary<int, int>(entityCapacity);
 
             this._count = 0;
+
+            this.ListCapacity = listCapacity;
         }
 
-        public int Count()
-        {
-            return this._entityMapToList.Count;
-        }
+        public int Count => this._count;
 
         public void Clear()
         {
-            this._entityMapToList.Clear();
-
+            this._entityIndexToDataIndex.Clear();
             this._count = 0;
         }
 
-        public AppendOnlyList<T> this[Entity entity]
+        public ref AppendOnlyList<T> this[Entity entity]
         {
             get
             {
-                if (!this._entityMapToList.ContainsKey(entity))
+                if (!this._entityIndexToDataIndex.ContainsKey(entity.Id))
                 {
-                    if (this._count == this._listPool.Length)
-                    {
-                        Array.Resize(ref _listPool, 2 * this._count);
+                    // Allocate this index
 
-                        AllocateListPool(this._listPool, start: this._count, length: this._count);
+                    if (this._count == this._entityItems.Length)
+                    {
+                        Array.Resize(ref this._entityItems, 2 * this._count);
                     }
 
-                    // Assign and clear the next available list.
-                    this._entityMapToList[entity] = _listPool[_count++];
-                    this._entityMapToList[entity].Clear();
+                    this._entityIndexToDataIndex[entity.Id] = this._count;
+                    this._entityItems[_count] = new EntityItem
+                    {
+                        Items = new AppendOnlyList<T>(ListCapacity),
+                        Entity = entity,
+                    };
+
+                    return ref _entityItems[_count++].Items;
                 }
+                else
+                {
+                    var entityIndex = this._entityIndexToDataIndex[entity.Id];
 
-                return this._entityMapToList[entity];
+                    if (this._entityItems[entityIndex].Entity != entity)
+                    {
+                        this._entityItems[entityIndex].Entity = entity;
+                        this._entityItems[entityIndex].Items.Clear();
+                    }
+
+                    return ref this._entityItems[entityIndex].Items;
+                }
             }
         }
 
-        public Dictionary<Entity, AppendOnlyList<T>>.Enumerator GetEnumerator()
+        public Enumerator GetEnumerator()
         {
-            return this._entityMapToList.GetEnumerator();
+            return new Enumerator(this);
         }
 
-        private void AllocateListPool(AppendOnlyList<T>[] listPool, int start, int length)
+        public struct Enumerator
         {
-            for (int i = start; i < start + length; i++)
+            EntityMapList<T> _mapList;
+            private int _current;
+
+            internal Enumerator(EntityMapList<T> mapList)
             {
-                this._listPool[i] = new AppendOnlyList<T>(this.ListCapacity);
+                this._mapList = mapList ?? throw new ArgumentNullException(nameof(mapList));
+                this._current = -1;
             }
+
+            public EntityItem Current => _mapList._entityItems[_current];
+
+            public bool MoveNext()
+            {
+                return ++this._current < this._mapList._count;
+            }
+        }
+
+        public struct EntityItem
+        {
+            public Entity Entity;
+            public AppendOnlyList<T> Items;
         }
     }
 }

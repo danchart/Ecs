@@ -49,6 +49,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Collections\AppendOnlyList.cs" />
+    <Compile Include="Collections\EntityMapListMOTHBALL.cs" />
     <Compile Include="Collections\EntityMapList.cs" />
     <Compile Include="ComponentRef.cs" />
     <Compile Include="ComponentPool.cs" />

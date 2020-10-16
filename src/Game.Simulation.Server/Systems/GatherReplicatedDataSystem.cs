@@ -59,7 +59,7 @@ namespace Game.Simulation.Server
             // TODO: This Func<> probably prevents an important inlining opportunity.
             //      Using it for now as it saves a lot of typing and code duplication.
             Func<EntityQueryWithChangeFilter<ReplicationTagComponent, T>, int, ReplicatedComponentData> newComponentDataFunc,
-            EntityMapList<ReplicatedComponentData> replicatedEntityData)
+            EntityMapListMOTHBALL<ReplicatedComponentData> replicatedEntityData)
             where T : unmanaged
         {
             foreach (int index in query.GetIndices())

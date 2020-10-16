@@ -3,13 +3,13 @@ using Xunit;
 
 namespace Ecs.Core.Tests.Collections
 {
-    public class EntityMapListTests
+    public class EntityMapListMOTHBALLTests
     {
         [Fact]
         public void Test()
         {
             var w = new World(EcsConfig.Default);
-            var mapList = new EntityMapList<MyData>(entityCapacity: 1, listCapacity: 1);
+            var mapList = new EntityMapListMOTHBALL<MyData>(entityCapacity: 1, listPoolCapacity: 1, listCapacity: 1);
 
             var entities = new Entity[1000];
 
@@ -35,18 +35,18 @@ namespace Ecs.Core.Tests.Collections
 
             // Validate even entities
 
-            foreach (var item in mapList)
+            foreach (var kv in mapList)
             {
-                Assert.Equal(2, item.Items.Count);
-                Assert.Equal(item.Entity.Id, item.Items.Items[0].value);
-                Assert.Equal(item.Entity.Id, -item.Items.Items[1].value);
+                Assert.Equal(2, kv.Value.Count);
+                Assert.Equal(kv.Key.Id, kv.Value.Items[0].value);
+                Assert.Equal(kv.Key.Id, -kv.Value.Items[1].value);
             }
 
             // Reset map - should keep the list pool.
 
             mapList.Clear();
 
-            Assert.Equal(0, mapList.Count);
+            Assert.Equal(0, mapList.Count());
 
             // Add every odd entity
 
@@ -65,11 +65,11 @@ namespace Ecs.Core.Tests.Collections
 
             // Validate odd entities
 
-            foreach (var item in mapList)
+            foreach (var kv in mapList)
             {
-                Assert.Equal(2, item.Items.Count);
-                Assert.Equal(item.Entity.Id, item.Items.Items[0].value);
-                Assert.Equal(item.Entity.Id, -item.Items.Items[1].value);
+                Assert.Equal(2, kv.Value.Count);
+                Assert.Equal(kv.Key.Id, kv.Value.Items[0].value);
+                Assert.Equal(kv.Key.Id, -kv.Value.Items[1].value);
             }
         }
 
