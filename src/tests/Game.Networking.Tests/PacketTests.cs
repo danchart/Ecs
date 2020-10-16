@@ -1,7 +1,8 @@
-﻿using System.IO;
+﻿using Game.Networking.Core;
+using System.IO;
 using Xunit;
 
-namespace Game.Networking.Core.Tests
+namespace Game.Networking.Tests
 {
     public class PacketTests
     {

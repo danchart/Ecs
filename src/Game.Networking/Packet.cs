@@ -1,8 +1,9 @@
-﻿using System;
+﻿using Game.Networking.Core;
+using System;
 using System.IO;
 using System.Runtime.InteropServices;
 
-namespace Game.Networking.Core
+namespace Game.Networking
 {
     //[StructLayout(LayoutKind.Explicit, Pack = 1)]
     public struct Packet

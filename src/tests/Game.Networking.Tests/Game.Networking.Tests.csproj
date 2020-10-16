@@ -5,13 +5,11 @@
   <Import Project="$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props" Condition="Exists('$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props')" />
   <Import Project="..\tests.props" />
   <PropertyGroup>
-    <ProjectGuid>{FE03A7B7-6303-46C2-A14B-D8D4F032130F}</ProjectGuid>
+    <ProjectGuid>{669D2B95-E4CB-4E24-BBAA-A272BBCD283A}</ProjectGuid>
     <OutputType>Library</OutputType>
     <AppDesignerFolder>Properties</AppDesignerFolder>
-    <RootNamespace>Game.Networking.Core.Tests</RootNamespace>
-    <AssemblyName>Game.Networking.Core.Tests</AssemblyName>
-    <NuGetPackageImportStamp>
-    </NuGetPackageImportStamp>
+    <RootNamespace>Game.Networking.Tests</RootNamespace>
+    <AssemblyName>Game.Networking.Tests</AssemblyName>
   </PropertyGroup>
   <ItemGroup>
     <Reference Include="System" />
@@ -36,21 +34,24 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="BitFieldTests.cs" />
-    <Compile Include="PacketStreamExtensionsTests.cs" />
+    <Compile Include="PacketTests.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
-  </ItemGroup>
-  <ItemGroup>
-    <None Include="packages.config" />
-  </ItemGroup>
-  <ItemGroup>
-    <Analyzer Include="..\..\packages\xunit.analyzers.0.10.0\analyzers\dotnet\cs\xunit.analyzers.dll" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\..\Game.Networking.Core\Game.Networking.Core.csproj">
       <Project>{b19a0428-3713-43b2-81a5-1f228ce19489}</Project>
       <Name>Game.Networking.Core</Name>
     </ProjectReference>
+    <ProjectReference Include="..\..\Game.Networking\Game.Networking.csproj">
+      <Project>{769ce99b-f28d-4c73-9e98-e7d46eb17b42}</Project>
+      <Name>Game.Networking</Name>
+    </ProjectReference>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="packages.config" />
+  </ItemGroup>
+  <ItemGroup>
+    <Analyzer Include="..\..\packages\xunit.analyzers.0.10.0\analyzers\dotnet\cs\xunit.analyzers.dll" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <Target Name="EnsureNuGetPackageBuildImports" BeforeTargets="PrepareForBuild">
@@ -61,5 +62,5 @@
     <Error Condition="!Exists('..\..\packages\xunit.core.2.4.1\build\xunit.core.targets')" Text="$([System.String]::Format('$(ErrorText)', '..\..\packages\xunit.core.2.4.1\build\xunit.core.targets'))" />
     <Error Condition="!Exists('..\..\packages\xunit.runner.visualstudio.2.4.3\build\net452\xunit.runner.visualstudio.props')" Text="$([System.String]::Format('$(ErrorText)', '..\..\packages\xunit.runner.visualstudio.2.4.3\build\net452\xunit.runner.visualstudio.props'))" />
   </Target>
-  <Import Project="..\..\packages\xunit.core.2.4.1\build\xunit.core.targets" Condition="Exists('..\packages\xunit.core.2.4.1\build\xunit.core.targets')" />
+  <Import Project="..\..\packages\xunit.core.2.4.1\build\xunit.core.targets" Condition="Exists('..\..\packages\xunit.core.2.4.1\build\xunit.core.targets')" />
 </Project>

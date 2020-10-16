@@ -21,7 +21,6 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="BitField.cs" />
-    <Compile Include="Packet.cs" />
     <Compile Include="PacketStreamExtensions.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
