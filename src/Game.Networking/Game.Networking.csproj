@@ -21,6 +21,9 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Packet.cs" />
+    <Compile Include="PacketData\MovementData.cs" />
+    <Compile Include="PacketData\PlayerInputData.cs" />
+    <Compile Include="PacketData\TransformData.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <ItemGroup>

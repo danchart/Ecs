@@ -6,5 +6,7 @@
         public float pos_x;
         public float pox_y;
         public float rotation;
+
+        public TransformData
     }
 }

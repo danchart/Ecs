@@ -31,7 +31,7 @@ namespace Game.Simulation.Server
                 (query, index) =>
                     new ReplicatedComponentData
                     {
-                        Transform = query.Ref2(index)
+                        Transform = query.GetReadonly2(index).ToPacket()
                     },
                 entityComponents);
 

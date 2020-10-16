@@ -1,4 +1,5 @@
 ﻿using Ecs.Core;
+using Game.Networking.PacketData;
 using Game.Simulation.Core;
 using System.Runtime.InteropServices;
 
@@ -11,8 +12,13 @@ namespace Game.Simulation.Server
         public int ComponentId;
 
         [FieldOffset(2)]
-        public ComponentRef<TransformComponent> Transform;
+        public TransformData Transform;
         [FieldOffset(2)]
-        public ComponentRef<MovementComponent> Movement;
+        public MovementData Movement;
+
+        //[FieldOffset(2)]
+        //public ComponentRef<TransformComponent> Transform;
+        //[FieldOffset(2)]
+        //public ComponentRef<MovementComponent> Movement;
     }
 }

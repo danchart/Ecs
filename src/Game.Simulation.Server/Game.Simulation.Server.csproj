@@ -39,6 +39,10 @@
       <Project>{65beb14c-5414-4516-b566-e668e494c3eb}</Project>
       <Name>Ecs.Core</Name>
     </ProjectReference>
+    <ProjectReference Include="..\Game.Networking\Game.Networking.csproj">
+      <Project>{769ce99b-f28d-4c73-9e98-e7d46eb17b42}</Project>
+      <Name>Game.Networking</Name>
+    </ProjectReference>
     <ProjectReference Include="..\Game.Simulation.Core\Game.Simulation.Core.csproj">
       <Project>{03c4608e-69a7-4f46-8231-749dd5cb5ed2}</Project>
       <Name>Game.Simulation.Core</Name>

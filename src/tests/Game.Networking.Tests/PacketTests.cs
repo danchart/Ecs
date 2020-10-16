@@ -1,4 +1,5 @@
 ﻿using Game.Networking.Core;
+using Game.Networking.PacketData;
 using System.IO;
 using Xunit;
 
@@ -28,7 +29,7 @@ namespace Game.Networking.Tests
                                     Bit1 = true,
                                     Bit2 = true
                                 },
-                                Transform = new PacketDataItem.TransformData
+                                Transform = new TransformData
                                 {
                                     x = 5.5f,
                                     y = 7.7f,

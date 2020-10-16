@@ -40,8 +40,9 @@ namespace Game.Simulation.Server
 
         public void Sync()
         {
-            // 1) Determinee priority per-entity for every player - O(E * P) 
-            // 2) Create replication packet. Delta with last packet.
+            // 1) Convert components to packet data
+            // 2) Determinee priority per-entity for every player - O(E * P) 
+            // 3) Create replication packet. Delta with last packet.
 
             foreach (var pair in this._playerConnectionManager.Connections)
             {

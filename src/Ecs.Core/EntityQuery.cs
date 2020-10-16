@@ -1305,19 +1305,27 @@ namespace Ecs.Core
             return ref this._componentPool1.Items[_componentIds1[index]].Item;
         }
 
-        public ref IncType1 Get1(int index)
-        {
-            return ref this._componentPool1.Items[_componentIds1[index]].Item;
-        }
-
         public ref readonly IncType2 GetReadonly2(int index)
         {
             return ref this._componentPool2.Items[_componentIds2[index]].Item;
         }
 
+        public ref IncType1 Get1(int index)
+        {
+            ref var item = ref this._componentPool1.Items[_componentIds1[index]];
+
+            item.Version = this.World.State.LastSystemVersion.Items[this._systemsIndex];
+
+            return ref this._componentPool1.Items[_componentIds1[index]].Item;
+        }
+
         public ref IncType2 Get2(int index)
         {
-            return ref this._componentPool2.Items[_componentIds2[index]].Item;
+            ref var item = ref this._componentPool2.Items[_componentIds2[index]];
+
+            item.Version = this.World.State.LastSystemVersion.Items[this._systemsIndex];
+
+            return ref item.Item;
         }
 
         public ComponentRef<IncType1> Ref1(int index)
