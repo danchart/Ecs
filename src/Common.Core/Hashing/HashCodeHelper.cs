@@ -1,6 +1,6 @@
-﻿namespace Ecs.Core
+﻿namespace Common.Core.Numerics
 {
-    public static class HashingUtil
+    public static class HashCodeHelper
     {
         public static int CombineHashCodes(int h1, int h2)
         {

@@ -9,7 +9,7 @@ namespace Ecs.Core.Tests.Collections
         public void Test()
         {
             var w = new World(EcsConfig.Default);
-            var mapList = new EntityMapList<MyData>(entityCapacity: 1, listCapacity: 1);
+            var mapList = new EntityMapList<MyData>(entityCapacity: 1, listCapacity: 1); // capacity 1 validates array growth
 
             var entities = new Entity[1000];
 
@@ -22,15 +22,10 @@ namespace Ecs.Core.Tests.Collections
 
             for (int i = 0; i < entities.Length; i += 2)
             {
-                mapList[entities[i]].Add(new MyData
-                {
-                    value = i
-                });
-
-                mapList[entities[i]].Add(new MyData
-                {
-                    value = -i
-                });
+                mapList[entities[i]].New();
+                mapList[entities[i]].Current.value = i;
+                mapList[entities[i]].New();
+                mapList[entities[i]].Current.value = -i;
             }
 
             // Validate even entities
@@ -38,8 +33,16 @@ namespace Ecs.Core.Tests.Collections
             foreach (var item in mapList)
             {
                 Assert.Equal(2, item.Items.Count);
-                Assert.Equal(item.Entity.Id, item.Items.Items[0].value);
-                Assert.Equal(item.Entity.Id, -item.Items.Items[1].value);
+
+                // Direct access
+                Assert.Equal(item.Entity.Id, item.Items[0].value);
+                Assert.Equal(item.Entity.Id, -item.Items[1].value);
+
+                // Loop
+                for (int i = 0; i < item.Items.Count; i++)
+                {
+                    Assert.Equal(i == 0 ? item.Entity.Id : -item.Entity.Id, item.Items[i].value);
+                }
             }
 
             // Reset map - should keep the list pool.
@@ -52,15 +55,10 @@ namespace Ecs.Core.Tests.Collections
 
             for (int i = 1; i < entities.Length; i += 2)
             {
-                mapList[entities[i]].Add(new MyData
-                {
-                    value = i
-                });
-
-                mapList[entities[i]].Add(new MyData
-                {
-                    value = -i
-                });
+                mapList[entities[i]].New();
+                mapList[entities[i]].Current.value = i;
+                mapList[entities[i]].New();
+                mapList[entities[i]].Current.value = -i;
             }
 
             // Validate odd entities
@@ -68,8 +66,16 @@ namespace Ecs.Core.Tests.Collections
             foreach (var item in mapList)
             {
                 Assert.Equal(2, item.Items.Count);
-                Assert.Equal(item.Entity.Id, item.Items.Items[0].value);
-                Assert.Equal(item.Entity.Id, -item.Items.Items[1].value);
+
+                // Direct access
+                Assert.Equal(item.Entity.Id, item.Items[0].value);
+                Assert.Equal(item.Entity.Id, -item.Items[1].value);
+
+                // Loop
+                for (int i = 0; i < item.Items.Count; i++)
+                {
+                    Assert.Equal(i == 0 ? item.Entity.Id : -item.Entity.Id, item.Items[i].value);
+                }
             }
         }
 

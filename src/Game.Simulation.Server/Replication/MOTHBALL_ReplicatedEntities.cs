@@ -4,7 +4,7 @@ using System.Collections.Generic;
 
 namespace Game.Simulation.Server
 {
-    public class ReplicatedEntities
+    public class MOTHBALL_ReplicatedEntities
     {
         private Dictionary<Entity, AppendOnlyList<ReplicatedComponentData>>[] _entityComponents;
 
@@ -13,7 +13,7 @@ namespace Game.Simulation.Server
 
         private readonly int _componentCapacity;
 
-        public ReplicatedEntities(
+        public MOTHBALL_ReplicatedEntities(
             int entityCapacity,
             int componentCapacity)
         {

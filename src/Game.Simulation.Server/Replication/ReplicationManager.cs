@@ -8,7 +8,7 @@ namespace Game.Simulation.Server
     {
         ReplicationConfig Config { get; }
 
-        EntityMapListMOTHBALL<ReplicatedComponentData> EntityComponents { get;  }
+        EntityMapList<ReplicatedComponentData> EntityComponents { get;  }
 
         void Sync();
     }
@@ -19,7 +19,7 @@ namespace Game.Simulation.Server
 
         private readonly World _world;
 
-        private EntityMapListMOTHBALL<ReplicatedComponentData> _entityComponents;
+        private EntityMapList<ReplicatedComponentData> _entityComponents;
 
         public ReplicationManager(
             ReplicationConfig config,
@@ -30,15 +30,14 @@ namespace Game.Simulation.Server
             this._world = world ?? throw new ArgumentNullException(nameof(world));
             this._playerConnectionManager = playerConnectionManager ?? throw new ArgumentNullException(nameof(playerConnectionManager));
 
-            _entityComponents = new EntityMapListMOTHBALL<ReplicatedComponentData>(
+            _entityComponents = new EntityMapList<ReplicatedComponentData>(
                 entityCapacity: config.InitialReplicatedEntityCapacity,
-                listPoolCapacity: config.InitialReplicatedEntityCapacity,
                 listCapacity: config.InitialReplicatedComponentCapacity);
         }
 
         public ReplicationConfig Config { get; private set; }
 
-        public EntityMapListMOTHBALL<ReplicatedComponentData> EntityComponents => _entityComponents;
+        public EntityMapList<ReplicatedComponentData> EntityComponents => _entityComponents;
 
         public void Sync()
         {

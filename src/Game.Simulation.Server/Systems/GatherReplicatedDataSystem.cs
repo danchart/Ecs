@@ -1,5 +1,6 @@
 ﻿using Ecs.Core;
 using Ecs.Core.Collections;
+using Game.Networking.PacketData;
 using Game.Simulation.Core;
 using System;
 
@@ -23,11 +24,8 @@ namespace Game.Simulation.Server
             {
                 var entity = _transformQuery.GetEntity(index);
 
-                entityComponents[entity].Add(
-                    new ReplicatedComponentData
-                    {
-                        //            //Transform = query.GetReadonly2(index).ToPacket()
-                    });
+                entityComponents[entity].New();
+                entityComponents[entity].Current.Transform = _transformQuery.GetReadonly2(index).ToPacket();
             }
 
             // TransformComponent
@@ -59,7 +57,7 @@ namespace Game.Simulation.Server
             // TODO: This Func<> probably prevents an important inlining opportunity.
             //      Using it for now as it saves a lot of typing and code duplication.
             Func<EntityQueryWithChangeFilter<ReplicationTagComponent, T>, int, ReplicatedComponentData> newComponentDataFunc,
-            EntityMapListMOTHBALL<ReplicatedComponentData> replicatedEntityData)
+            MOTHBALL_EntityMapList<ReplicatedComponentData> replicatedEntityData)
             where T : unmanaged
         {
             foreach (int index in query.GetIndices())

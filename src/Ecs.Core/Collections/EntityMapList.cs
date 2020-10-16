@@ -32,7 +32,7 @@ namespace Ecs.Core.Collections
             this._count = 0;
         }
 
-        public ref AppendOnlyList<T> this[Entity entity]
+        public ref ItemList this[Entity entity]
         {
             get
             {
@@ -48,7 +48,7 @@ namespace Ecs.Core.Collections
                     this._entityIndexToDataIndex[entity.Id] = this._count;
                     this._entityItems[_count] = new EntityItem
                     {
-                        Items = new AppendOnlyList<T>(ListCapacity),
+                        Items = new ItemList(ListCapacity),
                         Entity = entity,
                     };
 
@@ -60,6 +60,8 @@ namespace Ecs.Core.Collections
 
                     if (this._entityItems[entityIndex].Entity != entity)
                     {
+                        // Different generation, reset the data.
+
                         this._entityItems[entityIndex].Entity = entity;
                         this._entityItems[entityIndex].Items.Clear();
                     }
@@ -93,10 +95,63 @@ namespace Ecs.Core.Collections
             }
         }
 
+        public class ItemList
+        {
+            internal T[] _items;
+            internal int _count;
+
+            internal ItemList(int capacity)
+            {
+                this._items = new T[capacity];
+                this._count = 0;
+            }
+
+            public int Count => this._count;
+
+            // If count < 0 you haven't called New().
+            public ref T Current => ref this._items[_count-1];
+
+            public ref T this[int index] => ref this._items[index];
+
+            public void Clear()
+            {
+                _count = 0;
+            }
+
+            public void New()
+            {
+                if (this._items.Length == this._count)
+                {
+                    Array.Resize(ref this._items, 2 * this._count);
+                }
+
+                this._count++;
+            }
+
+            public struct Enumerator
+            {
+                private ItemList _list;
+                private int _current;
+
+                internal Enumerator(ItemList list)
+                {
+                    this._list = list ?? throw new ArgumentNullException(nameof(list));
+                    this._current = -1;
+                }
+
+                public T Current => _list._items[_current];
+
+                public bool MoveNext()
+                {
+                    return ++this._current < this._list._count;
+                }
+            }
+        }
+
         public struct EntityItem
         {
             public Entity Entity;
-            public AppendOnlyList<T> Items;
+            public ItemList Items;
         }
     }
 }

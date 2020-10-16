@@ -1,4 +1,6 @@
-﻿using Game.Networking.Core;
+﻿using Common.Core.Numerics;
+using Game.Networking.Core;
+using Game.Simulation.Core;
 using System.IO;
 
 namespace Game.Networking.PacketData
@@ -12,7 +14,7 @@ namespace Game.Networking.PacketData
         // 2
         public float rotation;
 
-        public bool Serialize(BitField hasFields, Stream stream)
+        public bool Serialize(in BitField hasFields, Stream stream)
         {
             if (hasFields.IsSet(0))
             {
@@ -61,6 +63,35 @@ namespace Game.Networking.PacketData
             }
 
             return true;
+        }
+    }
+
+    public static class TransformDataExtensions
+    {
+        public static TransformData ToPacket(this in TransformComponent component)
+        {
+            return new TransformData
+            {
+                x = component.position.x,
+                y = component.position.y,
+                rotation = component.rotation,
+            };
+        }
+
+        public static TransformComponent FromPacket(
+            this in TransformData packet, 
+            in BitField hasFields, 
+            ref TransformComponent component)
+        {
+            component.position.x = hasFields.Bit0 ? packet.x : component.position.x;
+            component.position.y = hasFields.Bit1 ? packet.y : component.position.y;
+            component.rotation = hasFields.Bit2 ? packet.rotation : component.rotation;
+
+            return new TransformComponent
+            {
+                position = new Vector2(packet.x, packet.y),
+                rotation = packet.rotation
+            };
         }
     }
 }

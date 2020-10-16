@@ -6,7 +6,7 @@ namespace Ecs.Core.Collections
     /// <summary>
     /// Provides a pooled map-list of entities. Trades more memory for less allocations.
     /// </summary>
-    public class EntityMapListMOTHBALL<T>
+    public class MOTHBALL_EntityMapList<T>
         where T : struct
     {
         internal AppendOnlyList<T>[] _listPool;
@@ -16,7 +16,7 @@ namespace Ecs.Core.Collections
 
         private readonly int ListCapacity;
 
-        public EntityMapListMOTHBALL(int entityCapacity, int listPoolCapacity, int listCapacity)
+        public MOTHBALL_EntityMapList(int entityCapacity, int listPoolCapacity, int listCapacity)
         {
             ListCapacity = listCapacity;
 

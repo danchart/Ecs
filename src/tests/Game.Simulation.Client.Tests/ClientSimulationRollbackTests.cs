@@ -1,4 +1,5 @@
-﻿using Ecs.Core;
+﻿using Common.Core.Numerics;
+using Ecs.Core;
 using Game.Simulation.Core;
 using System;
 using System.Diagnostics;
@@ -110,7 +111,7 @@ namespace Game.Simulation.Client.Tests
 
                 testDriver.Run(deltaTime);
 
-                Debug.WriteLine($"Position={position.x}");
+                Debug.WriteLine($"Position={position.xy.x}");
             }
 
 
@@ -127,25 +128,25 @@ namespace Game.Simulation.Client.Tests
 
             var positionAfter1 = position;
 
-            Assert.True(positionBefore.x.AboutEquals(positionAfter1.x));
+            Assert.True(positionBefore.xy.x.AboutEquals(positionAfter1.xy.x));
 
             simulation.Rewind(3);
             simulation.PlayForward(3);
 
             var positionAfter2 = position;
 
-            Assert.True(positionBefore.x.AboutEquals(positionAfter2.x));
+            Assert.True(positionBefore.xy.x.AboutEquals(positionAfter2.xy.x));
 
             simulation.Rewind(5);
 
             // Update position.
-            position.x += 5.0f;
+            position.xy.x += 5.0f;
 
             simulation.PlayForward(5);
 
             var positionAfter3 = position;
 
-            Assert.True((positionBefore.x + 5.0f).AboutEquals(positionAfter3.x));
+            Assert.True((positionBefore.xy.x + 5.0f).AboutEquals(positionAfter3.xy.x));
         }
 
         public class SimulationManagerTestDriver<TInput>
@@ -202,12 +203,14 @@ namespace Game.Simulation.Client.Tests
 
         internal struct MovementComponent
         {
-            public float velocity_x;
+            public Vector2 velocity;
         }
 
         internal struct PositionComponent
         {
-            public float x;
+            //public float x;
+
+            public Vector2 xy;
         }
 
         internal struct SingletonPlayerComponent
@@ -250,7 +253,7 @@ namespace Game.Simulation.Client.Tests
                 {
                     ref var movement = ref playerEnt.GetComponent<MovementComponent>();
 
-                    movement.velocity_x =
+                    movement.velocity.x =
                         5.0f
                         * deltaTime
                         * (input.isLeftDown ? -1.0f : 1.0f);
@@ -259,7 +262,7 @@ namespace Game.Simulation.Client.Tests
                 {
                     ref var movement = ref playerEnt.GetComponent<MovementComponent>();
 
-                    movement.velocity_x = 0;
+                    movement.velocity.x = 0;
                 }
             }
         }
@@ -274,9 +277,9 @@ namespace Game.Simulation.Client.Tests
                 {
                     ref var movement = ref entity.GetComponent<MovementComponent>();
 
-                    if (Math.Abs(movement.velocity_x) < 0.001f)
+                    if (Math.Abs(movement.velocity.x) < 0.001f)
                     {
-                        movement.velocity_x = 0;
+                        movement.velocity.x = 0;
 
                         continue;
                     }
@@ -284,7 +287,7 @@ namespace Game.Simulation.Client.Tests
                     ref var position = ref entity.GetComponent<PositionComponent>();
 
                     // Move position by velocity.
-                    position.x += movement.velocity_x;
+                    position.xy.x += movement.velocity.x;
 
                     // Decelerate velocity;
                     //movement.velocity_x -=

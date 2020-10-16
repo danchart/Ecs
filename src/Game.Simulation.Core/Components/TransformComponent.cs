@@ -1,12 +1,11 @@
-﻿namespace Game.Simulation.Core
+﻿using Common.Core.Numerics;
+
+namespace Game.Simulation.Core
 {
     [ComponentId(ComponentId.Transform)]
     public struct TransformComponent
     {
-        public float pos_x;
-        public float pox_y;
+        public Vector2 position;
         public float rotation;
-
-        //public TransformData
     }
 }

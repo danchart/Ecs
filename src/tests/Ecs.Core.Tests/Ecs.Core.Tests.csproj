@@ -38,7 +38,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Collections\AppendOnlyListTests.cs" />
-    <Compile Include="Collections\EntityMapListMOTHBALLTests.cs" />
+    <Compile Include="Collections\MOTHBALL_EntityMapListTests.cs" />
     <Compile Include="Collections\EntityMapListTests.cs" />
     <Compile Include="ComponentPoolTests.cs" />
     <Compile Include="ComponentTests.cs" />

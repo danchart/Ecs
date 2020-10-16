@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Common.Core.Numerics;
+using System;
 
 namespace Ecs.Core
 {
@@ -32,9 +33,9 @@ namespace Ecs.Core
         public override int GetHashCode()
         {
             return
-                HashingUtil.CombineHashCodes(
+                HashCodeHelper.CombineHashCodes(
                     Id,
-                    HashingUtil.CombineHashCodes(
+                    HashCodeHelper.CombineHashCodes(
                         (int) Generation,
                         World.GetHashCode()));
         }

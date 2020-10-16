@@ -3,13 +3,13 @@ using Xunit;
 
 namespace Ecs.Core.Tests.Collections
 {
-    public class EntityMapListMOTHBALLTests
+    public class MOTHBALL_EntityMapListTests
     {
         [Fact]
         public void Test()
         {
             var w = new World(EcsConfig.Default);
-            var mapList = new EntityMapListMOTHBALL<MyData>(entityCapacity: 1, listPoolCapacity: 1, listCapacity: 1);
+            var mapList = new MOTHBALL_EntityMapList<MyData>(entityCapacity: 1, listPoolCapacity: 1, listCapacity: 1);
 
             var entities = new Entity[1000];
 

@@ -29,6 +29,10 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Game.Networking.Tests", "te
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Game.Simulation.Server.Tests", "tests\Game.Simulation.Server.Tests\Game.Simulation.Server.Tests.csproj", "{25598F90-F0BD-40F3-A5E4-DCF4053DC221}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Common.Core", "Common.Core\Common.Core.csproj", "{83DE9636-9348-4678-B986-02987685B57D}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Common.Core.Tests", "tests\Common.Core.Tests\Common.Core.Tests.csproj", "{63A75549-3F66-4DD9-AEE8-8E49D0186560}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -83,6 +87,14 @@ Global
 		{25598F90-F0BD-40F3-A5E4-DCF4053DC221}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{25598F90-F0BD-40F3-A5E4-DCF4053DC221}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{25598F90-F0BD-40F3-A5E4-DCF4053DC221}.Release|Any CPU.Build.0 = Release|Any CPU
+		{83DE9636-9348-4678-B986-02987685B57D}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{83DE9636-9348-4678-B986-02987685B57D}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{83DE9636-9348-4678-B986-02987685B57D}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{83DE9636-9348-4678-B986-02987685B57D}.Release|Any CPU.Build.0 = Release|Any CPU
+		{63A75549-3F66-4DD9-AEE8-8E49D0186560}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{63A75549-3F66-4DD9-AEE8-8E49D0186560}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{63A75549-3F66-4DD9-AEE8-8E49D0186560}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{63A75549-3F66-4DD9-AEE8-8E49D0186560}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -94,6 +106,7 @@ Global
 		{45C411CA-B80E-4868-90A9-1DFBBE56D98D} = {CF347B84-B468-4AF1-9B18-709CEC95EE65}
 		{669D2B95-E4CB-4E24-BBAA-A272BBCD283A} = {CF347B84-B468-4AF1-9B18-709CEC95EE65}
 		{25598F90-F0BD-40F3-A5E4-DCF4053DC221} = {CF347B84-B468-4AF1-9B18-709CEC95EE65}
+		{63A75549-3F66-4DD9-AEE8-8E49D0186560} = {CF347B84-B468-4AF1-9B18-709CEC95EE65}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {9BFB332F-0C94-4627-B04F-1ECD297CEEA0}
