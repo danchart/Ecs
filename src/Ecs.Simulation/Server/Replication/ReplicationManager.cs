@@ -1,6 +1,5 @@
 ﻿using Ecs.Core;
 using System;
-using System.Collections.Generic;
 
 namespace Ecs.Simulation.Server
 {

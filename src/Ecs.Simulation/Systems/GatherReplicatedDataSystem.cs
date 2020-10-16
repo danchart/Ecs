@@ -5,6 +5,7 @@ namespace Ecs.Simulation.Server
 {
     public class GatherReplicatedDataSystem : SystemBase
     {
+        public EntityQuery<ReplicationTagComponent> _replicationQuery = null;
         public EntityQueryWithChangeFilter<ReplicationTagComponent, TransformComponent> _transformQuery = null;
         public EntityQueryWithChangeFilter<ReplicationTagComponent, MovementComponent> _movementQuery = null;
 
@@ -12,8 +13,16 @@ namespace Ecs.Simulation.Server
 
         public override void OnUpdate(float deltaTime)
         {
+            // Collect all the replicated entities
+
             var entityComponents = ReplicationManager.EntityComponents;
-            entityComponents.Clear();
+
+            entityComponents.Swap();
+
+            foreach (var entity in _replicationQuery)
+            {
+                entityComponents.AddEntity(entity);
+            }
 
             // TransformComponent
             Gather(
@@ -51,11 +60,11 @@ namespace Ecs.Simulation.Server
             {
                 var entity = query.GetEntity(index);
 
-                replicatedEntityData[entity]
-                    .Add(
-                        newComponentDataFunc(
-                            query, 
-                            index));
+                replicatedEntityData.AddComponentData(
+                    entity,
+                    newComponentDataFunc(
+                        query, 
+                        index));
             }
         }
     }
