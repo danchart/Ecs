@@ -1,4 +1,5 @@
 ﻿using Ecs.Core;
+using Ecs.Core.Collections;
 using System;
 
 namespace Game.Simulation.Server
@@ -7,7 +8,7 @@ namespace Game.Simulation.Server
     {
         ReplicationConfig Config { get; }
 
-        ReplicatedEntities EntityComponents { get;  }
+        EntityMapList<ReplicatedComponentData> EntityComponents { get;  }
 
         void Sync();
     }
@@ -18,7 +19,7 @@ namespace Game.Simulation.Server
 
         private readonly World _world;
 
-        private ReplicatedEntities _entityComponents;
+        private EntityMapList<ReplicatedComponentData> _entityComponents;
 
         public ReplicationManager(
             ReplicationConfig config,
@@ -29,14 +30,15 @@ namespace Game.Simulation.Server
             this._world = world ?? throw new ArgumentNullException(nameof(world));
             this._playerConnectionManager = playerConnectionManager ?? throw new ArgumentNullException(nameof(playerConnectionManager));
 
-            _entityComponents = new ReplicatedEntities(
+            _entityComponents = new EntityMapList<ReplicatedComponentData>(
                 entityCapacity: config.InitialReplicatedEntityCapacity,
-                componentCapacity: config.InitialReplicatedComponentCapacity);
+                listPoolCapacity: config.InitialReplicatedEntityCapacity,
+                listCapacity: config.InitialReplicatedComponentCapacity);
         }
 
         public ReplicationConfig Config { get; private set; }
 
-        public ReplicatedEntities EntityComponents => _entityComponents;
+        public EntityMapList<ReplicatedComponentData> EntityComponents => _entityComponents;
 
         public void Sync()
         {

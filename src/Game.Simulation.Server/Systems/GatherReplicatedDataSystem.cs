@@ -1,4 +1,5 @@
 ﻿using Ecs.Core;
+using Ecs.Core.Collections;
 using Game.Simulation.Core;
 using System;
 
@@ -6,7 +7,6 @@ namespace Game.Simulation.Server
 {
     public class GatherReplicatedDataSystem : SystemBase
     {
-        public EntityQuery<ReplicationTagComponent> _replicationQuery = null;
         public EntityQueryWithChangeFilter<ReplicationTagComponent, TransformComponent> _transformQuery = null;
         public EntityQueryWithChangeFilter<ReplicationTagComponent, MovementComponent> _movementQuery = null;
 
@@ -18,33 +18,38 @@ namespace Game.Simulation.Server
 
             var entityComponents = ReplicationManager.EntityComponents;
 
-            entityComponents.Swap();
-
-            foreach (var entity in _replicationQuery)
+            // TransformComponent
+            foreach (int index in _transformQuery.GetIndices())
             {
-                entityComponents.AddEntity(entity);
+                var entity = _transformQuery.GetEntity(index);
+
+                entityComponents[entity].Add(
+                    new ReplicatedComponentData
+                    {
+                        //            //Transform = query.GetReadonly2(index).ToPacket()
+                    });
             }
 
             // TransformComponent
-            Gather(
-                _transformQuery,
-                (query, index) =>
-                    new ReplicatedComponentData
-                    {
-                        Transform = query.GetReadonly2(index).ToPacket()
-                    },
-                entityComponents);
+            //Gather(
+            //    _transformQuery,
+            //    (query, index) =>
+            //        new ReplicatedComponentData
+            //        {
+            //            //Transform = query.GetReadonly2(index).ToPacket()
+            //        },
+            //    entityComponents);
 
-            // MovementComponent
-            Gather(
-                _movementQuery,
-                (query, index) =>
-                    new ReplicatedComponentData
-                    {
-                        Movement = query.Ref2(index)
-                    }
-                ,
-                entityComponents);
+            //// MovementComponent
+            //Gather(
+            //    _movementQuery,
+            //    (query, index) =>
+            //        new ReplicatedComponentData
+            //        {
+            //            //Movement = query.Ref2(index)
+            //        }
+            //    ,
+            //    entityComponents);
 
             ReplicationManager.Sync();
         }
@@ -54,15 +59,14 @@ namespace Game.Simulation.Server
             // TODO: This Func<> probably prevents an important inlining opportunity.
             //      Using it for now as it saves a lot of typing and code duplication.
             Func<EntityQueryWithChangeFilter<ReplicationTagComponent, T>, int, ReplicatedComponentData> newComponentDataFunc,
-            ReplicatedEntities replicatedEntityData)
+            EntityMapList<ReplicatedComponentData> replicatedEntityData)
             where T : unmanaged
         {
             foreach (int index in query.GetIndices())
             {
                 var entity = query.GetEntity(index);
 
-                replicatedEntityData.AddComponentData(
-                    entity,
+                replicatedEntityData[entity].Add(
                     newComponentDataFunc(
                         query, 
                         index));

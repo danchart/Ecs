@@ -27,6 +27,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Game.Simulation.Client.Test
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Game.Networking.Tests", "tests\Game.Networking.Tests\Game.Networking.Tests.csproj", "{669D2B95-E4CB-4E24-BBAA-A272BBCD283A}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Game.Simulation.Server.Tests", "tests\Game.Simulation.Server.Tests\Game.Simulation.Server.Tests.csproj", "{25598F90-F0BD-40F3-A5E4-DCF4053DC221}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -77,6 +79,10 @@ Global
 		{669D2B95-E4CB-4E24-BBAA-A272BBCD283A}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{669D2B95-E4CB-4E24-BBAA-A272BBCD283A}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{669D2B95-E4CB-4E24-BBAA-A272BBCD283A}.Release|Any CPU.Build.0 = Release|Any CPU
+		{25598F90-F0BD-40F3-A5E4-DCF4053DC221}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{25598F90-F0BD-40F3-A5E4-DCF4053DC221}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{25598F90-F0BD-40F3-A5E4-DCF4053DC221}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{25598F90-F0BD-40F3-A5E4-DCF4053DC221}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -87,6 +93,7 @@ Global
 		{FE03A7B7-6303-46C2-A14B-D8D4F032130F} = {CF347B84-B468-4AF1-9B18-709CEC95EE65}
 		{45C411CA-B80E-4868-90A9-1DFBBE56D98D} = {CF347B84-B468-4AF1-9B18-709CEC95EE65}
 		{669D2B95-E4CB-4E24-BBAA-A272BBCD283A} = {CF347B84-B468-4AF1-9B18-709CEC95EE65}
+		{25598F90-F0BD-40F3-A5E4-DCF4053DC221} = {CF347B84-B468-4AF1-9B18-709CEC95EE65}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {9BFB332F-0C94-4627-B04F-1ECD297CEEA0}
