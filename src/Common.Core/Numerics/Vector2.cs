@@ -120,7 +120,7 @@ namespace Common.Core.Numerics
         /// <param name="value2">The second point.</param>
         /// <returns>The distance.</returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static float Distance(Vector2 value1, Vector2 value2)
+        public static float Distance(in Vector2 value1, in Vector2 value2)
         {
             float dx = value1.x - value2.x;
             float dy = value1.y - value2.y;
@@ -137,7 +137,7 @@ namespace Common.Core.Numerics
         /// <param name="value2">The second point.</param>
         /// <returns>The distance squared.</returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static float DistanceSquared(Vector2 value1, Vector2 value2)
+        public static float DistanceSquared(in Vector2 value1, in Vector2 value2)
         {
             float dx = value1.x - value2.x;
             float dy = value1.y - value2.y;

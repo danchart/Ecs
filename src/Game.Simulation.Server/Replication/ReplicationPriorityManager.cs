@@ -1,4 +1,5 @@
-﻿using Ecs.Core;
+﻿using Common.Core.Numerics;
+using Ecs.Core;
 using Ecs.Core.Collections;
 using Game.Simulation.Core;
 using System;
@@ -13,6 +14,7 @@ namespace Game.Simulation.Server
             EntityMapList<ReplicatedComponentData> replicatedEntities,
             ReplicationPriorityContext context);
     }
+
 
     public class ReplicationPriorityManager : IReplicationPriorityManager
     {
@@ -32,11 +34,9 @@ namespace Game.Simulation.Server
 
             foreach (var entityItem in replicatedEntities)
             {
-                ref readonly var data = ref context.GetHydrated(entityItem.Entity);
+                ref readonly var priorityComponents = ref context.GetHydrated(entityItem.Entity);
 
-                //ref readonly var transform = ref entityItem.Entity.GetReadOnlyComponent<TransformComponent>();
-
-                ref readonly var transform = ref data.Transform.UnrefReadOnly();
+                ref readonly var transform = ref priorityComponents.Transform.UnrefReadOnly();
 
 
             }
@@ -44,13 +44,24 @@ namespace Game.Simulation.Server
             return new ReplicationPriority[0];
         }
 
-        private static float FromDistance(
+        private float FromDistance(
+
             in TransformComponent playerTransform,
             in TransformComponent transform)
         {
-            //var distSquared = transform.
+            var distSquared = Vector2.DistanceSquared(
+                transform.position,
+                playerTransform.position);
 
-            return 1.0f;
+            return
+                distSquared < _config.DistanceSquardRing0
+                ? _config.Ring3Priority
+                : distSquared < _config.DistanceSquardRing1
+                    ? _config.Ring1Priority
+                    : distSquared < _config.DistanceSquardRing2
+                        ? _config.Ring2Priority
+                        : _config.Ring3Priority;
+
         }
     }
 

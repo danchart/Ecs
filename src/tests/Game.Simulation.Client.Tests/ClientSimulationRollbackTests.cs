@@ -47,8 +47,6 @@ namespace Game.Simulation.Client.Tests
             ref var movement = ref entityPlayer.GetComponent<MovementComponent>();
             ref var position = ref entityPlayer.GetComponent<PositionComponent>();
 
-
-
             int inputIdx = 0;
             var inputs = new InputAtTime[]
             {
