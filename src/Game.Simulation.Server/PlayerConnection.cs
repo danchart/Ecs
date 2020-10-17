@@ -6,6 +6,6 @@ namespace Game.Simulation.Server
     {
         public Entity Entity;
 
-        public EntityReplicationPriorities 
+        public EntityReplicationPriorities EntityPriorities;
     }
 }

@@ -56,7 +56,11 @@ namespace Game.Simulation.Server
             {
                 var playerEntity = pair.Value.Entity;
 
-                _priorityManager.GetEntityPriorities(playerEntity, _entityComponents, _context, )
+                _priorityManager.AssignEntityPriorities(
+                    playerEntity, 
+                    _entityComponents, 
+                    _context, 
+                    pair.Value.EntityPriorities);
             }
         }
     }

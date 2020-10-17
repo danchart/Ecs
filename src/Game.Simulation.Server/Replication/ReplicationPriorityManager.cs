@@ -4,12 +4,13 @@ using Ecs.Core.Collections;
 using Game.Simulation.Core;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 
 namespace Game.Simulation.Server
 {
     public interface IReplicationPriorityManager
     {
-        void GetEntityPriorities(
+        void AssignEntityPriorities(
             Entity player,
             EntityMapList<ReplicatedComponentData> replicatedEntities,
             ReplicationPriorityContext context,
@@ -25,7 +26,7 @@ namespace Game.Simulation.Server
             this._config = config;
         }
 
-        public void GetEntityPriorities(
+        public void AssignEntityPriorities(
             Entity player,
             EntityMapList<ReplicatedComponentData> replicatedEntities,
             ReplicationPriorityContext context,
@@ -35,19 +36,20 @@ namespace Game.Simulation.Server
 
             foreach (var entityItem in replicatedEntities)
             {
-                ref readonly var priorityComponents = ref context.GetHydrated(entityItem.Entity);
+                ref readonly var components = ref context.GetHydrated(entityItem.Entity);
 
                 float priority = 1.0f;
 
-                ref readonly var transform = ref priorityComponents.Transform.UnrefReadOnly();
-                ref readonly var replicated = ref priorityComponents.Replicated.UnrefReadOnly();
+                ref readonly var transform = ref components.Transform.UnrefReadOnly();
+                ref readonly var replicated = ref components.Replicated.UnrefReadOnly();
 
                 priority *= FromDistance(playerTransform, transform);
                 priority *= FromRelevance(replicated.Relevance);
 
-                ref var entityPriority = ref entityPriorities.Get(entityItem.Entity);
-
-                entityPriority.FinalPriority = priority;
+                entityPriorities.Assign(
+                    entityItem.Entity,
+                    priority: priority,
+                    relevance: 1.0f); // TODO: Compute relevance based on player orientation
             }
         }
 
@@ -62,7 +64,7 @@ namespace Game.Simulation.Server
                 case ReplicationRelevance.High:
                     return 1.0f;
                 default:
-                    throw new InvalidOperationException($"Unknown {nameof(ReplicationRelevance)} value={replicated.Relevance}");
+                    throw new InvalidOperationException($"Unknown {nameof(ReplicationRelevance)} value={relevance}");
             }
         }
 
@@ -153,18 +155,22 @@ namespace Game.Simulation.Server
         private ReplicationPriority[] _priorities;
         private Dictionary<Entity, int> _entityToIndex;
 
-        private int[] 
-            _priorityQueue0,
-            _priorityQueue1,
-            _priorityQueue2;
-
         private int _count;
 
-        public EntityReplicationPriorities(int capacity)
+        private float _tickTime;
+        private readonly int[] _queueTicks;
+
+        public EntityReplicationPriorities(int capacity, float tickTime, int[] queueTicks)
         {
             this._priorities = new ReplicationPriority[capacity];
             this._count = 0;
+
+            this._tickTime = tickTime;
+            this._queueTicks = queueTicks;
         }
+
+        public int Count => this._count;
+        public ref readonly ReplicationPriority this[int index] => ref this._priorities[index];
 
         public void Clear()
         {
@@ -172,23 +178,56 @@ namespace Game.Simulation.Server
             this._count = 0;
         }
 
-        public ref ReplicationPriority Get(Entity entity)
+        public void Assign(
+            Entity entity,
+            float priority,
+            float relevance)
         {
+            Debug.Assert(priority > 0 && priority <= 1.0f);
+            Debug.Assert(relevance > 0 && relevance <= 1.0f);
+
+            bool wasUnassigned = false;
+            int index;
+
             if (!this._entityToIndex.ContainsKey(entity))
             {
+                wasUnassigned = true;
+
                 if (this._count == this._priorities.Length)
                 {
                     Array.Resize(ref this._priorities, 2 * _count);
                 }
 
-                this._entityToIndex[entity] = _count++;
+                index = _count++;
 
-                return ref this._priorities[_count - 1];
+                this._entityToIndex[entity] = index;
             }
             else
             {
-                return ref this._priorities[this._entityToIndex[entity]];
+                index = this._entityToIndex[entity];
             }
+
+            ref var entityPriority = ref this._priorities[index];
+
+            entityPriority.Priority = priority;
+            entityPriority.Relevance = relevance;
+            entityPriority.RequestedQueueTimeRemaining =
+                wasUnassigned
+                ? GetRequestedQueueTime(entityPriority.Priority, entityPriority.Relevance)
+                : entityPriority.RequestedQueueTimeRemaining;
+        }
+
+        private float GetRequestedQueueTime(float priority, float relevance)
+        {
+            float queuePriority = 
+                Math.Max(
+                    0, 
+                    1.0f - (priority * relevance));
+            int index = Math.Min(
+                this._queueTicks.Length - 1,
+                (int) (this._queueTicks.Length * queuePriority));
+
+            return this._tickTime * this._queueTicks[index];
         }
     }
 
@@ -197,7 +236,7 @@ namespace Game.Simulation.Server
         /// <summary>
         /// The final computed priority. [0..1]
         /// </summary>
-        public float FinalPriority;
+        public float Priority;
 
         /// <summary>
         /// The player perceived relevance or visibility. [0..1]
@@ -207,6 +246,6 @@ namespace Game.Simulation.Server
         /// <summary>
         /// Desired update period, in milliseconds.
         /// </summary>
-        public float QueueTimeRemaining;
+        public float RequestedQueueTimeRemaining;
     }
 }
