@@ -5,10 +5,10 @@
         /// <summary>
         /// Intrinsic replication relevance for this entity.
         /// </summary>
-        public ReplicationRelevance Relevance;
+        public PriorityEnum BasePriority;
     }
 
-    public enum ReplicationRelevance
+    public enum PriorityEnum
     {
         Low,
         Normal,

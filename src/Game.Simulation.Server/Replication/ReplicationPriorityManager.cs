@@ -44,27 +44,30 @@ namespace Game.Simulation.Server
                 ref readonly var replicated = ref components.Replicated.UnrefReadOnly();
 
                 priority *= FromDistance(playerTransform, transform);
-                priority *= FromRelevance(replicated.Relevance);
+                priority *= FromBasePriority(replicated.BasePriority);
+
+                // TODO: Compute relevance based on entity size, etc.
+                float relevance = 1.0f;
 
                 entityPriorities.Assign(
                     entityItem.Entity,
                     priority: priority,
-                    relevance: 1.0f); // TODO: Compute relevance based on player orientation
+                    relevance: relevance); 
             }
         }
 
-        private float FromRelevance(ReplicationRelevance relevance)
+        private float FromBasePriority(PriorityEnum relevance)
         {
             switch (relevance)
             {
-                case ReplicationRelevance.Low:
-                    return 0.25f;
-                case ReplicationRelevance.Normal:
-                    return 0.75f;
-                case ReplicationRelevance.High:
+                case PriorityEnum.Low:
+                    return 0.5f;
+                case PriorityEnum.Normal:
                     return 1.0f;
+                case PriorityEnum.High:
+                    return 2.0f;
                 default:
-                    throw new InvalidOperationException($"Unknown {nameof(ReplicationRelevance)} value={relevance}");
+                    throw new InvalidOperationException($"Unknown {nameof(PriorityEnum)} value={relevance}");
             }
         }
 
@@ -152,7 +155,7 @@ namespace Game.Simulation.Server
 
     public class EntityReplicationPriorities
     {
-        private ReplicationPriority[] _priorities;
+        private EntityReplicationPriority[] _priorities;
         private Dictionary<Entity, int> _entityToIndex;
 
         private int _count;
@@ -162,7 +165,7 @@ namespace Game.Simulation.Server
 
         public EntityReplicationPriorities(int capacity, float tickTime, int[] queueTicks)
         {
-            this._priorities = new ReplicationPriority[capacity];
+            this._priorities = new EntityReplicationPriority[capacity];
             this._count = 0;
 
             this._tickTime = tickTime;
@@ -170,7 +173,7 @@ namespace Game.Simulation.Server
         }
 
         public int Count => this._count;
-        public ref readonly ReplicationPriority this[int index] => ref this._priorities[index];
+        public ref readonly EntityReplicationPriority this[int index] => ref this._priorities[index];
 
         public void Clear()
         {
@@ -183,9 +186,6 @@ namespace Game.Simulation.Server
             float priority,
             float relevance)
         {
-            Debug.Assert(priority > 0 && priority <= 1.0f);
-            Debug.Assert(relevance > 0 && relevance <= 1.0f);
-
             bool wasUnassigned = false;
             int index;
 
@@ -209,11 +209,16 @@ namespace Game.Simulation.Server
 
             ref var entityPriority = ref this._priorities[index];
 
-            entityPriority.Priority = priority;
-            entityPriority.Relevance = relevance;
+            // Update priority and relevance, but preserve the assigned queue time if there is one to ensure
+            // this entity is dispatched at the correct time.
+
+            entityPriority.Priority = Math.Min(1.0f, priority);
+            entityPriority.Relevance = Math.Min(1.0f, relevance);
             entityPriority.RequestedQueueTimeRemaining =
                 wasUnassigned
+                // Assign new queue time.
                 ? GetRequestedQueueTime(entityPriority.Priority, entityPriority.Relevance)
+                // Keep the existing queue time.
                 : entityPriority.RequestedQueueTimeRemaining;
         }
 
@@ -231,20 +236,20 @@ namespace Game.Simulation.Server
         }
     }
 
-    public struct ReplicationPriority
+    public struct EntityReplicationPriority
     {
         /// <summary>
-        /// The final computed priority. [0..1]
+        /// How much does this effect gameplay. [0..1]
         /// </summary>
         public float Priority;
 
         /// <summary>
-        /// The player perceived relevance or visibility. [0..1]
+        /// How noticable is this entity. [0..1]
         /// </summary>
         public float Relevance;
 
         /// <summary>
-        /// Desired update period, in milliseconds.
+        /// Desired update period, in seconds.
         /// </summary>
         public float RequestedQueueTimeRemaining;
     }
