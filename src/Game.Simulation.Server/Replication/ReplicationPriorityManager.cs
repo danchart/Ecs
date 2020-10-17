@@ -25,7 +25,7 @@ namespace Game.Simulation.Server
             this._config = config;
         }
 
-        public ReplicationPriority[] GetPriorities(
+        public void GetPriorities(
             Entity player,
             EntityMapList<ReplicatedComponentData> replicatedEntities,
             ReplicationPriorityContext context)
@@ -36,16 +36,36 @@ namespace Game.Simulation.Server
             {
                 ref readonly var priorityComponents = ref context.GetHydrated(entityItem.Entity);
 
+                float priority = 1.0f;
+
                 ref readonly var transform = ref priorityComponents.Transform.UnrefReadOnly();
+                ref readonly var replicated = ref priorityComponents.Replicated.UnrefReadOnly();
 
+                priority *= FromDistance(playerTransform, transform);
+                priority *= FromRelevance(replicated.Relevance);
 
+                context.
             }
 
             return new ReplicationPriority[0];
         }
 
-        private float FromDistance(
+        private float FromRelevance(ReplicationRelevance relevance)
+        {
+            switch (relevance)
+            {
+                case ReplicationRelevance.Low:
+                    return 0.25f;
+                case ReplicationRelevance.Normal:
+                    return 0.75f;
+                case ReplicationRelevance.High:
+                    return 1.0f;
+                default:
+                    throw new InvalidOperationException($"Unknown {nameof(ReplicationRelevance)} value={replicated.Relevance}");
+            }
+        }
 
+        private float FromDistance(
             in TransformComponent playerTransform,
             in TransformComponent transform)
         {
@@ -63,6 +83,13 @@ namespace Game.Simulation.Server
                         : _config.Ring3Priority;
 
         }
+    }
+
+    public class EntityPriorities
+    {
+        private float[] _priorities;
+
+
     }
 
     public class ReplicationPriorityContext
@@ -117,11 +144,13 @@ namespace Game.Simulation.Server
         private void Hydrate(in Entity entity, ref EntityRelevantComponents entityComponents)
         {
             entityComponents.Transform = entity.Reference<TransformComponent>();
+            entityComponents.Replicated = entity.Reference<ReplicatedComponent>();
         }
 
         public struct EntityRelevantComponents
         {
             public ComponentRef<TransformComponent> Transform;
+            public ComponentRef<ReplicatedComponent> Replicated;
         }
     }
 

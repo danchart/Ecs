@@ -8,8 +8,8 @@ namespace Game.Simulation.Server
 {
     public class GatherReplicatedDataSystem : SystemBase
     {
-        public EntityQueryWithChangeFilter<ReplicationTagComponent, TransformComponent> _transformQuery = null;
-        public EntityQueryWithChangeFilter<ReplicationTagComponent, MovementComponent> _movementQuery = null;
+        public EntityQueryWithChangeFilter<ReplicatedComponent, TransformComponent> _transformQuery = null;
+        public EntityQueryWithChangeFilter<ReplicatedComponent, MovementComponent> _movementQuery = null;
 
         public IReplicationManager ReplicationManager = null;
 
@@ -53,10 +53,10 @@ namespace Game.Simulation.Server
         }
 
         private static void Gather<T>(
-            EntityQueryWithChangeFilter<ReplicationTagComponent, T> query, 
+            EntityQueryWithChangeFilter<ReplicatedComponent, T> query, 
             // TODO: This Func<> probably prevents an important inlining opportunity.
             //      Using it for now as it saves a lot of typing and code duplication.
-            Func<EntityQueryWithChangeFilter<ReplicationTagComponent, T>, int, ReplicatedComponentData> newComponentDataFunc,
+            Func<EntityQueryWithChangeFilter<ReplicatedComponent, T>, int, ReplicatedComponentData> newComponentDataFunc,
             MOTHBALL_EntityMapList<ReplicatedComponentData> replicatedEntityData)
             where T : unmanaged
         {

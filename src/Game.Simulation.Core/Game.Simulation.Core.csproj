@@ -46,7 +46,7 @@
     <Compile Include="ComponentId.cs" />
     <Compile Include="Components\PlayerInputComponent.cs" />
     <Compile Include="Components\MovementComponent.cs" />
-    <Compile Include="Components\Tags\ReplicationTagComponent.cs" />
+    <Compile Include="Components\ReplicatedComponent.cs" />
     <Compile Include="Components\TransformComponent.cs" />
     <Compile Include="SimulationConfig.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
@@ -61,6 +61,8 @@
       <Name>Ecs.Core</Name>
     </ProjectReference>
   </ItemGroup>
-  <ItemGroup />
+  <ItemGroup>
+    <Folder Include="Components\Tags\" />
+  </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>
