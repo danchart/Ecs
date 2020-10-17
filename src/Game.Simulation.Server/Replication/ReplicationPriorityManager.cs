@@ -153,6 +153,11 @@ namespace Game.Simulation.Server
         private ReplicationPriority[] _priorities;
         private Dictionary<Entity, int> _entityToIndex;
 
+        private int[] 
+            _priorityQueue0,
+            _priorityQueue1,
+            _priorityQueue2;
+
         private int _count;
 
         public EntityReplicationPriorities(int capacity)
@@ -202,6 +207,6 @@ namespace Game.Simulation.Server
         /// <summary>
         /// Desired update period, in milliseconds.
         /// </summary>
-        public float UpdatePeriod;
+        public float QueueTimeRemaining;
     }
 }

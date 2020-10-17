@@ -3,7 +3,7 @@
 namespace Game.Simulation.Core
 {
     /// <summary>
-    /// Replication ID
+    /// Global component replication ID.
     /// </summary>
     [AttributeUsage(AttributeTargets.Struct)]
     public class ComponentIdAttribute : Attribute
