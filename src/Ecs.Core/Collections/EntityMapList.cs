@@ -128,6 +128,11 @@ namespace Ecs.Core.Collections
                 this._count++;
             }
 
+            public Enumerator GetEnumerator()
+            {
+                return new Enumerator(this);
+            }
+
             public struct Enumerator
             {
                 private ItemList _list;

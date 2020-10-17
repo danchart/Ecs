@@ -1,4 +1,5 @@
-﻿using Game.Networking.Core;
+﻿using Common.Core;
+using Game.Networking.Core;
 using Game.Networking.PacketData;
 using System;
 using System.IO;

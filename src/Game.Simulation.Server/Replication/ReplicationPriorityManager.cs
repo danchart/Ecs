@@ -1,20 +1,20 @@
-﻿using Common.Core.Numerics;
+﻿using Common.Core;
+using Common.Core.Numerics;
 using Ecs.Core;
 using Ecs.Core.Collections;
 using Game.Simulation.Core;
 using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 
 namespace Game.Simulation.Server
 {
     public interface IReplicationPriorityManager
     {
-        void AssignEntityPriorities(
+        void AssignPlayersEntityPriorities(
             Entity player,
             EntityMapList<ReplicatedComponentData> replicatedEntities,
-            ReplicationPriorityContext context,
-            EntityReplicationPriorities entityPriorities);
+            ReplicationContext context,
+            EntityPriorities entityPriorities);
     }
 
     public class ReplicationPriorityManager : IReplicationPriorityManager
@@ -26,11 +26,11 @@ namespace Game.Simulation.Server
             this._config = config;
         }
 
-        public void AssignEntityPriorities(
+        public void AssignPlayersEntityPriorities(
             Entity player,
             EntityMapList<ReplicatedComponentData> replicatedEntities,
-            ReplicationPriorityContext context,
-            EntityReplicationPriorities entityPriorities)
+            ReplicationContext context,
+            EntityPriorities entityPriorities)
         {
             ref readonly var playerTransform = ref player.GetReadOnlyComponent<TransformComponent>();
 
@@ -38,13 +38,11 @@ namespace Game.Simulation.Server
             {
                 ref readonly var components = ref context.GetHydrated(entityItem.Entity);
 
-                float priority = 1.0f;
-
                 ref readonly var transform = ref components.Transform.UnrefReadOnly();
                 ref readonly var replicated = ref components.Replicated.UnrefReadOnly();
 
-                priority *= FromDistance(playerTransform, transform);
-                priority *= FromBasePriority(replicated.BasePriority);
+                float priority = GetBasePriority(replicated.BasePriority);
+                priority *= GetFactorFromDistance(playerTransform, transform);
 
                 // TODO: Compute relevance based on entity size, etc.
                 float relevance = 1.0f;
@@ -56,9 +54,9 @@ namespace Game.Simulation.Server
             }
         }
 
-        private float FromBasePriority(PriorityEnum relevance)
+        private float GetBasePriority(PriorityEnum priority)
         {
-            switch (relevance)
+            switch (priority)
             {
                 case PriorityEnum.Low:
                     return 0.5f;
@@ -67,11 +65,11 @@ namespace Game.Simulation.Server
                 case PriorityEnum.High:
                     return 2.0f;
                 default:
-                    throw new InvalidOperationException($"Unknown {nameof(PriorityEnum)} value={relevance}");
+                    throw new InvalidOperationException($"Unknown {nameof(PriorityEnum)} value={priority}");
             }
         }
 
-        private float FromDistance(
+        private float GetFactorFromDistance(
             in TransformComponent playerTransform,
             in TransformComponent transform)
         {
@@ -91,71 +89,9 @@ namespace Game.Simulation.Server
         }
     }
 
-    public class ReplicationPriorityContext
+    public class EntityPriorities
     {
-        private EntityRelevantComponents[] _components;
-
-        private Dictionary<Entity, int> _entityToIndex;
-
-        private int _count;
-
-        public ReplicationPriorityContext(int capacity)
-        {
-            this._components = new EntityRelevantComponents[capacity];
-            this._entityToIndex = new Dictionary<Entity, int>(capacity);
-
-            this._count = 0;
-        }
-
-        public void Clear()
-        {
-            this._entityToIndex.Clear();
-            this._count = 0;
-        }
-
-        public ref readonly EntityRelevantComponents GetHydrated(in Entity entity)
-        {
-            int index;
-
-            if (!this._entityToIndex.ContainsKey(entity))
-            {
-                if (this._components.Length == this._count)
-                {
-                    Array.Resize(ref this._components, 2 * this._count);
-                }
-
-                this._entityToIndex[entity] = _count;
-
-                ref var item = ref this._components[_count];
-
-                Hydrate(entity, ref item);
-
-                index = this._count++;
-
-                return ref item;
-            }
-            else
-            {
-                return ref this._components[this._entityToIndex[entity]];
-            }
-        }
-
-        private void Hydrate(in Entity entity, ref EntityRelevantComponents entityComponents)
-        {
-            entityComponents.Transform = entity.Reference<TransformComponent>();
-            entityComponents.Replicated = entity.Reference<ReplicatedComponent>();
-        }
-
-        public struct EntityRelevantComponents
-        {
-            public ComponentRef<TransformComponent> Transform;
-            public ComponentRef<ReplicatedComponent> Replicated;
-        }
-    }
-
-    public class EntityReplicationPriorities
-    {
-        private EntityReplicationPriority[] _priorities;
+        private EntityPriority[] _priorities;
         private Dictionary<Entity, int> _entityToIndex;
 
         private int _count;
@@ -163,9 +99,10 @@ namespace Game.Simulation.Server
         private float _tickTime;
         private readonly int[] _queueTicks;
 
-        public EntityReplicationPriorities(int capacity, float tickTime, int[] queueTicks)
+        public EntityPriorities(int capacity, float tickTime, int[] queueTicks)
         {
-            this._priorities = new EntityReplicationPriority[capacity];
+            this._priorities = new EntityPriority[capacity];
+            this._entityToIndex = new Dictionary<Entity, int>(capacity);
             this._count = 0;
 
             this._tickTime = tickTime;
@@ -173,7 +110,7 @@ namespace Game.Simulation.Server
         }
 
         public int Count => this._count;
-        public ref readonly EntityReplicationPriority this[int index] => ref this._priorities[index];
+        public ref readonly EntityPriority this[int index] => ref this._priorities[index];
 
         public void Clear()
         {
@@ -181,8 +118,14 @@ namespace Game.Simulation.Server
             this._count = 0;
         }
 
+        public void Remove(Entity entity)
+        {
+
+        }
+
         public void Assign(
             Entity entity,
+            EntityMapList<ReplicatedComponentData>.ItemList components,
             float priority,
             float relevance)
         {
@@ -217,26 +160,31 @@ namespace Game.Simulation.Server
             entityPriority.RequestedQueueTimeRemaining =
                 wasUnassigned
                 // Assign new queue time.
-                ? GetRequestedQueueTime(entityPriority.Priority, entityPriority.Relevance)
+                ? GetQueueTimeFromPriority(entityPriority.Priority)
                 // Keep the existing queue time.
                 : entityPriority.RequestedQueueTimeRemaining;
+
+            foreach (var component in components)
+            {
+
+            }
         }
 
-        private float GetRequestedQueueTime(float priority, float relevance)
+        private float GetQueueTimeFromPriority(float priority)
         {
             float queuePriority = 
                 Math.Max(
                     0, 
-                    1.0f - (priority * relevance));
+                    1.0f - priority);
             int index = Math.Min(
                 this._queueTicks.Length - 1,
-                (int) (this._queueTicks.Length * queuePriority));
+                (int) (0.5f + this._queueTicks.Length * queuePriority));
 
             return this._tickTime * this._queueTicks[index];
         }
     }
 
-    public struct EntityReplicationPriority
+    public struct EntityPriority
     {
         /// <summary>
         /// How much does this effect gameplay. [0..1]
@@ -252,5 +200,13 @@ namespace Game.Simulation.Server
         /// Desired update period, in seconds.
         /// </summary>
         public float RequestedQueueTimeRemaining;
+
+        public Dictionary<ComponentId, Component> _components;
+
+        public struct Component
+        {
+            public BitField HasFields;
+            public ReplicatedComponentData Data;
+        }
     }
 }

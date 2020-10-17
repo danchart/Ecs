@@ -14,20 +14,25 @@
             Ring3Priority = 0.1f;
 
         /// <summary>
-        /// Number of ticks per queue priority index to queue replication packet. 
+        /// Base tick time for priority queue. 
+        /// </summary>
+        public float PriorityQueueDelayBaseTick = 0.016f;
+
+        /// <summary>
+        /// Requested queue delay (in seconds) per queue priority index to queue replication packet. 
         /// 
         /// 0 is highest and Length - 1 is lowest priority.
         /// </summary>
-        public int[] QueueTicks = new int[]
+        public int[] PriorityQueueDelay = new int[]
         {
-            // 0 - Highest priority, 0 ticks
+            // 0 - Highest priority, immediate dispatch.
             0,
             // 1
             4,
             // 2
-            16,
+            8,
             // 3
-            64
+            20
         };
     }
 }

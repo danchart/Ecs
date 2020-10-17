@@ -1,6 +1,4 @@
-﻿using Ecs.Core;
-using Game.Networking.PacketData;
-using Game.Simulation.Core;
+﻿using Game.Networking.PacketData;
 using System.Runtime.InteropServices;
 
 namespace Game.Simulation.Server

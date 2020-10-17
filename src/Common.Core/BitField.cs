@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Diagnostics;
 
-namespace Game.Networking.Core
+namespace Common.Core
 {
     public struct BitField
     {

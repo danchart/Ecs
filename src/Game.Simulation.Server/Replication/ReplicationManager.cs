@@ -6,11 +6,8 @@ namespace Game.Simulation.Server
 {
     public interface IReplicationManager
     {
-        ReplicationConfig Config { get; }
-
-        EntityMapList<ReplicatedComponentData> EntityComponents { get;  }
-
-        void Sync();
+        EntityMapList<ReplicatedComponentData> BeginDataCollection();
+        void EndDataCollection();
     }
 
     public class ReplicationManager : IReplicationManager
@@ -18,20 +15,18 @@ namespace Game.Simulation.Server
         private readonly IPlayerConnectionManager _playerConnectionManager;
         private readonly IReplicationPriorityManager _priorityManager;
 
+        public readonly ReplicationConfig _config;
         private readonly World _world;
 
         private readonly EntityMapList<ReplicatedComponentData> _entityComponents;
-
-        private readonly EntityReplicationPriorities _entityPriorities;
-
-        private readonly ReplicationPriorityContext _context;
+        private readonly ReplicationContext _context;
 
         public ReplicationManager(
             ReplicationConfig config,
             World world,
             IPlayerConnectionManager playerConnectionManager)
         {
-            this.Config = config;
+            this._config = config;
             this._world = world ?? throw new ArgumentNullException(nameof(world));
             this._playerConnectionManager = playerConnectionManager ?? throw new ArgumentNullException(nameof(playerConnectionManager));
 
@@ -39,14 +34,15 @@ namespace Game.Simulation.Server
                 entityCapacity: config.InitialReplicatedEntityCapacity,
                 listCapacity: config.InitialReplicatedComponentCapacity);
 
-            _context = new ReplicationPriorityContext(config.InitialReplicatedEntityCapacity);
+            _context = new ReplicationContext(config.InitialReplicatedEntityCapacity);
         }
 
-        public ReplicationConfig Config { get; private set; }
+        public EntityMapList<ReplicatedComponentData> BeginDataCollection()
+        {
+            return _entityComponents;
+        }
 
-        public EntityMapList<ReplicatedComponentData> EntityComponents => _entityComponents;
-
-        public void Sync()
+        public void EndDataCollection()
         {
             // 1) Convert components to packet data
             // 2) Determinee priority per-entity for every player - O(E * P) 
@@ -56,7 +52,7 @@ namespace Game.Simulation.Server
             {
                 var playerEntity = pair.Value.Entity;
 
-                _priorityManager.AssignEntityPriorities(
+                _priorityManager.AssignPlayersEntityPriorities(
                     playerEntity, 
                     _entityComponents, 
                     _context, 

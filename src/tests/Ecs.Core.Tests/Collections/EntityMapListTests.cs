@@ -71,10 +71,17 @@ namespace Ecs.Core.Tests.Collections
                 Assert.Equal(item.Entity.Id, item.Items[0].value);
                 Assert.Equal(item.Entity.Id, -item.Items[1].value);
 
-                // Loop
+                // ItemList for loop
                 for (int i = 0; i < item.Items.Count; i++)
                 {
                     Assert.Equal(i == 0 ? item.Entity.Id : -item.Entity.Id, item.Items[i].value);
+                }
+
+                // ItemList foreach loop
+                int count = 0;
+                foreach (var subItem in item.Items)
+                {
+                    Assert.Equal(count++ == 0 ? item.Entity.Id : -item.Entity.Id, subItem.value);
                 }
             }
         }
