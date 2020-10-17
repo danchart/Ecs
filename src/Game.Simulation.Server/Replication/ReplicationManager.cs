@@ -6,7 +6,9 @@ namespace Game.Simulation.Server
 {
     public interface IReplicationManager
     {
-        EntityMapList<ReplicatedComponentData> BeginDataCollection();
+        uint Version { get; }
+
+        EntityMapList<GenerationedReplicatedComponentData> BeginDataCollection();
         void EndDataCollection();
     }
 
@@ -18,8 +20,13 @@ namespace Game.Simulation.Server
         public readonly ReplicationConfig _config;
         private readonly World _world;
 
-        private readonly EntityMapList<ReplicatedComponentData> _entityComponents;
+        private readonly EntityMapList<GenerationedReplicatedComponentData> _entityComponents;
         private readonly ReplicationContext _context;
+
+        // Incremented every time we begin collection.
+        private uint _version;
+
+        public uint Version => _version;
 
         public ReplicationManager(
             ReplicationConfig config,
@@ -30,16 +37,20 @@ namespace Game.Simulation.Server
             this._world = world ?? throw new ArgumentNullException(nameof(world));
             this._playerConnectionManager = playerConnectionManager ?? throw new ArgumentNullException(nameof(playerConnectionManager));
 
-            _entityComponents = new EntityMapList<ReplicatedComponentData>(
+            this._entityComponents = new EntityMapList<GenerationedReplicatedComponentData>(
                 entityCapacity: config.InitialReplicatedEntityCapacity,
                 listCapacity: config.InitialReplicatedComponentCapacity);
 
-            _context = new ReplicationContext(config.InitialReplicatedEntityCapacity);
+            this._context = new ReplicationContext(config.InitialReplicatedEntityCapacity);
+
+            this._version = 0;
         }
 
-        public EntityMapList<ReplicatedComponentData> BeginDataCollection()
+        public EntityMapList<GenerationedReplicatedComponentData> BeginDataCollection()
         {
-            return _entityComponents;
+            // Invalidate any previously collected data.
+            this._version++;
+            return this._entityComponents;
         }
 
         public void EndDataCollection()
@@ -52,12 +63,18 @@ namespace Game.Simulation.Server
             {
                 var playerEntity = pair.Value.Entity;
 
-                _priorityManager.AssignPlayersEntityPriorities(
+                _priorityManager.AddEntityChangesToPlayer(
                     playerEntity, 
                     _entityComponents, 
                     _context, 
                     pair.Value.EntityPriorities);
             }
         }
+    }
+
+    public struct GenerationedReplicatedComponentData
+    {
+        public uint Version;
+        public ReplicatedComponentData ComponentData;
     }
 }

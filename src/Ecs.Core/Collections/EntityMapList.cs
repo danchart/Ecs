@@ -46,9 +46,8 @@ namespace Ecs.Core.Collections
                     }
 
                     this._entityIndexToDataIndex[entity.Id] = this._count;
-                    this._entityItems[_count] = new EntityItem
+                    this._entityItems[_count] = new EntityItem(ListCapacity)
                     {
-                        Items = new ItemList(ListCapacity),
                         Entity = entity,
                     };
 
@@ -118,7 +117,7 @@ namespace Ecs.Core.Collections
                 _count = 0;
             }
 
-            public void New()
+            public ref T New()
             {
                 if (this._items.Length == this._count)
                 {
@@ -126,6 +125,8 @@ namespace Ecs.Core.Collections
                 }
 
                 this._count++;
+
+                return ref this.Current;
             }
 
             public Enumerator GetEnumerator()
@@ -157,6 +158,11 @@ namespace Ecs.Core.Collections
         {
             public Entity Entity;
             public ItemList Items;
+
+            public EntityItem(int capacity) : this()
+            {
+                Items = new ItemList(capacity);
+            }
         }
     }
 }

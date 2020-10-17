@@ -38,6 +38,10 @@
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <ItemGroup>
+    <ProjectReference Include="..\..\Common.Core\Common.Core.csproj">
+      <Project>{83DE9636-9348-4678-B986-02987685B57D}</Project>
+      <Name>Common.Core</Name>
+    </ProjectReference>
     <ProjectReference Include="..\..\Game.Networking.Core\Game.Networking.Core.csproj">
       <Project>{b19a0428-3713-43b2-81a5-1f228ce19489}</Project>
       <Name>Game.Networking.Core</Name>

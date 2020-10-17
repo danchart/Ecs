@@ -16,15 +16,17 @@ namespace Game.Simulation.Server
             // Collects all world replicated components.
 
             var entityComponents = ReplicationManager.BeginDataCollection();
+            var version = ReplicationManager.Version;
 
             // TransformComponent
             foreach (int index in _transformQuery.GetIndices())
             {
                 var entity = _transformQuery.GetEntity(index);
 
-                entityComponents[entity].New();
-                _transformQuery.GetReadonly2(index).ToPacket(ref entityComponents[entity].Current.Transform);
-                entityComponents[entity].Current.FieldCount = TransformData.FieldCount;
+                ref var component = ref entityComponents[entity].New();
+                _transformQuery.GetReadonly2(index).ToPacket(ref component.ComponentData.Transform);
+                component.ComponentData.FieldCount = TransformData.FieldCount;
+                component.Version = version;
             }
 
             // MovementComponent
@@ -32,9 +34,10 @@ namespace Game.Simulation.Server
             {
                 var entity = _movementQuery.GetEntity(index);
 
-                entityComponents[entity].New();
-                _movementQuery.GetReadonly2(index).ToPacket(ref entityComponents[entity].Current.Movement);
-                entityComponents[entity].Current.FieldCount = MovementData.FieldCount;
+                ref var component = ref entityComponents[entity].New();
+                _movementQuery.GetReadonly2(index).ToPacket(ref component.ComponentData.Movement);
+                component.ComponentData.FieldCount = MovementData.FieldCount;
+                component.Version = version;
             }
 
             ReplicationManager.EndDataCollection();
