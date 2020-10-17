@@ -1,4 +1,5 @@
 ﻿using Game.Networking.Core;
+using Game.Simulation.Core;
 using System.IO;
 
 namespace Game.Networking.PacketData
@@ -50,6 +51,26 @@ namespace Game.Networking.PacketData
             }
 
             return true;
+        }
+    }
+
+    public static class MovementDataExtensions
+    {
+        public static void ToPacket(
+            this in MovementComponent component, 
+            ref MovementData packet)
+        {
+            packet.velocity_x = component.velocity.x;
+            packet.velocity_y = component.velocity.y;
+        }
+
+        public static void FromPacket(
+            this in MovementData packet,
+            in BitField hasFields,
+            ref MovementComponent component)
+        {
+            component.velocity.x = hasFields.Bit0 ? packet.velocity_x : component.velocity.x;
+            component.velocity.y = hasFields.Bit1 ? packet.velocity_y : component.velocity.y;
         }
     }
 }

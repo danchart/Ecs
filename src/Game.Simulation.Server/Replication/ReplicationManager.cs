@@ -16,10 +16,15 @@ namespace Game.Simulation.Server
     public class ReplicationManager : IReplicationManager
     {
         private readonly IPlayerConnectionManager _playerConnectionManager;
+        private readonly IReplicationPriorityManager _priorityManager;
 
         private readonly World _world;
 
-        private EntityMapList<ReplicatedComponentData> _entityComponents;
+        private readonly EntityMapList<ReplicatedComponentData> _entityComponents;
+
+        private readonly EntityReplicationPriorities _entityPriorities;
+
+        private readonly ReplicationPriorityContext _context;
 
         public ReplicationManager(
             ReplicationConfig config,
@@ -33,6 +38,8 @@ namespace Game.Simulation.Server
             _entityComponents = new EntityMapList<ReplicatedComponentData>(
                 entityCapacity: config.InitialReplicatedEntityCapacity,
                 listCapacity: config.InitialReplicatedComponentCapacity);
+
+            _context = new ReplicationPriorityContext(config.InitialReplicatedEntityCapacity);
         }
 
         public ReplicationConfig Config { get; private set; }
@@ -49,7 +56,7 @@ namespace Game.Simulation.Server
             {
                 var playerEntity = pair.Value.Entity;
 
-
+                _priorityManager.GetEntityPriorities(playerEntity, _entityComponents, _context, )
             }
         }
     }

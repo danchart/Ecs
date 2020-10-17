@@ -68,17 +68,16 @@ namespace Game.Networking.PacketData
 
     public static class TransformDataExtensions
     {
-        public static TransformData ToPacket(this in TransformComponent component)
+        public static void ToPacket(
+            this in TransformComponent component, 
+            ref TransformData packet)
         {
-            return new TransformData
-            {
-                x = component.position.x,
-                y = component.position.y,
-                rotation = component.rotation,
-            };
+            packet.x = component.position.x;
+            packet.y = component.position.y;
+            packet.rotation = component.rotation;
         }
 
-        public static TransformComponent FromPacket(
+        public static void FromPacket(
             this in TransformData packet, 
             in BitField hasFields, 
             ref TransformComponent component)
@@ -86,12 +85,6 @@ namespace Game.Networking.PacketData
             component.position.x = hasFields.Bit0 ? packet.x : component.position.x;
             component.position.y = hasFields.Bit1 ? packet.y : component.position.y;
             component.rotation = hasFields.Bit2 ? packet.rotation : component.rotation;
-
-            return new TransformComponent
-            {
-                position = new Vector2(packet.x, packet.y),
-                rotation = packet.rotation
-            };
         }
     }
 }

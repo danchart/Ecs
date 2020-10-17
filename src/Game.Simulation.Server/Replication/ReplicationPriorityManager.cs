@@ -9,12 +9,12 @@ namespace Game.Simulation.Server
 {
     public interface IReplicationPriorityManager
     {
-        ReplicationPriority[] GetPriorities(
+        void GetEntityPriorities(
             Entity player,
             EntityMapList<ReplicatedComponentData> replicatedEntities,
-            ReplicationPriorityContext context);
+            ReplicationPriorityContext context,
+            EntityReplicationPriorities entityPriorities);
     }
-
 
     public class ReplicationPriorityManager : IReplicationPriorityManager
     {
@@ -25,10 +25,11 @@ namespace Game.Simulation.Server
             this._config = config;
         }
 
-        public void GetPriorities(
+        public void GetEntityPriorities(
             Entity player,
             EntityMapList<ReplicatedComponentData> replicatedEntities,
-            ReplicationPriorityContext context)
+            ReplicationPriorityContext context,
+            EntityReplicationPriorities entityPriorities)
         {
             ref readonly var playerTransform = ref player.GetReadOnlyComponent<TransformComponent>();
 
@@ -44,10 +45,10 @@ namespace Game.Simulation.Server
                 priority *= FromDistance(playerTransform, transform);
                 priority *= FromRelevance(replicated.Relevance);
 
-                context.
-            }
+                ref var entityPriority = ref entityPriorities.Get(entityItem.Entity);
 
-            return new ReplicationPriority[0];
+                entityPriority.FinalPriority = priority;
+            }
         }
 
         private float FromRelevance(ReplicationRelevance relevance)
@@ -83,13 +84,6 @@ namespace Game.Simulation.Server
                         : _config.Ring3Priority;
 
         }
-    }
-
-    public class EntityPriorities
-    {
-        private float[] _priorities;
-
-
     }
 
     public class ReplicationPriorityContext
@@ -151,6 +145,45 @@ namespace Game.Simulation.Server
         {
             public ComponentRef<TransformComponent> Transform;
             public ComponentRef<ReplicatedComponent> Replicated;
+        }
+    }
+
+    public class EntityReplicationPriorities
+    {
+        private ReplicationPriority[] _priorities;
+        private Dictionary<Entity, int> _entityToIndex;
+
+        private int _count;
+
+        public EntityReplicationPriorities(int capacity)
+        {
+            this._priorities = new ReplicationPriority[capacity];
+            this._count = 0;
+        }
+
+        public void Clear()
+        {
+            this._entityToIndex = 0;
+            this._count = 0;
+        }
+
+        public ref ReplicationPriority Get(Entity entity)
+        {
+            if (!this._entityToIndex.ContainsKey(entity))
+            {
+                if (this._count == this._priorities.Length)
+                {
+                    Array.Resize(ref this._priorities, 2 * _count);
+                }
+
+                this._entityToIndex[entity] = _count++;
+
+                return ref this._priorities[_count - 1];
+            }
+            else
+            {
+                return ref this._priorities[this._entityToIndex[entity]];
+            }
         }
     }
 

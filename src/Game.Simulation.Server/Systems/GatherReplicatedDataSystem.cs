@@ -25,7 +25,16 @@ namespace Game.Simulation.Server
                 var entity = _transformQuery.GetEntity(index);
 
                 entityComponents[entity].New();
-                entityComponents[entity].Current.Transform = _transformQuery.GetReadonly2(index).ToPacket();
+                _transformQuery.GetReadonly2(index).ToPacket(ref entityComponents[entity].Current.Transform);
+            }
+
+            // MovementComponent
+            foreach (int index in _movementQuery.GetIndices())
+            {
+                var entity = _movementQuery.GetEntity(index);
+
+                entityComponents[entity].New();
+                _movementQuery.GetReadonly2(index).ToPacket(ref entityComponents[entity].Current.Movement);
             }
 
             // TransformComponent
