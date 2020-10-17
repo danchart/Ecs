@@ -5,5 +5,7 @@ namespace Game.Simulation.Server
     public struct PlayerConnection
     {
         public Entity Entity;
+
+        public EntityReplicationPriorities 
     }
 }

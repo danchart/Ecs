@@ -163,7 +163,7 @@ namespace Game.Simulation.Server
 
         public void Clear()
         {
-            this._entityToIndex = 0;
+            this._entityToIndex.Clear();
             this._count = 0;
         }
 
