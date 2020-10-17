@@ -24,6 +24,7 @@ namespace Game.Simulation.Server
 
                 entityComponents[entity].New();
                 _transformQuery.GetReadonly2(index).ToPacket(ref entityComponents[entity].Current.Transform);
+                entityComponents[entity].Current.FieldCount = TransformData.FieldCount;
             }
 
             // MovementComponent
@@ -33,6 +34,7 @@ namespace Game.Simulation.Server
 
                 entityComponents[entity].New();
                 _movementQuery.GetReadonly2(index).ToPacket(ref entityComponents[entity].Current.Movement);
+                entityComponents[entity].Current.FieldCount = MovementData.FieldCount;
             }
 
             ReplicationManager.EndDataCollection();

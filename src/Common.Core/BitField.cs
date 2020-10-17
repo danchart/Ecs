@@ -5,7 +5,12 @@ namespace Common.Core
 {
     public struct BitField
     {
-        uint _bits;
+        private uint _bits;
+
+        public BitField(uint value = 0)
+        {
+            _bits = value;
+        }
 
         public bool Bit0
         {
@@ -139,7 +144,17 @@ namespace Common.Core
         {
             ThrowIfOutOfRange(index);
 
-            _bits &= 0xffffffff ^ (1U << index);
+            _bits &= ~(1U << index);
+        }
+
+        /// <summary>
+        /// Set all bits up to nth, unsets all others.
+        /// </summary>
+        public void SetAll(int n)
+        {
+            Debug.Assert(n < 32);
+
+            _bits = (1U << n) - 1U;
         }
 
         public bool IsSet(ushort index)
@@ -156,6 +171,11 @@ namespace Common.Core
             {
                 throw new IndexOutOfRangeException($"{index} out of range.");
             }
+        }
+
+        public static BitField NewSetAll(int n)
+        {
+            return new BitField((1U << n) - 1U);
         }
     }
 }

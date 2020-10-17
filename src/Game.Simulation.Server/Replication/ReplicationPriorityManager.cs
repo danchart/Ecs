@@ -91,7 +91,7 @@ namespace Game.Simulation.Server
 
     public class EntityPriorities
     {
-        private EntityPriority[] _priorities;
+        private EntityReplicationData[] _entityReplicationsDatas;
         private Dictionary<Entity, int> _entityToIndex;
 
         private int _count;
@@ -101,7 +101,7 @@ namespace Game.Simulation.Server
 
         public EntityPriorities(int capacity, float tickTime, int[] queueTicks)
         {
-            this._priorities = new EntityPriority[capacity];
+            this._entityReplicationsDatas = new EntityReplicationData[capacity];
             this._entityToIndex = new Dictionary<Entity, int>(capacity);
             this._count = 0;
 
@@ -110,7 +110,7 @@ namespace Game.Simulation.Server
         }
 
         public int Count => this._count;
-        public ref readonly EntityPriority this[int index] => ref this._priorities[index];
+        public ref readonly EntityReplicationData this[int index] => ref this._entityReplicationsDatas[index];
 
         public void Clear()
         {
@@ -136,9 +136,9 @@ namespace Game.Simulation.Server
             {
                 wasUnassigned = true;
 
-                if (this._count == this._priorities.Length)
+                if (this._count == this._entityReplicationsDatas.Length)
                 {
-                    Array.Resize(ref this._priorities, 2 * _count);
+                    Array.Resize(ref this._entityReplicationsDatas, 2 * _count);
                 }
 
                 index = _count++;
@@ -150,23 +150,41 @@ namespace Game.Simulation.Server
                 index = this._entityToIndex[entity];
             }
 
-            ref var entityPriority = ref this._priorities[index];
+            ref var entityReplicationData = ref this._entityReplicationsDatas[index];
 
             // Update priority and relevance, but preserve the assigned queue time if there is one to ensure
             // this entity is dispatched at the correct time.
 
-            entityPriority.Priority = Math.Min(1.0f, priority);
-            entityPriority.Relevance = Math.Min(1.0f, relevance);
-            entityPriority.RequestedQueueTimeRemaining =
+            entityReplicationData.Priority.Priority = Math.Min(1.0f, priority);
+            entityReplicationData.Priority.Relevance = Math.Min(1.0f, relevance);
+            entityReplicationData.Priority.RequestedQueueTimeRemaining =
                 wasUnassigned
                 // Assign new queue time.
-                ? GetQueueTimeFromPriority(entityPriority.Priority)
+                ? GetQueueTimeFromPriority(entityReplicationData.Priority.Priority)
                 // Keep the existing queue time.
-                : entityPriority.RequestedQueueTimeRemaining;
+                : entityReplicationData.Priority.RequestedQueueTimeRemaining;
 
             foreach (var component in components)
             {
+                // TODO: We must keep the PREVIOUS entity data copy to compute the delta (HasFields)
 
+                if (entityReplicationData._components.ContainsKey(component.ComponentId))
+                {
+                    // Merge
+                }
+                else
+                {
+                    // Add component
+
+                    entityReplicationData._components.Add(
+                        (ComponentId) component.ComponentId,
+                        new EntityReplicationData.Component
+                        {
+                            // Replicate all fields as there is no delta.
+                            HasFields = BitField.NewSetAll(component.FieldCount),
+                            Data = component
+                        });
+                }
             }
         }
 
@@ -184,24 +202,29 @@ namespace Game.Simulation.Server
         }
     }
 
-    public struct EntityPriority
+    public struct EntityReplicationData
     {
-        /// <summary>
-        /// How much does this effect gameplay. [0..1]
-        /// </summary>
-        public float Priority;
-
-        /// <summary>
-        /// How noticable is this entity. [0..1]
-        /// </summary>
-        public float Relevance;
-
-        /// <summary>
-        /// Desired update period, in seconds.
-        /// </summary>
-        public float RequestedQueueTimeRemaining;
+        public QueuePriority Priority;
 
         public Dictionary<ComponentId, Component> _components;
+
+        public struct QueuePriority
+        {
+            /// <summary>
+            /// How much does this effect gameplay. [0..1]
+            /// </summary>
+            public float Priority;
+
+            /// <summary>
+            /// How noticable is this entity. [0..1]
+            /// </summary>
+            public float Relevance;
+
+            /// <summary>
+            /// Desired update period, in seconds.
+            /// </summary>
+            public float RequestedQueueTimeRemaining;
+        }
 
         public struct Component
         {

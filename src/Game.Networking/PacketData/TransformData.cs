@@ -7,6 +7,8 @@ namespace Game.Networking.PacketData
 {
     public struct TransformData
     {
+        public const int FieldCount = 3;
+
         // 0
         public float x;
         // 1

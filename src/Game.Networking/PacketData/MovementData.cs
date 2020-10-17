@@ -7,6 +7,8 @@ namespace Game.Networking.PacketData
 {
     public struct MovementData
     {
+        public const int FieldCount = 2;
+
         // 0
         public float velocity_x;
         // 1
