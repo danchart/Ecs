@@ -8,9 +8,10 @@ namespace Game.Simulation.Server
 
         public PlayerReplicationData ReplicationData;
 
-        public void Clear()
+        public void Assign(in Entity entity)
         {
-            // TODO
+            this.ReplicationData.Clear();
+            this.Entity = entity;
         }
     }
 }

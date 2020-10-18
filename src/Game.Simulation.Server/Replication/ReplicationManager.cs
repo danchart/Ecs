@@ -16,18 +16,16 @@ namespace Game.Simulation.Server
         private readonly ReplicationConfig _config;
 
         private readonly ReplicationContext _context;
-        private readonly IPlayerConnectionManager _playerConnectionManager;
+        private readonly IPlayerConnections _playerConnectionManager;
 
         public ReplicationManager(
             ReplicationConfig config,
-            IPlayerConnectionManager playerConnectionManager)
+            IPlayerConnections playerConnectionManager)
         {
             this._config = config;
             this._playerConnectionManager = playerConnectionManager;
             this._context = new ReplicationContext(config.InitialReplicatedEntityCapacity);
         }
-
-        public EntityMapList<ReplicatedComponentData> EntityComponents => this._entityComponents;
 
         public void Apply(EntityMapList<ReplicatedComponentData> modifiedEntityComponents)
         {
