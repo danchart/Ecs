@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Runtime.CompilerServices;
 
 namespace Ecs.Core.Collections
 {
@@ -12,24 +13,34 @@ namespace Ecs.Core.Collections
 
         private int _count;
 
+        internal uint _version;
+
         private readonly int ListCapacity;
 
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public EntityMapList(int entityCapacity, int listCapacity)
         {
             this._entityItems = new EntityItem[entityCapacity];
             this._entityIndexToDataIndex = new Dictionary<int, int>(entityCapacity);
 
             this._count = 0;
+            this._version = 0;
 
             this.ListCapacity = listCapacity;
         }
 
-        public int Count => this._count;
+        public int Count
+        {
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
+            get => this._count;
+        }
 
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void Clear()
         {
             this._entityIndexToDataIndex.Clear();
             this._count = 0;
+            this._version++;
         }
 
         public ref ItemList this[Entity entity]
@@ -46,7 +57,7 @@ namespace Ecs.Core.Collections
                     }
 
                     this._entityIndexToDataIndex[entity.Id] = this._count;
-                    this._entityItems[_count] = new EntityItem(ListCapacity)
+                    this._entityItems[_count] = new EntityItem(this, ListCapacity)
                     {
                         Entity = entity,
                     };
@@ -70,6 +81,7 @@ namespace Ecs.Core.Collections
             }
         }
 
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public Enumerator GetEnumerator()
         {
             return new Enumerator(this);
@@ -80,14 +92,20 @@ namespace Ecs.Core.Collections
             EntityMapList<T> _mapList;
             private int _current;
 
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
             internal Enumerator(EntityMapList<T> mapList)
             {
                 this._mapList = mapList ?? throw new ArgumentNullException(nameof(mapList));
                 this._current = -1;
             }
 
-            public EntityItem Current => _mapList._entityItems[_current];
+            public EntityItem Current 
+            {
+                [MethodImpl(MethodImplOptions.AggressiveInlining)]
+                get => this._mapList._entityItems [_current];
+            }
 
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
             public bool MoveNext()
             {
                 return ++this._current < this._mapList._count;
@@ -99,26 +117,55 @@ namespace Ecs.Core.Collections
             internal T[] _items;
             internal int _count;
 
-            internal ItemList(int capacity)
+            private uint _version;
+            private EntityMapList<T> _parent;
+
+            internal ItemList(EntityMapList<T> parent, int capacity)
             {
                 this._items = new T[capacity];
                 this._count = 0;
+                this._version = parent._version;
+                this._parent = parent;
             }
 
-            public int Count => this._count;
+            public int Count
+            {
+                [MethodImpl(MethodImplOptions.AggressiveInlining)]
+                get
+                {
+                    {
+                        ClearIfOldVersion();
+
+                        return this._count;
+                    }
+                }
+            }
 
             // If count < 0 you haven't called New().
-            public ref T Current => ref this._items[_count-1];
-
-            public ref T this[int index] => ref this._items[index];
-
-            public void Clear()
+            public ref T Current
             {
-                _count = 0;
+                [MethodImpl(MethodImplOptions.AggressiveInlining)]
+                get => ref this._items[_count - 1];
             }
 
+            public ref T this[int index]
+            {
+                [MethodImpl(MethodImplOptions.AggressiveInlining)]
+                get => ref this._items[index];
+            }
+
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
+            public void Clear()
+            {
+                this._count = 0;
+                this._version = _parent._version;
+            }
+
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
             public ref T New()
             {
+                ClearIfOldVersion();
+
                 if (this._items.Length == this._count)
                 {
                     Array.Resize(ref this._items, 2 * this._count);
@@ -129,9 +176,21 @@ namespace Ecs.Core.Collections
                 return ref this.Current;
             }
 
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
             public Enumerator GetEnumerator()
             {
+                ClearIfOldVersion();
+
                 return new Enumerator(this);
+            }
+
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
+            private void ClearIfOldVersion()
+            {
+                if (_parent._version != this._version)
+                {
+                    Clear();
+                }
             }
 
             public struct Enumerator
@@ -139,14 +198,20 @@ namespace Ecs.Core.Collections
                 private ItemList _list;
                 private int _current;
 
+                [MethodImpl(MethodImplOptions.AggressiveInlining)]
                 internal Enumerator(ItemList list)
                 {
                     this._list = list ?? throw new ArgumentNullException(nameof(list));
                     this._current = -1;
                 }
 
-                public T Current => _list._items[_current];
+                public T Current
+                {
+                    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+                    get => _list._items[_current];
+                }
 
+                [MethodImpl(MethodImplOptions.AggressiveInlining)]
                 public bool MoveNext()
                 {
                     return ++this._current < this._list._count;
@@ -159,9 +224,10 @@ namespace Ecs.Core.Collections
             public Entity Entity;
             public ItemList Items;
 
-            public EntityItem(int capacity) : this()
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
+            public EntityItem(EntityMapList<T> parent, int capacity) : this()
             {
-                Items = new ItemList(capacity);
+                Items = new ItemList(parent, capacity);
             }
         }
     }

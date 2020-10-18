@@ -10,7 +10,7 @@ namespace Game.Simulation.Server
     {
         void AddEntityChangesToPlayer(
             Entity player,
-            EntityMapList<GenerationedReplicatedComponentData> replicatedEntities,
+            EntityMapList<ReplicatedComponentData> replicatedEntities,
             ReplicationContext context,
             PlayerReplicationData entityPriorities);
     }
@@ -26,7 +26,7 @@ namespace Game.Simulation.Server
 
         public void AddEntityChangesToPlayer(
             Entity player,
-            EntityMapList<GenerationedReplicatedComponentData> replicatedEntities,
+            EntityMapList<ReplicatedComponentData> replicatedEntities,
             ReplicationContext context,
             PlayerReplicationData playerReplicationData)
         {

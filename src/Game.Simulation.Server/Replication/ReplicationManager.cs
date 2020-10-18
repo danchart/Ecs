@@ -6,9 +6,7 @@ namespace Game.Simulation.Server
 {
     public interface IReplicationManager
     {
-        uint Version { get; }
-
-        EntityMapList<GenerationedReplicatedComponentData> BeginDataCollection();
+        EntityMapList<ReplicatedComponentData> BeginDataCollection();
         void EndDataCollection();
     }
 
@@ -20,13 +18,8 @@ namespace Game.Simulation.Server
         public readonly ReplicationConfig _config;
         private readonly World _world;
 
-        private readonly EntityMapList<GenerationedReplicatedComponentData> _entityComponents;
+        private readonly EntityMapList<ReplicatedComponentData> _entityComponents;
         private readonly ReplicationContext _context;
-
-        // Incremented every time we begin collection.
-        private uint _version;
-
-        public uint Version => _version;
 
         public ReplicationManager(
             ReplicationConfig config,
@@ -37,19 +30,18 @@ namespace Game.Simulation.Server
             this._world = world ?? throw new ArgumentNullException(nameof(world));
             this._playerConnectionManager = playerConnectionManager ?? throw new ArgumentNullException(nameof(playerConnectionManager));
 
-            this._entityComponents = new EntityMapList<GenerationedReplicatedComponentData>(
+            this._entityComponents = new EntityMapList<ReplicatedComponentData>(
                 entityCapacity: config.InitialReplicatedEntityCapacity,
                 listCapacity: config.InitialReplicatedComponentCapacity);
 
             this._context = new ReplicationContext(config.InitialReplicatedEntityCapacity);
-
-            this._version = 0;
         }
 
-        public EntityMapList<GenerationedReplicatedComponentData> BeginDataCollection()
+        public EntityMapList<ReplicatedComponentData> BeginDataCollection()
         {
             // Invalidate any previously collected data.
-            this._version++;
+            this._entityComponents.Clear();
+
             return this._entityComponents;
         }
 
@@ -70,11 +62,5 @@ namespace Game.Simulation.Server
                     pair.Value.EntityPriorities);
             }
         }
-    }
-
-    public struct GenerationedReplicatedComponentData
-    {
-        public uint Version;
-        public ReplicatedComponentData ComponentData;
     }
 }

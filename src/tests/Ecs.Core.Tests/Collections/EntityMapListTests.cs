@@ -84,6 +84,15 @@ namespace Ecs.Core.Tests.Collections
                     Assert.Equal(count++ == 0 ? item.Entity.Id : -item.Entity.Id, subItem.value);
                 }
             }
+
+            // Validate versioning
+
+            mapList.Clear();
+            mapList[entities[0]].New().value = 11;
+            mapList[entities[0]].New().value = 12;
+            Assert.Equal(2, mapList[entities[0]].Count);
+            Assert.Equal(11, mapList[entities[0]][0].value);
+            Assert.Equal(12, mapList[entities[0]][1].value);
         }
 
         internal struct MyData

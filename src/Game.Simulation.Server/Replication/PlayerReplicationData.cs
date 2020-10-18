@@ -44,7 +44,7 @@ namespace Game.Simulation.Server
 
         public void AddEntityChanges(
             Entity entity,
-            EntityMapList<GenerationedReplicatedComponentData>.ItemList components,
+            EntityMapList<ReplicatedComponentData>.ItemList components,
             float priority,
             float relevance)
         {
@@ -87,13 +87,12 @@ namespace Game.Simulation.Server
             {
                 // TODO: We must keep the PREVIOUS entity data copy to compute the delta (HasFields)
 
-                if (entityReplicationData._components.ContainsKey(component.ComponentData.ComponentIdAsIndex))
+                if (entityReplicationData._components.ContainsKey(component.ComponentIdAsIndex))
                 {
                     // Merge
 
-                    ref readonly var componentData = ref entityReplicationData._components[component.ComponentData.ComponentIdAsIndex];
+                    ref readonly var componentData = ref entityReplicationData._components[component.ComponentIdAsIndex];
 
-                    if (component.Version)
 
                     //entityReplicationData._components.Com
                 }
@@ -101,12 +100,12 @@ namespace Game.Simulation.Server
                 {
                     // Add component
 
-                    entityReplicationData._components[component.ComponentData.ComponentIdAsIndex] =
+                    entityReplicationData._components[component.ComponentIdAsIndex] =
                         new ReplicatedEntity.Component
                         {
                             // Replicate all fields as there is no delta.
-                            HasFields = BitField.NewSetAll(component.ComponentData.FieldCount),
-                            Data = component.ComponentData
+                            HasFields = BitField.NewSetAll(component.FieldCount),
+                            Data = component
                         };
                 }
             }
