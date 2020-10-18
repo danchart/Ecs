@@ -7,7 +7,7 @@ namespace Game.Simulation.Server
 {
     public class ReplicationContext
     {
-        private PriorityDeterminantComponents[] _components;
+        private PrioritizationComponentRefs[] _components;
 
         private Dictionary<Entity, int> _entityToIndex;
 
@@ -15,7 +15,7 @@ namespace Game.Simulation.Server
 
         public ReplicationContext(int capacity)
         {
-            this._components = new PriorityDeterminantComponents[capacity];
+            this._components = new PrioritizationComponentRefs[capacity];
             this._entityToIndex = new Dictionary<Entity, int>(capacity);
 
             this._count = 0;
@@ -27,7 +27,7 @@ namespace Game.Simulation.Server
             this._count = 0;
         }
 
-        public ref readonly PriorityDeterminantComponents GetHydrated(in Entity entity)
+        public ref readonly PrioritizationComponentRefs GetComponents(in Entity entity)
         {
             int index;
 
@@ -54,13 +54,13 @@ namespace Game.Simulation.Server
             }
         }
 
-        private void Hydrate(in Entity entity, ref PriorityDeterminantComponents entityComponents)
+        private void Hydrate(in Entity entity, ref PrioritizationComponentRefs entityComponents)
         {
             entityComponents.Transform = entity.Reference<TransformComponent>();
             entityComponents.Replicated = entity.Reference<ReplicatedComponent>();
         }
 
-        public struct PriorityDeterminantComponents
+        public struct PrioritizationComponentRefs
         {
             public ComponentRef<TransformComponent> Transform;
             public ComponentRef<ReplicatedComponent> Replicated;

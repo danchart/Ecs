@@ -6,6 +6,11 @@ namespace Game.Simulation.Server
     {
         public Entity Entity;
 
-        public PlayerReplicationData EntityPriorities;
+        public PlayerReplicationData ReplicationData;
+
+        public void Clear()
+        {
+            // TODO
+        }
     }
 }

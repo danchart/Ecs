@@ -75,5 +75,25 @@ namespace Game.Networking.PacketData
             component.velocity.x = hasFields.Bit0 ? packet.velocity_x : component.velocity.x;
             component.velocity.y = hasFields.Bit1 ? packet.velocity_y : component.velocity.y;
         }
+
+        public static void Merge(
+            this MovementData data,
+            in MovementData newData,
+            ref BitField hasFields)
+        {
+            // 0/velocity_x
+            if (data.velocity_x != newData.velocity_x)
+            {
+                data.velocity_x = newData.velocity_x;
+                hasFields.Set(0);
+            }
+
+            // 1/velocity_y
+            if (data.velocity_y != newData.velocity_y)
+            {
+                data.velocity_y = newData.velocity_y;
+                hasFields.Set(1);
+            }
+        }
     }
 }

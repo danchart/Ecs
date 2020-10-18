@@ -2,6 +2,7 @@
 using Game.Networking.Core;
 using Game.Simulation.Core;
 using System.IO;
+using System.Runtime.CompilerServices;
 
 namespace Game.Networking.PacketData
 {
@@ -87,6 +88,33 @@ namespace Game.Networking.PacketData
             component.position.x = hasFields.Bit0 ? packet.x : component.position.x;
             component.position.y = hasFields.Bit1 ? packet.y : component.position.y;
             component.rotation = hasFields.Bit2 ? packet.rotation : component.rotation;
+        }
+
+        public static void Merge(
+            this TransformData data,
+            in TransformData newData,
+            ref BitField hasFields)
+        {
+            // 0/x
+            if (data.x != newData.x)
+            {
+                data.x = newData.x;
+                hasFields.Set(0);
+            }
+
+            // 1/y
+            if (data.y != newData.y)
+            {
+                data.y = newData.y;
+                hasFields.Set(1);
+            }
+
+            // 2/rotation
+            if (data.rotation != newData.rotation)
+            {
+                data.rotation = newData.rotation;
+                hasFields.Set(2);
+            }
         }
     }
 }

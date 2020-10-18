@@ -30,9 +30,8 @@
     <Compile Include="Replication\ReplicatedComponentData.cs" />
     <Compile Include="Replication\ReplicationConfig.cs" />
     <Compile Include="Replication\ReplicationContext.cs" />
+    <Compile Include="Replication\ReplicationDataBroker.cs" />
     <Compile Include="Replication\ReplicationManager.cs" />
-    <Compile Include="Replication\ReplicationPriorityConfig.cs" />
-    <Compile Include="Replication\ReplicationPriorityManager.cs" />
     <Compile Include="ServerSimulation.cs" />
     <Compile Include="Systems\GatherReplicatedDataSystem.cs" />
   </ItemGroup>

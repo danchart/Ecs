@@ -4,7 +4,6 @@ using Ecs.Core.Collections;
 using Game.Simulation.Core;
 using System;
 using System.Collections.Generic;
-using System.Net.Http.Headers;
 
 namespace Game.Simulation.Server
 {
@@ -44,7 +43,7 @@ namespace Game.Simulation.Server
 
         public void AddEntityChanges(
             Entity entity,
-            EntityMapList<ReplicatedComponentData>.ItemList components,
+            EntityMapList<ReplicatedComponentData>.ItemList modifiedComponents,
             float priority,
             float relevance)
         {
@@ -83,29 +82,28 @@ namespace Game.Simulation.Server
                 // Keep the existing queue time.
                 : entityReplicationData.Priority.RequestedQueueTimeRemaining;
 
-            foreach (var component in components)
+
+            foreach (var modifiedComponent in modifiedComponents)
             {
-                // TODO: We must keep the PREVIOUS entity data copy to compute the delta (HasFields)
-
-                if (entityReplicationData._components.ContainsKey(component.ComponentIdAsIndex))
+                if (entityReplicationData._components.ContainsKey(modifiedComponent.ComponentIdAsIndex))
                 {
-                    // Merge
+                    // Merge component changes into the replication data.
 
-                    ref readonly var componentData = ref entityReplicationData._components[component.ComponentIdAsIndex];
+                    ref var replicationComponentData = ref entityReplicationData._components[modifiedComponent.ComponentIdAsIndex];
 
-
-                    //entityReplicationData._components.Com
+                    replicationComponentData.Merge(modifiedComponent);
                 }
                 else
                 {
-                    // Add component
+                    // Add component to the replication data.
 
-                    entityReplicationData._components[component.ComponentIdAsIndex] =
+                    entityReplicationData._components[modifiedComponent.ComponentIdAsIndex] =
                         new ReplicatedEntity.Component
                         {
-                            // Replicate all fields as there is no delta.
-                            HasFields = BitField.NewSetAll(component.FieldCount),
-                            Data = component
+                            // Replicate all fields
+                            HasFields = BitField.NewSetAll(modifiedComponent.FieldCount),
+                            // Copy data
+                            Data = modifiedComponent
                         };
                 }
             }
@@ -159,6 +157,11 @@ namespace Game.Simulation.Server
             {
                 public BitField HasFields;
                 public ReplicatedComponentData Data;
+
+                public void Merge(in ReplicatedComponentData modifiedData)
+                {
+                    this.Data.Merge(modifiedData, ref this.HasFields);
+                }
             }
         }
     }

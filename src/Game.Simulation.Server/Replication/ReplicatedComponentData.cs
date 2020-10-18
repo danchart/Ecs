@@ -1,5 +1,7 @@
-﻿using Game.Networking.PacketData;
+﻿using Common.Core;
+using Game.Networking.PacketData;
 using Game.Simulation.Core;
+using System;
 using System.Runtime.InteropServices;
 
 namespace Game.Simulation.Server
@@ -18,5 +20,27 @@ namespace Game.Simulation.Server
         public MovementData Movement;
 
         public int ComponentIdAsIndex => (int)ComponentId;
+    }
+
+    public static class ReplicatedComponentDataExtensions
+    {
+        public static void Merge(
+            this ReplicatedComponentData data,
+            in ReplicatedComponentData newData,
+            ref BitField hasFields)
+        {
+            switch (data.ComponentId)
+            {
+                case ComponentId.Transform:
+                    data.Transform.Merge(newData.Transform, ref hasFields);
+                    break;
+                case ComponentId.Movement:
+                    data.Movement.Merge(newData.Movement, ref hasFields);
+                    break;
+                default:
+                    // You forgot to update Merge()
+                    throw new InvalidOperationException($"Unknown ComponentId: {data.ComponentId}");
+            }
+        }
     }
 }

@@ -9,21 +9,25 @@ namespace Game.Simulation.Server
         public EntityQueryWithChangeFilter<ReplicatedComponent, TransformComponent> _transformQuery = null;
         public EntityQueryWithChangeFilter<ReplicatedComponent, MovementComponent> _movementQuery = null;
 
-        public IReplicationManager ReplicationManager = null;
+        public IReplicationDataBroker ReplicationDataBroker = null;
 
         public override void OnUpdate(float deltaTime)
         {
-            // Collects all world replicated components.
+            // 1) Collect all modified world replicated components.
+            // 2) Convert component to packet data.
+            // 3) Save packet to the replication data broker.
 
-            var entityComponents = ReplicationManager.BeginDataCollection();
+            var modifiedEntityComponents = ReplicationDataBroker.BeginDataCollection();
 
             // TransformComponent
             foreach (int index in _transformQuery.GetIndices())
             {
                 var entity = _transformQuery.GetEntity(index);
 
-                ref var component = ref entityComponents[entity].New();
-                _transformQuery.GetReadonly2(index).ToPacket(ref component.Transform);
+                ref var component = ref modifiedEntityComponents[entity].New();
+                _transformQuery
+                    .GetReadonly2(index)
+                    .ToPacket(ref component.Transform);
                 component.FieldCount = TransformData.FieldCount;
             }
 
@@ -32,12 +36,14 @@ namespace Game.Simulation.Server
             {
                 var entity = _movementQuery.GetEntity(index);
 
-                ref var component = ref entityComponents[entity].New();
-                _movementQuery.GetReadonly2(index).ToPacket(ref component.Movement);
+                ref var component = ref modifiedEntityComponents[entity].New();
+                _movementQuery
+                    .GetReadonly2(index)
+                    .ToPacket(ref component.Movement);
                 component.FieldCount = MovementData.FieldCount;
             }
 
-            ReplicationManager.EndDataCollection();
+            ReplicationDataBroker.EndDataCollection();
         }
     }
 }
