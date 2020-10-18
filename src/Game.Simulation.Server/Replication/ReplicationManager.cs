@@ -16,14 +16,14 @@ namespace Game.Simulation.Server
         private readonly ReplicationConfig _config;
 
         private readonly ReplicationContext _context;
-        private readonly IPlayerConnections _playerConnectionManager;
+        private readonly PlayerConnections _playerConnections;
 
         public ReplicationManager(
             ReplicationConfig config,
-            IPlayerConnections playerConnectionManager)
+            PlayerConnections playerConnectionManager)
         {
             this._config = config;
-            this._playerConnectionManager = playerConnectionManager;
+            this._playerConnections = playerConnectionManager;
             this._context = new ReplicationContext(config.InitialReplicatedEntityCapacity);
         }
 
@@ -32,22 +32,20 @@ namespace Game.Simulation.Server
             this._context.Clear();
 
             // Apply changes to player entity change lists
-            foreach (var pair in this._playerConnectionManager.Connections)
+            foreach (var connection in this._playerConnections)
             {
-                ref var connection = ref pair.Value;
-
-                var playerEntity = .Entity;
+                var playerEntity = connection.Entity;
 
                 AddEntityChangesToPlayer(
                     playerEntity,
                     modifiedEntityComponents,
                     this._context,
-                    pair.Value.ReplicationData);
+                    connection.ReplicationData);
             }
         }
 
         private void AddEntityChangesToPlayer(
-            Entity player,
+            in Entity player,
             EntityMapList<ReplicatedComponentData> replicatedEntities,
             ReplicationContext context,
             PlayerReplicationData playerReplicationData)

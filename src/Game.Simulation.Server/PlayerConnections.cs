@@ -31,9 +31,9 @@ namespace Game.Simulation.Server
 
             int index;
 
-            if (_freeCount > 0)
+            if (this._freeCount > 0)
             {
-                index = _freeIndices[--_freeCount];
+                index = this._freeIndices[--this._freeCount];
             }
             else
             {
@@ -76,9 +76,9 @@ namespace Game.Simulation.Server
                 this._enumerator = parent._playerIdToIndex.GetEnumerator();
             }
 
-            public ref PlayerConnection Current
+            public ref Current
             {
-                get => ref this._parent._connections[_enumerator.Current.Value];
+                get => ref this._parent._connections[this._enumerator.Current.Value];
             }
 
             public bool MoveNext()
