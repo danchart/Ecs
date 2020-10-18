@@ -60,7 +60,7 @@ namespace Game.Simulation.Server
                     Array.Resize(ref this._replicatedEntities, 2 * _count);
                 }
 
-                index = _count++;
+                index = this._count++;
 
                 this._entityToIndex[entity] = index;
             }
@@ -91,7 +91,9 @@ namespace Game.Simulation.Server
                 {
                     // Merge
 
-                    ref readonly var t = ref entityReplicationData._components[component.ComponentData.ComponentIdAsIndex];
+                    ref readonly var componentData = ref entityReplicationData._components[component.ComponentData.ComponentIdAsIndex];
+
+                    if (component.Version)
 
                     //entityReplicationData._components.Com
                 }
