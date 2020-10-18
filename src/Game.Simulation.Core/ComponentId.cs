@@ -2,7 +2,10 @@
 {
     public enum ComponentId : ushort
     {
-        Transform = 1,
+        Transform,
         Movement,
+
+        // Use as ID count
+        MaxValue
     }
 }

@@ -51,6 +51,11 @@ namespace Common.Core.Tests
             Assert.True(bitfield.IsSet(1));
             Assert.False(bitfield.Bit2);
             Assert.False(bitfield.IsSet(2));
+
+            bitfield.Toggle(0);
+            Assert.False(bitfield.Bit0);
+            bitfield.Toggle(0);
+            Assert.True(bitfield.Bit0);
         }
     }
 }

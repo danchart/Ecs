@@ -1,10 +1,8 @@
-﻿using Common.Core;
-using Common.Core.Numerics;
+﻿using Common.Core.Numerics;
 using Ecs.Core;
 using Ecs.Core.Collections;
 using Game.Simulation.Core;
 using System;
-using System.Collections.Generic;
 
 namespace Game.Simulation.Server
 {

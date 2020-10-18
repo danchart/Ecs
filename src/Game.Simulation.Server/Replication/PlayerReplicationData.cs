@@ -87,22 +87,25 @@ namespace Game.Simulation.Server
             {
                 // TODO: We must keep the PREVIOUS entity data copy to compute the delta (HasFields)
 
-                if (entityReplicationData._components.ContainsKey(component.ComponentId))
+                if (entityReplicationData._components.ContainsKey(component.ComponentData.ComponentIdAsIndex))
                 {
                     // Merge
+
+                    ref readonly var t = ref entityReplicationData._components[component.ComponentData.ComponentIdAsIndex];
+
+                    //entityReplicationData._components.Com
                 }
                 else
                 {
                     // Add component
 
-                    entityReplicationData._components.Add(
-                        (ComponentId)component.ComponentId,
+                    entityReplicationData._components[component.ComponentData.ComponentIdAsIndex] =
                         new ReplicatedEntity.Component
                         {
                             // Replicate all fields as there is no delta.
-                            HasFields = BitField.NewSetAll(component.FieldCount),
-                            Data = component
-                        });
+                            HasFields = BitField.NewSetAll(component.ComponentData.FieldCount),
+                            Data = component.ComponentData
+                        };
                 }
             }
         }
@@ -125,12 +128,12 @@ namespace Game.Simulation.Server
             public QueuePriority Priority;
 
             public Dictionary<ComponentId, BitField> _prevReplicatedComponentFields;
-            public Dictionary<ComponentId, Component> _components;
+            public FixedIndexDictionary<Component> _components;
 
             public ReplicatedEntity(int componentCapacity) : this()
             {
                 this._prevReplicatedComponentFields = new Dictionary<ComponentId, BitField>(componentCapacity);
-                this._components = new Dictionary<ComponentId, Component>(componentCapacity);
+                this._components = new FixedIndexDictionary<Component>((int)ComponentId.MaxValue);
             }
 
             public struct QueuePriority

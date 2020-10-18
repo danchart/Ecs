@@ -147,14 +147,21 @@ namespace Common.Core
             _bits &= ~(1U << index);
         }
 
+        public void Toggle(ushort index)
+        {
+            ThrowIfOutOfRange(index);
+
+            _bits ^= (1U << index);
+        }
+
         /// <summary>
         /// Set all bits up to nth, unsets all others.
         /// </summary>
-        public void SetAll(int n)
+        public void SetAll(ushort index)
         {
-            Debug.Assert(n < 32);
+            ThrowIfOutOfRange(index);
 
-            _bits = (1U << n) - 1U;
+            _bits = (1U << index) - 1U;
         }
 
         public bool IsSet(ushort index)
@@ -173,9 +180,12 @@ namespace Common.Core
             }
         }
 
-        public static BitField NewSetAll(int n)
+        /// <summary>
+        /// Creats bitfield with all bits set up to and including n.
+        /// </summary>
+        public static BitField NewSetAll(int index)
         {
-            return new BitField((1U << n) - 1U);
+            return new BitField((1U << index) - 1U);
         }
     }
 }

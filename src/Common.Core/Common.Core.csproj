@@ -21,6 +21,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="BitField.cs" />
+    <Compile Include="FixedIndexDictionary.cs" />
     <Compile Include="Hashing\HashCodeHelper.cs" />
     <Compile Include="Numerics\Vector2.cs" />
     <Compile Include="Numerics\Vector2_Intrinsics.cs" />
