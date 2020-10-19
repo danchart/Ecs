@@ -25,6 +25,16 @@ namespace Game.Simulation.Server
             this._freeCount = 0;
         }
 
+        public int Count
+        {
+            get => this._count;
+        }
+
+        public ref PlayerConnection this[int playerId]
+        {
+            get => ref this._connections[_playerIdToIndex[playerId]];
+        }
+
         public void Add(int playerId, in Entity entity)
         {
             Debug.Assert(!this._playerIdToIndex.ContainsKey(playerId));
@@ -47,7 +57,7 @@ namespace Game.Simulation.Server
             }
 
             this._playerIdToIndex[playerId] = index;
-            this._connections[index].Assign(entity);
+            this._connections[index].Assign(playerId, entity);
         }
 
         public void Remove(int playerId)
@@ -63,6 +73,23 @@ namespace Game.Simulation.Server
             return new Enumerator(this);
         }
 
+        private static void Assign(
+            ref PlayerConnection connection,
+            int playerId,
+            in Entity entity)
+        {
+            connection.PlayerId = playerId;
+            connection.Entity = entity;
+
+            if (connection.ReplicationData == null)
+            {
+                connection.ReplicationData = new PlayerReplicationData()
+            }
+
+            connection.ReplicationData.Clear();
+        }
+
+
         public struct Enumerator
         {
             private readonly PlayerConnections _parent;
@@ -76,7 +103,7 @@ namespace Game.Simulation.Server
                 this._enumerator = parent._playerIdToIndex.GetEnumerator();
             }
 
-            public ref Current
+            public ref PlayerConnection Current
             {
                 get => ref this._parent._connections[this._enumerator.Current.Value];
             }

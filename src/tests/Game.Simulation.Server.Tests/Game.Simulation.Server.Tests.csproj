@@ -36,6 +36,7 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="PlayerConnectionsTests.cs" />
     <Compile Include="ReplicatedEntitiesTests.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
