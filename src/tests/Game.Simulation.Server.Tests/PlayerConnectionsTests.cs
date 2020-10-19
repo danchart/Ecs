@@ -8,7 +8,13 @@ namespace Game.Simulation.Server.Tests
         [Fact]
         public void Test()
         {
-            var connections = new PlayerConnections(ReplicationConfig.Default, capacity: 1);
+            var connections = new PlayerConnections(ReplicationConfig.Default, new PlayerConnectionConfig
+            {
+                Capacity = new PlayerConnectionConfig.CapacityConfig
+                {
+                    InitialConnectionsCapacity = 1
+                }
+            });
 
             Assert.Equal(0, connections.Count);
 

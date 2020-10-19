@@ -4,9 +4,9 @@
     {
         public static readonly ReplicationConfig Default = new ReplicationConfig();
 
-        public CapacityConfig Capacity;
-        public PacketPriorityConfig PacketPriority;
-        public NetworkingConfig Networking;
+        public CapacityConfig Capacity = new CapacityConfig();
+        public PacketPriorityConfig PacketPriority = new PacketPriorityConfig();
+        public NetworkingConfig Networking = new NetworkingConfig();
 
         public class CapacityConfig
         {
@@ -27,7 +27,6 @@
                 Ring2Priority = 0.5f,
                 Ring3Priority = 0.1f;
         }
-
 
         public class NetworkingConfig
         {

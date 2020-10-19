@@ -43,6 +43,7 @@
   <ItemGroup>
     <Compile Include="GameSever.cs" />
     <Compile Include="GameWorld.cs" />
+    <Compile Include="Logging\ILogger.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <ItemGroup>
@@ -70,6 +71,9 @@
       <Project>{dc15907f-cf6c-44ea-b3cb-b01c74d0e388}</Project>
       <Name>Game.Simulation.Server</Name>
     </ProjectReference>
+  </ItemGroup>
+  <ItemGroup>
+    <Folder Include="Ids\" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>

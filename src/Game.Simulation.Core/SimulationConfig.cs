@@ -13,6 +13,7 @@
 
         public static SimulationConfig Default = new SimulationConfig
         {
+            FixedTick = 1 / 60.0f,
             SnapShotCount = 10,
             TickEpsilon = 0.000001f,
         };

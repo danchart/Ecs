@@ -6,12 +6,15 @@ namespace Game.Simulation.Server
     public class PlayerConnections
     {
         private readonly RefDictionary<int, PlayerConnection> _connections;
+
+        private readonly PlayerConnectionConfig _playerConnectionConfig;
         private readonly ReplicationConfig _replicationConfig;
 
-        public PlayerConnections(ReplicationConfig replicationConfig, int capacity)
+        public PlayerConnections(ReplicationConfig replicationConfig, PlayerConnectionConfig playerConnectionConfig)
         {
+            this._playerConnectionConfig = playerConnectionConfig;
             this._replicationConfig = replicationConfig;
-            this._connections = new RefDictionary<int, PlayerConnection>(capacity);
+            this._connections = new RefDictionary<int, PlayerConnection>(playerConnectionConfig.Capacity.InitialConnectionsCapacity);
         }
 
         public int Count
