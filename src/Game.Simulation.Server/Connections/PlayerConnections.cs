@@ -1,11 +1,12 @@
 ﻿using Common.Core;
 using Ecs.Core;
+using Game.Networking;
 
 namespace Game.Simulation.Server
 {
     public class PlayerConnections
     {
-        private readonly RefDictionary<int, PlayerConnection> _connections;
+        private readonly RefDictionary<PlayerId, PlayerConnection> _connections;
 
         private readonly PlayerConnectionConfig _playerConnectionConfig;
         private readonly ReplicationConfig _replicationConfig;
@@ -14,7 +15,7 @@ namespace Game.Simulation.Server
         {
             this._playerConnectionConfig = playerConnectionConfig;
             this._replicationConfig = replicationConfig;
-            this._connections = new RefDictionary<int, PlayerConnection>(playerConnectionConfig.Capacity.InitialConnectionsCapacity);
+            this._connections = new RefDictionary<PlayerId, PlayerConnection>(playerConnectionConfig.Capacity.InitialConnectionsCapacity);
         }
 
         public int Count
@@ -22,14 +23,14 @@ namespace Game.Simulation.Server
             get => this._connections.Count;
         }
 
-        public ref PlayerConnection this[int playerId]
+        public ref PlayerConnection this[PlayerId playerId]
         {
             get => ref this._connections[playerId];
         }
 
-        public bool HasPlayer(int playerId) => this._connections.ContainsKey(playerId);
+        public bool HasPlayer(PlayerId playerId) => this._connections.ContainsKey(playerId);
 
-        public void Add(int playerId, in Entity entity)
+        public void Add(PlayerId playerId, in Entity entity, byte[] encryptionKey)
         {
             this._connections.Add(playerId);
 
@@ -37,6 +38,7 @@ namespace Game.Simulation.Server
 
             connection.PlayerId = playerId;
             connection.Entity = entity;
+            connection.PacketEncryptionKey = encryptionKey;
 
             if (connection.ReplicationData == null)
             {
@@ -51,7 +53,7 @@ namespace Game.Simulation.Server
             }
         }
 
-        public void Remove(int playerId)
+        public void Remove(PlayerId playerId)
         {
             this._connections.Remove(playerId);
         }

@@ -18,13 +18,15 @@ namespace Game.Simulation.Server.Tests
 
             Assert.Equal(0, connections.Count);
 
+            var encryptionKey = new byte[] { 0x1 };
+
             var entity1 = new Entity();
             var entity2 = new Entity();
             var entity3 = new Entity();
 
-            connections.Add(0, entity1);
-            connections.Add(1, entity2);
-            connections.Add(2, entity3);
+            connections.Add(0, entity1, encryptionKey);
+            connections.Add(1, entity2, encryptionKey);
+            connections.Add(2, entity3, encryptionKey);
 
             Assert.Equal(3, connections.Count);
 
@@ -41,7 +43,7 @@ namespace Game.Simulation.Server.Tests
 
             var entity4 = new Entity();
 
-            connections.Add(3, entity4);
+            connections.Add(3, entity4, encryptionKey);
 
             Assert.Equal(2, connections.Count);
 
