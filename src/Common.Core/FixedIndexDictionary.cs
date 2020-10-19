@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Runtime.CompilerServices;
 
 namespace Common.Core
 {
@@ -10,6 +11,7 @@ namespace Common.Core
 
         private const uint FirstVersion = 1U;
 
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public FixedIndexDictionary(int size)
         {
             this._items = new VersionedValue[size];
@@ -18,6 +20,7 @@ namespace Common.Core
 
         public ref TValue this[int index]
         {
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
             get
             {
                 _items[index].Version = this._version;
@@ -26,6 +29,7 @@ namespace Common.Core
             }
         }
 
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void Clear()
         {
             if (unchecked(++this._version) == 0)
@@ -35,7 +39,8 @@ namespace Common.Core
                 this._version = FirstVersion;
             }
         }
-        
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public bool ContainsKey(int index) => _items[index].Version == this._version;
 
         private struct VersionedValue

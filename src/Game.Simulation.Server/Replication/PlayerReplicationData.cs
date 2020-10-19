@@ -12,7 +12,10 @@ namespace Game.Simulation.Server
         private ReplicatedEntity[] _replicatedEntities;
         private Dictionary<Entity, int> _entityToIndex;
 
+        private int[] _freeIndices;
+
         private int _count;
+        private int _freeCount;
 
         private float _tickTime;
         private readonly int[] _queueTicks;
@@ -20,8 +23,10 @@ namespace Game.Simulation.Server
         public PlayerReplicationData(int capacity, float tickTime, int[] queueTicks)
         {
             this._replicatedEntities = new ReplicatedEntity[capacity];
+            this._freeIndices = new int[capacity];
             this._entityToIndex = new Dictionary<Entity, int>(capacity);
             this._count = 0;
+            this._freeCount = 0;
 
             this._tickTime = tickTime;
             this._queueTicks = queueTicks;
@@ -38,7 +43,14 @@ namespace Game.Simulation.Server
 
         public void Remove(Entity entity)
         {
+            // Clear entity data & remove from the index.
+            var index = this._entityToIndex[entity];
 
+            this._replicatedEntities[index].Clear();
+            this._entityToIndex.Remove(entity);
+
+            // Return index to the free pool.
+            this._freeIndices[this._freeCount++] = index;
         }
 
         public void AddEntityChanges(
@@ -56,10 +68,19 @@ namespace Game.Simulation.Server
 
                 if (this._count == this._replicatedEntities.Length)
                 {
-                    Array.Resize(ref this._replicatedEntities, 2 * _count);
+                    Array.Resize(ref this._replicatedEntities, 2 * this._count);
+                    Array.Resize(ref this._freeIndices, 2 * this._count);
                 }
 
-                index = this._count++;
+                if (this._freeCount > 0)
+                {
+                    // Use index from the free pool first.
+                    index = this._freeIndices[--this._freeCount];
+                }
+                else
+                {
+                    index = this._count++;
+                }
 
                 this._entityToIndex[entity] = index;
             }
@@ -133,6 +154,12 @@ namespace Game.Simulation.Server
             {
                 this._prevReplicatedComponentFields = new Dictionary<ComponentId, BitField>(componentCapacity);
                 this._components = new FixedIndexDictionary<Component>((int)ComponentId.MaxValue);
+            }
+
+            public void Clear()
+            {
+                this._prevReplicatedComponentFields.Clear();
+                this._components.Clear();
             }
 
             public struct QueuePriority

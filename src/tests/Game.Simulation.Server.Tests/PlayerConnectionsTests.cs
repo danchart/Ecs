@@ -1,10 +1,4 @@
 ﻿using Ecs.Core;
-using System;
-using System.Collections.Generic;
-using System.Diagnostics;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using Xunit;
 
 namespace Game.Simulation.Server.Tests
@@ -14,7 +8,7 @@ namespace Game.Simulation.Server.Tests
         [Fact]
         public void Test()
         {
-            var connections = new PlayerConnections(capacity: 1);
+            var connections = new PlayerConnections(ReplicationConfig.Default, capacity: 1);
 
             Assert.Equal(0, connections.Count);
 

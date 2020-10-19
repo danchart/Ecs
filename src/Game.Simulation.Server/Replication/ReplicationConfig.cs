@@ -1,7 +1,11 @@
-﻿namespace Game.Simulation.Server
+﻿using System.ComponentModel;
+
+namespace Game.Simulation.Server
 {
     public class ReplicationConfig
     {
+        public static readonly ReplicationConfig Default = new ReplicationConfig();
+
         public int InitialReplicatedEntityCapacity = 1024;
         public int InitialReplicatedComponentCapacity = 6;
 
