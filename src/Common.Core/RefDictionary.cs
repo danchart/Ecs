@@ -1,11 +1,11 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.Runtime.CompilerServices;
 
 namespace Common.Core
 {
     public class RefDictionary<TKey, TValue>
+        where TKey : unmanaged
         where TValue : struct
     {
         private TValue[] _items;
@@ -69,6 +69,9 @@ namespace Common.Core
             this._items[index] = value;
         }
 
+        /// <summary>
+        /// Allocates key, but the value is undefined. Set it by reference.
+        /// </summary>
         public void Add(TKey key)
         {
             if (!this._idToIndex.ContainsKey(key))
@@ -89,7 +92,7 @@ namespace Common.Core
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public Enumerator GetEnumerator()
         {
-            return new Enumerator(this._idToIndex.GetEnumerator(), this._items);
+            return new Enumerator(this._idToIndex, this._items);
         }
 
         private int AllocateKey(TKey key)
@@ -120,14 +123,13 @@ namespace Common.Core
         {
             private readonly TValue[] _items;
 
-            private readonly Dictionary<TKey, int>.Enumerator _enumerator;
+            private Dictionary<TKey, int>.Enumerator _enumerator;
 
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
-            internal Enumerator(Dictionary<TKey, int>.Enumerator enumerator, TValue[] items)
+            internal Enumerator(Dictionary<TKey, int> dictionary, TValue[] items)
             {
                 this._items = items;
-
-                this._enumerator = enumerator;
+                this._enumerator = dictionary.GetEnumerator();
             }
 
             public ref TValue Current
@@ -137,10 +139,7 @@ namespace Common.Core
             }
 
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
-            public bool MoveNext()
-            {
-                return this._enumerator.MoveNext();
-            }
+            public bool MoveNext() => this._enumerator.MoveNext();
         }
     }
 }

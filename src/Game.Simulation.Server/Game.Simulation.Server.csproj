@@ -29,7 +29,7 @@
     <Compile Include="Replication\PlayerReplicationData.cs" />
     <Compile Include="Replication\ReplicatedComponentData.cs" />
     <Compile Include="Replication\ReplicationConfig.cs" />
-    <Compile Include="Replication\ReplicationContext.cs" />
+    <Compile Include="Replication\ReplicationPacketPriorityComponents.cs" />
     <Compile Include="Replication\ReplicationDataBroker.cs" />
     <Compile Include="Replication\ReplicationManager.cs" />
     <Compile Include="ServerSimulation.cs" />

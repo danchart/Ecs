@@ -32,7 +32,7 @@ namespace Common.Core.Tests
             dict.Remove(1);
 
             Assert.Equal(2, dict.Count);
-            Assert.True(dict.ContainsKey(1));
+            Assert.False(dict.ContainsKey(1));
             Assert.Throws<KeyNotFoundException>(() => dict[1]);
 
             dict.Clear();
@@ -46,7 +46,7 @@ namespace Common.Core.Tests
             Assert.Equal(3, dict[3].a);
             Assert.Equal(4, dict[4].a);
 
-            ref var i3 = ref dict[4];
+            ref var i3 = ref dict[3];
 
             i3.a = -3;
 

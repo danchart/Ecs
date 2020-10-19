@@ -15,7 +15,7 @@ namespace Game.Simulation.Server
     {
         private readonly ReplicationConfig _config;
 
-        private readonly ReplicationContext _context;
+        private readonly ReplicationPacketPriorityComponents _packetPriorityComponents;
         private readonly PlayerConnections _playerConnections;
 
         public ReplicationManager(
@@ -24,12 +24,12 @@ namespace Game.Simulation.Server
         {
             this._config = config;
             this._playerConnections = playerConnectionManager;
-            this._context = new ReplicationContext(config.InitialReplicatedEntityCapacity);
+            this._packetPriorityComponents = new ReplicationPacketPriorityComponents(config.InitialReplicatedEntityCapacity);
         }
 
         public void Apply(EntityMapList<ReplicatedComponentData> modifiedEntityComponents)
         {
-            this._context.Clear();
+            this._packetPriorityComponents.Clear();
 
             // Apply changes to player entity change lists
             for (int i = 0; i < this._playerConnections.Count; i++)
@@ -38,40 +38,40 @@ namespace Game.Simulation.Server
 
                 var playerEntity = connection.Entity;
 
-                AddEntityChangesToPlayer(
+                AddPacketPrioritizedEntityChangesToPlayer(
                     playerEntity,
                     modifiedEntityComponents,
-                    this._context,
+                    this._packetPriorityComponents,
                     connection.ReplicationData);
             }
         }
 
-        private void AddEntityChangesToPlayer(
-            in Entity player,
+        private void AddPacketPrioritizedEntityChangesToPlayer(
+            in Entity playerEntity,
             EntityMapList<ReplicatedComponentData> replicatedEntities,
-            ReplicationContext context,
+            ReplicationPacketPriorityComponents packetPriorityComponents,
             PlayerReplicationData playerReplicationData)
         {
-            ref readonly var playerTransform = ref player.GetReadOnlyComponent<TransformComponent>();
+            ref readonly var playerTransform = ref playerEntity.GetReadOnlyComponent<TransformComponent>();
 
-            foreach (var entityItem in replicatedEntities)
+            foreach (var replicatedEntityComponents in replicatedEntities)
             {
-                ref readonly var components = ref context.GetComponents(entityItem.Entity);
+                ref readonly var components = ref packetPriorityComponents.GetComponents(replicatedEntityComponents.Entity);
 
                 ref readonly var transform = ref components.Transform.UnrefReadOnly();
                 ref readonly var replicated = ref components.Replicated.UnrefReadOnly();
 
-                float priority = GetBasePriority(replicated.BasePriority);
-                priority *= GetFactorFromDistance(playerTransform, transform);
+                float entityPacketPriority = GetBasePriority(replicated.BasePriority);
+                entityPacketPriority *= GetFactorFromDistance(playerTransform, transform);
 
                 // TODO: Compute relevance based on entity size, etc.
-                float relevance = 1.0f;
+                float entityPlayerRelevance = 1.0f;
 
                 playerReplicationData.AddEntityChanges(
-                    entityItem.Entity,
-                    entityItem.Items,
-                    priority: priority,
-                    relevance: relevance); 
+                    replicatedEntityComponents.Entity,
+                    replicatedEntityComponents.Items,
+                    priority: entityPacketPriority,
+                    relevance: entityPlayerRelevance); 
             }
         }
 

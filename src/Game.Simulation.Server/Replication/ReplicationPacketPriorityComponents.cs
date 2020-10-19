@@ -5,7 +5,7 @@ using System.Collections.Generic;
 
 namespace Game.Simulation.Server
 {
-    public class ReplicationContext
+    public class ReplicationPacketPriorityComponents
     {
         private PrioritizationComponentRefs[] _components;
 
@@ -13,7 +13,7 @@ namespace Game.Simulation.Server
 
         private int _count;
 
-        public ReplicationContext(int capacity)
+        public ReplicationPacketPriorityComponents(int capacity)
         {
             this._components = new PrioritizationComponentRefs[capacity];
             this._entityToIndex = new Dictionary<Entity, int>(capacity);
