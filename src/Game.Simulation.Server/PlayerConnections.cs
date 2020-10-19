@@ -24,6 +24,8 @@ namespace Game.Simulation.Server
             get => ref this._connections[playerId];
         }
 
+        public bool HasPlayer(int playerId) => this._connections.ContainsKey(playerId);
+
         public void Add(int playerId, in Entity entity)
         {
             this._connections.Add(playerId);
@@ -36,9 +38,9 @@ namespace Game.Simulation.Server
             if (connection.ReplicationData == null)
             {
                 connection.ReplicationData = new PlayerReplicationData(
-                    this._replicationConfig.InitialReplicatedEntityCapacity,
-                    this._replicationConfig.PriorityQueueDelayBaseTick,
-                    this._replicationConfig.PriorityQueueDelay);
+                    this._replicationConfig.Capacity.InitialReplicatedEntityCapacity,
+                    this._replicationConfig.Networking.PriorityQueueDelayBaseTick,
+                    this._replicationConfig.Networking.PriorityQueueDelay);
             }
             else
             {

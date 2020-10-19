@@ -13,18 +13,18 @@ namespace Game.Simulation.Server
 
     public class ReplicationManager : IReplicationManager
     {
-        private readonly ReplicationConfig _config;
-
         private readonly ReplicationPacketPriorityComponents _packetPriorityComponents;
         private readonly PlayerConnections _playerConnections;
+
+        private readonly PacketPriorityCalculator _packetPriorityCalculator;
 
         public ReplicationManager(
             ReplicationConfig config,
             PlayerConnections playerConnectionManager)
         {
-            this._config = config;
             this._playerConnections = playerConnectionManager;
-            this._packetPriorityComponents = new ReplicationPacketPriorityComponents(config.InitialReplicatedEntityCapacity);
+            this._packetPriorityComponents = new ReplicationPacketPriorityComponents(config.Capacity.InitialReplicatedEntityCapacity);
+            this._packetPriorityCalculator = new PacketPriorityCalculator(config.PacketPriority);
         }
 
         public void Apply(EntityMapList<ReplicatedComponentData> modifiedEntityComponents)
@@ -61,8 +61,8 @@ namespace Game.Simulation.Server
                 ref readonly var transform = ref components.Transform.UnrefReadOnly();
                 ref readonly var replicated = ref components.Replicated.UnrefReadOnly();
 
-                float entityPacketPriority = GetBasePriority(replicated.BasePriority);
-                entityPacketPriority *= GetFactorFromDistance(playerTransform, transform);
+                float entityPacketPriority = this._packetPriorityCalculator.GetBasePriority(replicated.BasePriority);
+                entityPacketPriority *= this._packetPriorityCalculator.GetFactorFromDistance(playerTransform, transform);
 
                 // TODO: Compute relevance based on entity size, etc.
                 float entityPlayerRelevance = 1.0f;
@@ -75,38 +75,47 @@ namespace Game.Simulation.Server
             }
         }
 
-        private float GetBasePriority(PriorityEnum priority)
+        private class PacketPriorityCalculator
         {
-            switch (priority)
+            private readonly ReplicationConfig.PacketPriorityConfig _config;
+
+            public PacketPriorityCalculator(ReplicationConfig.PacketPriorityConfig config)
             {
-                case PriorityEnum.Low:
-                    return 0.5f;
-                case PriorityEnum.Normal:
-                    return 1.0f;
-                case PriorityEnum.High:
-                    return 2.0f;
-                default:
-                    throw new InvalidOperationException($"Unknown {nameof(PriorityEnum)} value={priority}");
+                this._config = config;
             }
-        }
 
-        private float GetFactorFromDistance(
-            in TransformComponent playerTransform,
-            in TransformComponent transform)
-        {
-            var distSquared = Vector2.DistanceSquared(
-                transform.position,
-                playerTransform.position);
+            public float GetBasePriority(PriorityEnum priority)
+            {
+                switch (priority)
+                {
+                    case PriorityEnum.Low:
+                        return 0.5f;
+                    case PriorityEnum.Normal:
+                        return 1.0f;
+                    case PriorityEnum.High:
+                        return 2.0f;
+                    default:
+                        throw new InvalidOperationException($"Unknown {nameof(PriorityEnum)} value={priority}");
+                }
+            }
 
-            return
-                distSquared < _config.DistanceSquardRing0
-                ? _config.Ring3Priority
-                : distSquared < _config.DistanceSquardRing1
-                    ? _config.Ring1Priority
-                    : distSquared < _config.DistanceSquardRing2
-                        ? _config.Ring2Priority
-                        : _config.Ring3Priority;
+            public float GetFactorFromDistance(
+                in TransformComponent playerTransform,
+                in TransformComponent transform)
+            {
+                var distSquared = Vector2.DistanceSquared(
+                    transform.position,
+                    playerTransform.position);
 
+                return
+                    distSquared < _config.DistanceSquardRing0
+                    ? _config.Ring3Priority
+                    : distSquared < _config.DistanceSquardRing1
+                        ? _config.Ring1Priority
+                        : distSquared < _config.DistanceSquardRing2
+                            ? _config.Ring2Priority
+                            : _config.Ring3Priority;
+            }
         }
     }
 }

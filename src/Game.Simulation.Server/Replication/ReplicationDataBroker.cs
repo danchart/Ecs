@@ -20,14 +20,14 @@ namespace Game.Simulation.Server
         private readonly EntityMapList<ReplicatedComponentData> _entityComponents;
 
         public ReplicationDataBroker(
-            ReplicationConfig config,
+            ReplicationConfig.CapacityConfig capacityConfig,
             IReplicationManager replicationManager)
         {
             this._replicationManager = replicationManager ?? throw new ArgumentNullException(nameof(replicationManager));
 
             this._entityComponents = new EntityMapList<ReplicatedComponentData>(
-                entityCapacity: config.InitialReplicatedEntityCapacity,
-                listCapacity: config.InitialReplicatedComponentCapacity);
+                entityCapacity: capacityConfig.InitialReplicatedEntityCapacity,
+                listCapacity: capacityConfig.InitialReplicatedComponentCapacity);
         }
 
         public EntityMapList<ReplicatedComponentData> BeginDataCollection()
