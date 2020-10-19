@@ -8,7 +8,7 @@ namespace Game.Networking
         internal readonly int Id;
         internal readonly uint Generation;
 
-        internal PlayerId(int id, uint generation)
+        public PlayerId(int id, uint generation = 0)
         {
             Id = id;
             Generation = generation;
