@@ -1,12 +1,17 @@
 ﻿using Common.Core;
 using Ecs.Core;
 using Game.Networking;
+using System.Collections.Generic;
 
 namespace Game.Simulation.Server
 {
     public class PlayerConnectionManager
     {
         internal readonly RefDictionary<PlayerId, PlayerConnection> _connections;
+        internal PlayerConnectionRefs[] _worldConnectionRefs;
+
+        internal readonly PlayerConnectionRefs[] _perWorldConnections;
+        internal readonly Dictionary<int, int> _worldIdToIndex;
 
         private readonly PlayerConnectionConfig _playerConnectionConfig;
         private readonly ReplicationConfig _replicationConfig;
