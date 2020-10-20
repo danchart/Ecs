@@ -14,15 +14,15 @@ namespace Game.Simulation.Server
     public class ReplicationManager : IReplicationManager
     {
         private readonly ReplicationPacketPriorityComponents _packetPriorityComponents;
-        private readonly PlayerConnections _playerConnections;
+        private readonly PlayerConnectionRefs _connectionRefs;
 
         private readonly PacketPriorityCalculator _packetPriorityCalculator;
 
         public ReplicationManager(
             ReplicationConfig config,
-            PlayerConnections playerConnectionManager)
+            PlayerConnectionRefs connectionRefs)
         {
-            this._playerConnections = playerConnectionManager;
+            this._connectionRefs = connectionRefs;
             this._packetPriorityComponents = new ReplicationPacketPriorityComponents(config.Capacity.InitialReplicatedEntityCapacity);
             this._packetPriorityCalculator = new PacketPriorityCalculator(config.PacketPriority);
         }
@@ -32,8 +32,10 @@ namespace Game.Simulation.Server
             this._packetPriorityComponents.Clear();
 
             // Apply changes to player entity change lists
-            foreach (ref var connection in this._playerConnections)
+            foreach (var connectionRef in this._connectionRefs)
             {
+                ref var connection = ref connectionRef.Unref();
+
                 var playerEntity = connection.Entity;
 
                 AddPacketPrioritizedEntityChangesToPlayer(

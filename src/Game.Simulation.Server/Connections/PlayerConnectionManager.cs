@@ -4,14 +4,14 @@ using Game.Networking;
 
 namespace Game.Simulation.Server
 {
-    public class PlayerConnections
+    public class PlayerConnectionManager
     {
         internal readonly RefDictionary<PlayerId, PlayerConnection> _connections;
 
         private readonly PlayerConnectionConfig _playerConnectionConfig;
         private readonly ReplicationConfig _replicationConfig;
 
-        public PlayerConnections(ReplicationConfig replicationConfig, PlayerConnectionConfig playerConnectionConfig)
+        public PlayerConnectionManager(ReplicationConfig replicationConfig, PlayerConnectionConfig playerConnectionConfig)
         {
             this._playerConnectionConfig = playerConnectionConfig;
             this._replicationConfig = replicationConfig;
@@ -29,6 +29,11 @@ namespace Game.Simulation.Server
         }
 
         public bool HasPlayer(PlayerId playerId) => this._connections.ContainsKey(playerId);
+
+        public PlayerConnectionRef GetRef(PlayerId id)
+        {
+            return new PlayerConnectionRef(id, this);
+        }
 
         public void Add(PlayerId playerId, in Entity entity, byte[] encryptionKey)
         {

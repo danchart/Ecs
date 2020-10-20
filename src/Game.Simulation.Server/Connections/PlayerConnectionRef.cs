@@ -2,12 +2,15 @@
 
 namespace Game.Simulation.Server
 {
+    /// <summary>
+    /// Reference to player connection struct.
+    /// </summary>
     public struct PlayerConnectionRef
     {
         private readonly PlayerId _id;
-        private readonly PlayerConnections _connections;
+        private readonly PlayerConnectionManager _connections;
 
-        internal PlayerConnectionRef(PlayerId id, in PlayerConnections connections)
+        internal PlayerConnectionRef(PlayerId id, in PlayerConnectionManager connections)
         {
             this._id = id;
             this._connections = connections;

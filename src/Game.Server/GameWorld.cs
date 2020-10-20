@@ -2,7 +2,6 @@
 using Game.Simulation.Core;
 using Game.Simulation.Server;
 using System;
-using System.Runtime.CompilerServices;
 using System.Threading;
 
 namespace Game.Server
@@ -15,8 +14,6 @@ namespace Game.Server
 
         private readonly EcsConfig _ecsConfig = EcsConfig.Default;
         private readonly SimulationConfig _simulationConfig = SimulationConfig.Default;
-        private readonly ReplicationConfig _replicationConfig = ReplicationConfig.Default;
-        private readonly PlayerConnectionConfig _playerConnectionConfig = PlayerConnectionConfig.Default;
 
         private readonly World _world;
         private readonly Systems _systems;
@@ -24,15 +21,18 @@ namespace Game.Server
 
         private readonly IReplicationManager _replicationManager;
 
-        private readonly PlayerConnections _playerConnections;
-
         private readonly ILogger _logger;
 
         private readonly uint _id;
 
         private bool _isStopped;
 
-        public GameWorld(uint id, ILogger logger)
+        public GameWorld(
+            uint id, 
+            ILogger logger,
+            PlayerConnectionRefs playerConnectionRefs,
+            ReplicationConfig replicationConfig,
+            PlayerConnectionConfig playerConnectionConfig)
         {
 
             //_simulationConfig.FixedTick = 0.5f;
@@ -43,15 +43,14 @@ namespace Game.Server
             this._isStopped = false;
             this._world = new World(this._ecsConfig);
 
-            _playerConnections = new PlayerConnections(this._replicationConfig, _playerConnectionConfig);
-            _replicationManager = new ReplicationManager(_replicationConfig, _playerConnections);
+            this._replicationManager = new ReplicationManager(replicationConfig, playerConnectionRefs);
 
             this._systems =
                 new Systems(this._world)
                 .Add(new GatherReplicatedDataSystem())
                 .Inject(
                     new ReplicationDataBroker(
-                        this._replicationConfig.Capacity, 
+                        replicationConfig.Capacity, 
                         this._replicationManager));
 
             this._simulation = new ServerSimulation<PlayerInputComponent>(

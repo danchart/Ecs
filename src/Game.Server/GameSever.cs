@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Game.Simulation.Server;
+using System;
 using System.Collections.Generic;
 using System.Threading;
 
@@ -6,7 +7,16 @@ namespace Game.Server
 {
     public class GameServer
     {
+        //
+        // Configurations
+        //
+
+        private readonly ReplicationConfig _replicationConfig = ReplicationConfig.Default;
+        private readonly PlayerConnectionConfig _playerConnectionConfig = PlayerConnectionConfig.Default;
+
         private List<SpawnedWorld> SpawnedWorlds = new List<SpawnedWorld>();
+
+        private PlayerConnectionManager _playerConnectionManager;
 
         private readonly ILogger _logger;
 
@@ -15,6 +25,8 @@ namespace Game.Server
         public GameServer(ILogger logger)
         {
             this._logger = logger ?? throw new ArgumentNullException(nameof(logger));
+
+            this._playerConnectionManager = new PlayerConnectionManager(this._replicationConfig, this._playerConnectionConfig);
         }
 
         public bool IsRunning()
@@ -40,7 +52,12 @@ namespace Game.Server
 
         public uint SpawnWorld()
         {
-            var world = new GameWorld(GenerateWorldId(), this._logger);
+            var world = new GameWorld(
+                GenerateWorldId(), 
+                this._logger,
+                ,
+                this._replicationConfig,
+                this._playerConnectionConfig);
             var thread = new Thread(world.Run);
             thread.Start();
 

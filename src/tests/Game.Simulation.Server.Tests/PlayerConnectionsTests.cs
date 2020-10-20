@@ -9,7 +9,7 @@ namespace Game.Simulation.Server.Tests
         [Fact]
         public void Test()
         {
-            var connections = new PlayerConnections(ReplicationConfig.Default, new PlayerConnectionConfig
+            var connections = new PlayerConnectionManager(ReplicationConfig.Default, new PlayerConnectionConfig
             {
                 Capacity = new PlayerConnectionConfig.CapacityConfig
                 {
