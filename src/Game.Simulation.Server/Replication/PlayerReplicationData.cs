@@ -104,7 +104,7 @@ namespace Game.Simulation.Server
                 : entityReplicationData.Priority.RequestedQueueTimeRemaining;
 
 
-            foreach (var modifiedComponent in modifiedComponents)
+            foreach (ref var modifiedComponent in modifiedComponents)
             {
                 if (entityReplicationData._components.ContainsKey(modifiedComponent.ComponentIdAsIndex))
                 {

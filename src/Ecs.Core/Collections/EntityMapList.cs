@@ -205,10 +205,10 @@ namespace Ecs.Core.Collections
                     this._current = -1;
                 }
 
-                public T Current
+                public ref T Current
                 {
                     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-                    get => _list._items[_current];
+                    get => ref _list._items[_current];
                 }
 
                 [MethodImpl(MethodImplOptions.AggressiveInlining)]

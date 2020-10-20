@@ -19,7 +19,10 @@ namespace Game.Server
         private readonly Systems _systems;
         private readonly ServerSimulation<PlayerInputComponent> _simulation;
 
-        private readonly IReplicationManager _replicationManager;
+        private readonly WorldPlayers _players;
+
+        private readonly IWorldReplicationManager _replicationManager;
+        private readonly PlayerConnectionManager _playerConnections;
 
         private readonly ILogger _logger;
 
@@ -30,7 +33,7 @@ namespace Game.Server
         public GameWorld(
             uint id, 
             ILogger logger,
-            PlayerConnectionRefs playerConnectionRefs,
+            PlayerConnectionManager playerConnections,
             ReplicationConfig replicationConfig,
             PlayerConnectionConfig playerConnectionConfig)
         {
@@ -40,10 +43,16 @@ namespace Game.Server
 
             this._id = id;
             this._logger = logger ?? throw new ArgumentNullException(nameof(logger));
+            this._playerConnections = playerConnections ?? throw new ArgumentNullException(nameof(playerConnections));
             this._isStopped = false;
             this._world = new World(this._ecsConfig);
 
-            this._replicationManager = new ReplicationManager(replicationConfig, playerConnectionRefs);
+            this._players = new WorldPlayers(
+                playerConnections,
+                replicationConfig,
+                playerConnectionConfig.Capacity.InitialConnectionsCapacity);
+
+            this._replicationManager = new WorldReplicationManager(replicationConfig, this._players);
 
             this._systems =
                 new Systems(this._world)

@@ -15,13 +15,13 @@ namespace Game.Simulation.Server
 
     public class ReplicationDataBroker : IReplicationDataBroker
     {
-        private readonly IReplicationManager _replicationManager;
+        private readonly IWorldReplicationManager _replicationManager;
 
         private readonly EntityMapList<ReplicatedComponentData> _entityComponents;
 
         public ReplicationDataBroker(
             ReplicationConfig.CapacityConfig capacityConfig,
-            IReplicationManager replicationManager)
+            IWorldReplicationManager replicationManager)
         {
             this._replicationManager = replicationManager ?? throw new ArgumentNullException(nameof(replicationManager));
 
@@ -40,7 +40,7 @@ namespace Game.Simulation.Server
 
         public void EndDataCollection()
         {
-            _replicationManager.Apply(_entityComponents);
+            _replicationManager.ApplyEntityChanges(_entityComponents);
         }
     }
 }

@@ -55,17 +55,18 @@ namespace Game.Server
             var world = new GameWorld(
                 GenerateWorldId(), 
                 this._logger,
-                ,
+                this._playerConnectionManager,
                 this._replicationConfig,
                 this._playerConnectionConfig);
             var thread = new Thread(world.Run);
             thread.Start();
 
-            this.SpawnedWorlds.Add(new SpawnedWorld
-            {
-                Thread = thread,
-                World = world
-            });
+            this.SpawnedWorlds.Add(
+                new SpawnedWorld
+                {
+                    Thread = thread,
+                    World = world
+                });
 
             this._logger.Info($"Spawning world: id={world.Id:x8}, threadId={thread.ManagedThreadId}");
 

@@ -6,43 +6,39 @@ using System;
 
 namespace Game.Simulation.Server
 {
-    public interface IReplicationManager
+    public interface IWorldReplicationManager
     {
-        void Apply(EntityMapList<ReplicatedComponentData> entityComponents);
+        void ApplyEntityChanges(EntityMapList<ReplicatedComponentData> entityComponents);
     }
 
-    public class ReplicationManager : IReplicationManager
+    public class WorldReplicationManager : IWorldReplicationManager
     {
         private readonly ReplicationPacketPriorityComponents _packetPriorityComponents;
-        private readonly PlayerConnectionRefs _connectionRefs;
+        private readonly WorldPlayers _players;
 
         private readonly PacketPriorityCalculator _packetPriorityCalculator;
 
-        public ReplicationManager(
+        public WorldReplicationManager(
             ReplicationConfig config,
-            PlayerConnectionRefs connectionRefs)
+            WorldPlayers players)
         {
-            this._connectionRefs = connectionRefs;
+            this._players = players ?? throw new ArgumentNullException(nameof(players));
             this._packetPriorityComponents = new ReplicationPacketPriorityComponents(config.Capacity.InitialReplicatedEntityCapacity);
             this._packetPriorityCalculator = new PacketPriorityCalculator(config.PacketPriority);
         }
 
-        public void Apply(EntityMapList<ReplicatedComponentData> modifiedEntityComponents)
+        public void ApplyEntityChanges(EntityMapList<ReplicatedComponentData> modifiedEntityComponents)
         {
             this._packetPriorityComponents.Clear();
 
             // Apply changes to player entity change lists
-            foreach (var connectionRef in this._connectionRefs)
+            foreach (ref var player in this._players)
             {
-                ref var connection = ref connectionRef.Unref();
-
-                var playerEntity = connection.Entity;
-
                 AddPacketPrioritizedEntityChangesToPlayer(
-                    playerEntity,
+                    player.Entity,
                     modifiedEntityComponents,
                     this._packetPriorityComponents,
-                    connection.ReplicationData);
+                    player.ReplicationData);
             }
         }
 

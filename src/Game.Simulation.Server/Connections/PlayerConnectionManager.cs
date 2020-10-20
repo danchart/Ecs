@@ -1,25 +1,14 @@
 ﻿using Common.Core;
-using Ecs.Core;
 using Game.Networking;
-using System.Collections.Generic;
 
 namespace Game.Simulation.Server
 {
     public class PlayerConnectionManager
     {
         internal readonly RefDictionary<PlayerId, PlayerConnection> _connections;
-        internal PlayerConnectionRefs[] _worldConnectionRefs;
-
-        internal readonly PlayerConnectionRefs[] _perWorldConnections;
-        internal readonly Dictionary<int, int> _worldIdToIndex;
-
-        private readonly PlayerConnectionConfig _playerConnectionConfig;
-        private readonly ReplicationConfig _replicationConfig;
-
+        
         public PlayerConnectionManager(ReplicationConfig replicationConfig, PlayerConnectionConfig playerConnectionConfig)
         {
-            this._playerConnectionConfig = playerConnectionConfig;
-            this._replicationConfig = replicationConfig;
             this._connections = new RefDictionary<PlayerId, PlayerConnection>(playerConnectionConfig.Capacity.InitialConnectionsCapacity);
         }
 
@@ -40,27 +29,14 @@ namespace Game.Simulation.Server
             return new PlayerConnectionRef(id, this);
         }
 
-        public void Add(PlayerId playerId, in Entity entity, byte[] encryptionKey)
+        public void Add(PlayerId playerId, byte[] encryptionKey)
         {
             this._connections.Add(playerId);
 
             ref var connection = ref this._connections[playerId];
 
             connection.PlayerId = playerId;
-            connection.Entity = entity;
             connection.PacketEncryptionKey = encryptionKey;
-
-            if (connection.ReplicationData == null)
-            {
-                connection.ReplicationData = new PlayerReplicationData(
-                    this._replicationConfig.Capacity.InitialReplicatedEntityCapacity,
-                    this._replicationConfig.Networking.PriorityQueueDelayBaseTick,
-                    this._replicationConfig.Networking.PriorityQueueDelay);
-            }
-            else
-            {
-                connection.ReplicationData.Clear();
-            }
         }
 
         public void Remove(PlayerId playerId)
