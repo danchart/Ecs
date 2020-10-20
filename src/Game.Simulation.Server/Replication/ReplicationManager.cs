@@ -32,10 +32,8 @@ namespace Game.Simulation.Server
             this._packetPriorityComponents.Clear();
 
             // Apply changes to player entity change lists
-            for (int i = 0; i < this._playerConnections.Count; i++)
+            foreach (ref var connection in this._playerConnections)
             {
-                ref var connection = ref this._playerConnections[i];
-
                 var playerEntity = connection.Entity;
 
                 AddPacketPrioritizedEntityChangesToPlayer(

@@ -25,6 +25,7 @@
   <ItemGroup>
     <Compile Include="Connections\PlayerConnection.cs" />
     <Compile Include="Connections\PlayerConnectionConfig.cs" />
+    <Compile Include="Connections\PlayerConnectionRef.cs" />
     <Compile Include="Connections\PlayerConnections.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Replication\PlayerReplicationData.cs" />

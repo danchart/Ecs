@@ -31,9 +31,9 @@ namespace Game.Simulation.Server.Tests
 
             Assert.Equal(3, connections.Count);
 
-            ref readonly var connection1 = ref connections[0];
-            ref readonly var connection2 = ref connections[1];
-            ref readonly var connection3 = ref connections[2];
+            ref readonly var connection1 = ref connections[new PlayerId(0)];
+            ref readonly var connection2 = ref connections[new PlayerId(1)];
+            ref readonly var connection3 = ref connections[new PlayerId(2)];
 
             Assert.Equal(new PlayerId(0), connection1.PlayerId);
             Assert.Equal(entity1, connection1.Entity);

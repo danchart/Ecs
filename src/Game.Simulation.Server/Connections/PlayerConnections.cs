@@ -6,7 +6,7 @@ namespace Game.Simulation.Server
 {
     public class PlayerConnections
     {
-        private readonly RefDictionary<PlayerId, PlayerConnection> _connections;
+        internal readonly RefDictionary<PlayerId, PlayerConnection> _connections;
 
         private readonly PlayerConnectionConfig _playerConnectionConfig;
         private readonly ReplicationConfig _replicationConfig;
@@ -56,6 +56,11 @@ namespace Game.Simulation.Server
         public void Remove(PlayerId playerId)
         {
             this._connections.Remove(playerId);
+        }
+
+        public RefDictionary<PlayerId, PlayerConnection>.Enumerator GetEnumerator()
+        {
+            return this._connections.GetEnumerator();
         }
     }
 }

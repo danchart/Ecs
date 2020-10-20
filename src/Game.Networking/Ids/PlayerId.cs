@@ -1,39 +1,31 @@
-﻿using Common.Core.Numerics;
-using System;
+﻿using System;
 
 namespace Game.Networking
 {
     public struct PlayerId : IEquatable<PlayerId>
     {
         internal readonly int Id;
-        internal readonly uint Generation;
 
-        public PlayerId(int id, uint generation = 0)
+        public PlayerId(int id)
         {
             Id = id;
-            Generation = generation;
         }
 
         public static bool operator ==(in PlayerId lhs, in PlayerId rhs)
         {
             return
-                lhs.Id == rhs.Id &&
-                lhs.Generation == rhs.Generation;
+                lhs.Id == rhs.Id;
         }
 
         public static bool operator !=(in PlayerId lhs, in PlayerId rhs)
         {
             return
-                lhs.Id != rhs.Id ||
-                lhs.Generation != rhs.Generation;
+                lhs.Id != rhs.Id;
         }
 
         public override int GetHashCode()
         {
-            return
-                HashCodeHelper.CombineHashCodes(
-                    Id,
-                    (int)Generation);
+            return Id;
         }
 
         public override bool Equals(object other)
@@ -46,8 +38,7 @@ namespace Game.Networking
         public bool Equals(PlayerId entity)
         {
             return
-                Id == entity.Id &&
-                Generation == entity.Generation;
+                Id == entity.Id;
         }
     }
 }
