@@ -10,16 +10,16 @@ namespace Game.Networking
         public int PacketReceiveQueueCapacity = 1024;
     }
 
-    abstract class SimulationUdpBase
+    abstract class SimulationPacketTransport
     {
-        protected UdpSocket Socket;
+        private UdpSocket ReceiveSocket;
+        private UdpSocket SendSocket;
         private ReceiveBuffer ReceiveBuffer;
 
-        protected SimulationUdpBase(SimulationUdpConfig config)
+        protected SimulationPacketTransport(SimulationUdpConfig config)
         {
             this.ReceiveBuffer = new ReceiveBuffer(config.MaxPacketSize, config.PacketReceiveQueueCapacity);
-
-            this.Socket = new UdpSocket(this.ReceiveBuffer);
+            this.ReceiveSocket = new UdpSocket(this.ReceiveBuffer);
         }
 
         public async Task<Packet> ReceiveAsync()

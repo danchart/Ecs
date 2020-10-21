@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Net;
 using System.Net.Sockets;
+using System.Security.Cryptography;
 
 namespace Game.Networking.Core
 {
@@ -45,6 +46,18 @@ namespace Game.Networking.Core
                 0, 
                 data.Length, 
                 SocketFlags.None,
+                SendAsyncCallback,
+                state);
+        }
+
+        public void SendTo(byte[] data)
+        {
+            this.state.Socket.BeginSendTo(
+                data,
+                0,
+                data.Length,
+                SocketFlags.None,
+                new IPEndPoint(IPAddress.Any, 0),
                 SendAsyncCallback,
                 state);
         }
