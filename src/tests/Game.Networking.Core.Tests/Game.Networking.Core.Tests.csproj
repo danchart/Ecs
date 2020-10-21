@@ -38,6 +38,8 @@
   <ItemGroup>
     <Compile Include="PacketStreamExtensionsTests.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="ReceiveBufferTests.cs" />
+    <Compile Include="UdpSocketTests.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />

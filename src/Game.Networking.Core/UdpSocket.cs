@@ -2,7 +2,7 @@
 using System.Net;
 using System.Net.Sockets;
 
-namespace Game.Networking
+namespace Game.Networking.Core
 {
     public class UdpSocket
     {

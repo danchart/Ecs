@@ -22,6 +22,8 @@
   <ItemGroup>
     <Compile Include="PacketStreamExtensions.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="ReceiveBuffer.cs" />
+    <Compile Include="UdpSocket.cs" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>
