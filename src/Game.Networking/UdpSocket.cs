@@ -25,6 +25,9 @@ namespace Game.Networking
             public ReceiveBuffer ReceiveBuffer;
         }
 
+        /// <summary>
+        /// Starts UDP server/receiver.
+        /// </summary>
         public void Server(string address, int port)
         {
             this.state.Socket.SetSocketOption(SocketOptionLevel.IP, SocketOptionName.ReuseAddress, true);
@@ -32,6 +35,9 @@ namespace Game.Networking
             Receive();
         }
 
+        /// <summary>
+        /// Starts UDP client/sender.
+        /// </summary>
         public void Client(string address, int port)
         {
             this.state.Socket.Connect(IPAddress.Parse(address), port);
@@ -91,8 +97,6 @@ namespace Game.Networking
                 ref state.EndpointFrom,
                 ReceiveAsyncCallback,
                 state);
-
-            //Console.WriteLine("RECV: {0}: {1}, {2}", epFrom.ToString(), bytes, Encoding.ASCII.GetString(state.buffer, 0, bytes));
         }
     }
 }

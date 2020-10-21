@@ -21,10 +21,7 @@ namespace Game.Networking.Core.Tests
             client.Send(Encoding.ASCII.GetBytes("hello"));
             client.Send(Encoding.ASCII.GetBytes("iam john"));
 
-            for (int countdown= 10; countdown >= 0 && serverBuffer.QueueCount != 2; countdown--)
-            {
-                Thread.Sleep(1);
-            }
+            WaitForReceive(serverBuffer, 2);
 
             Assert.Equal(2, serverBuffer.QueueCount);
 
@@ -33,15 +30,24 @@ namespace Game.Networking.Core.Tests
             int size;
 
             serverBuffer.GetReadBufferData(out data, out offset, out size);
+            serverBuffer.NextRead();
             var text = Encoding.ASCII.GetString(data, offset, size);
 
             Assert.Equal("hello", text);
 
-            serverBuffer.NextRead();
             serverBuffer.GetReadBufferData(out data, out offset, out size);
+            serverBuffer.NextRead();
             text = Encoding.ASCII.GetString(data, offset, size);
 
             Assert.Equal("iam john", text);
+        }
+
+        private static void WaitForReceive(ReceiveBuffer serverBuffer, int queueCount)
+        {
+            for (int countdown = 10; countdown >= 0 && serverBuffer.QueueCount != queueCount; countdown--)
+            {
+                Thread.Sleep(1);
+            }
         }
     }
 }
