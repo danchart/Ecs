@@ -26,6 +26,8 @@
     <Compile Include="PacketData\PlayerInputData.cs" />
     <Compile Include="PacketData\TransformData.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="MOTHBALL_SimulationUdpBase.cs" />
+    <Compile Include="UdpSocket.cs" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\Common.Core\Common.Core.csproj">
