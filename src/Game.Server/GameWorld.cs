@@ -26,16 +26,15 @@ namespace Game.Server
 
         private readonly ILogger _logger;
 
-        private readonly uint _id;
+        private readonly ushort _id;
 
         private bool _isStopped;
 
         public GameWorld(
-            uint id, 
+            ushort id, 
             ILogger logger,
-            PlayerConnectionManager playerConnections,
-            ReplicationConfig replicationConfig,
-            PlayerConnectionConfig playerConnectionConfig)
+            IServerConfig config,
+            PlayerConnectionManager playerConnections)
         {
 
             //_simulationConfig.FixedTick = 0.5f;
@@ -49,17 +48,17 @@ namespace Game.Server
 
             this._players = new WorldPlayers(
                 playerConnections,
-                replicationConfig,
-                playerConnectionConfig.Capacity.InitialConnectionsCapacity);
+                config.ReplicationConfig,
+                config.PlayerConnectionConfig.Capacity.InitialConnectionsCapacity);
 
-            this._replicationManager = new WorldReplicationManager(replicationConfig, this._players);
+            this._replicationManager = new WorldReplicationManager(config.ReplicationConfig, this._players);
 
             this._systems =
                 new Systems(this._world)
                 .Add(new GatherReplicatedDataSystem())
                 .Inject(
                     new ReplicationDataBroker(
-                        replicationConfig.Capacity, 
+                        config.ReplicationConfig.Capacity, 
                         this._replicationManager));
 
             this._simulation = new ServerSimulation<PlayerInputComponent>(
@@ -70,7 +69,7 @@ namespace Game.Server
             this._simulation.Create();
         }
 
-        public uint Id => this._id;
+        public ushort Id => this._id;
 
         public void Run()
         {

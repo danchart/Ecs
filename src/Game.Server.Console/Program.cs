@@ -10,7 +10,7 @@ namespace Game.Server.Console
         {
             _logger.Info("Hello, starting the game server.");
 
-            GameServer gameServer = new GameServer(_logger);
+            GameServer gameServer = new GameServer(new DefaultServerConfig(), _logger);
 
             gameServer.SpawnWorld();
             //gameServer.SpawnWorld();

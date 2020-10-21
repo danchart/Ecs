@@ -1,32 +1,31 @@
 ﻿using Game.Simulation.Server;
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Threading;
 
 namespace Game.Server
 {
     public class GameServer
     {
-        //
-        // Configurations
-        //
-
-        private readonly ReplicationConfig _replicationConfig = ReplicationConfig.Default;
-        private readonly PlayerConnectionConfig _playerConnectionConfig = PlayerConnectionConfig.Default;
-
         private List<SpawnedWorld> SpawnedWorlds = new List<SpawnedWorld>();
 
         private PlayerConnectionManager _playerConnectionManager;
 
         private readonly ILogger _logger;
+        private readonly IServerConfig _serverConfig;
 
-        private Random Random = new Random();
+        private ushort _nextWorldId;
 
-        public GameServer(ILogger logger)
+        public GameServer(
+            IServerConfig serverConfig,
+            ILogger logger)
         {
+            this._serverConfig = serverConfig  ?? throw new ArgumentNullException(nameof(serverConfig));
             this._logger = logger ?? throw new ArgumentNullException(nameof(logger));
 
-            this._playerConnectionManager = new PlayerConnectionManager(this._replicationConfig, this._playerConnectionConfig);
+            this._playerConnectionManager = new PlayerConnectionManager(this._serverConfig.ReplicationConfig, this._serverConfig.PlayerConnectionConfig);
+            this._nextWorldId = 0;
         }
 
         public bool IsRunning()
@@ -53,11 +52,10 @@ namespace Game.Server
         public uint SpawnWorld()
         {
             var world = new GameWorld(
-                GenerateWorldId(), 
+                NextWorldId(), 
                 this._logger,
-                this._playerConnectionManager,
-                this._replicationConfig,
-                this._playerConnectionConfig);
+                this._serverConfig,
+                this._playerConnectionManager);
             var thread = new Thread(world.Run);
             thread.Start();
 
@@ -73,28 +71,27 @@ namespace Game.Server
             return world.Id;
         }
 
-        private uint GenerateWorldId()
+        private ushort NextWorldId()
         {
-            while (true)
+            if (this.SpawnedWorlds.Count == ushort.MaxValue)
             {
-                uint id = (uint)this.Random.Next(int.MaxValue);
+                var message = $"Tried to spawn more than maximum allowed number of worlds. Count={this.SpawnedWorlds.Count}";
 
-                var isUnique = true;
+                _logger.Error(message);
 
-                foreach (var spawnedWorld in this.SpawnedWorlds)
-                {
-                    if (id == spawnedWorld.World.Id)
-                    {
-                        isUnique = false;
-                        break;
-                    }
-                }
-
-                if (isUnique)
-                {
-                    return id;
-                }
+                throw new InvalidOperationException(message);
             }
+
+            while (
+                this.SpawnedWorlds
+                .Where(
+                    x => x.World.Id == this._nextWorldId)
+                .Any())
+            {
+                this._nextWorldId++;
+            }
+
+            return this._nextWorldId++;
         }
 
         private struct SpawnedWorld
