@@ -15,30 +15,30 @@ namespace Game.Networking.Core.Tests
             byte[] data;
             int offset;
             int size;
-            EndPoint endpoint;
-            Assert.True(buffer.GetWriteBufferData(out data, out offset, out size, out endpoint));
+            var ipEndPoint = new IPEndPoint(IPAddress.Any, 0);
+            Assert.True(buffer.GetWriteBufferData(out data, out offset, out size));
 
             data[offset] = 1;
             data[offset+1] = 2;
-            buffer.NextWrite(2);
+            buffer.NextWrite(2, ipEndPoint);
 
             Assert.Equal(1, buffer.QueueCount);
 
-            Assert.True(buffer.GetWriteBufferData(out data, out offset, out size, out endpoint));
+            Assert.True(buffer.GetWriteBufferData(out data, out offset, out size));
             data[offset] = 3;
             data[offset + 1] = 4;
-            buffer.NextWrite(2);
+            buffer.NextWrite(2, ipEndPoint);
 
             Assert.Equal(2, buffer.QueueCount);
 
-            buffer.NextWrite(0);
+            buffer.NextWrite(0, ipEndPoint);
             Assert.Equal(3, buffer.QueueCount);
 
-            buffer.NextWrite(0);
+            buffer.NextWrite(0, ipEndPoint);
             Assert.Equal(4, buffer.QueueCount);
 
             // Overflow
-            Assert.False(buffer.GetWriteBufferData(out data, out offset, out size, out endpoint));
+            Assert.False(buffer.GetWriteBufferData(out data, out offset, out size));
             Assert.Equal(4, buffer.QueueCount);
 
             Assert.True(buffer.GetReadBufferData(out data, out offset, out size));
