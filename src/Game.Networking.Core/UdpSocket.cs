@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Net;
 using System.Net.Sockets;
-using System.Security.Cryptography;
 
 namespace Game.Networking.Core
 {
@@ -66,14 +65,14 @@ namespace Game.Networking.Core
         {
             byte[] data;
             int offset, size;
-            state.ReceiveBuffer.GetWriteBufferData(out data, out offset, out size);
+            state.ReceiveBuffer.GetWriteBufferData(out data, out offset, out size, out state.EndpointFrom);
 
             this.state.Socket.BeginReceiveFrom(
                 data, 
                 offset,
                 size, 
                 SocketFlags.None, 
-                ref this.state.EndpointFrom, 
+                ref state.EndpointFrom, 
                 ReceiveAsyncCallback,
                 state);
         }
@@ -94,7 +93,7 @@ namespace Game.Networking.Core
             // Chain next receive.
             byte[] data;
             int offset, size;
-            state.ReceiveBuffer.GetWriteBufferData(out data, out offset, out size);
+            state.ReceiveBuffer.GetWriteBufferData(out data, out offset, out size, out state.EndpointFrom);
 
             state.Socket.BeginReceiveFrom(
                 data,

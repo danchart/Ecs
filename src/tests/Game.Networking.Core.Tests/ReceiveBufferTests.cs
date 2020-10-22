@@ -1,4 +1,5 @@
-﻿using Xunit;
+﻿using System.Net;
+using Xunit;
 
 namespace Game.Networking.Core.Tests
 {
@@ -14,7 +15,8 @@ namespace Game.Networking.Core.Tests
             byte[] data;
             int offset;
             int size;
-            Assert.True(buffer.GetWriteBufferData(out data, out offset, out size));
+            EndPoint endpoint;
+            Assert.True(buffer.GetWriteBufferData(out data, out offset, out size, out endpoint));
 
             data[offset] = 1;
             data[offset+1] = 2;
@@ -22,7 +24,7 @@ namespace Game.Networking.Core.Tests
 
             Assert.Equal(1, buffer.QueueCount);
 
-            Assert.True(buffer.GetWriteBufferData(out data, out offset, out size));
+            Assert.True(buffer.GetWriteBufferData(out data, out offset, out size, out endpoint));
             data[offset] = 3;
             data[offset + 1] = 4;
             buffer.NextWrite(2);
@@ -36,7 +38,7 @@ namespace Game.Networking.Core.Tests
             Assert.Equal(4, buffer.QueueCount);
 
             // Overflow
-            Assert.False(buffer.GetWriteBufferData(out data, out offset, out size));
+            Assert.False(buffer.GetWriteBufferData(out data, out offset, out size, out endpoint));
             Assert.Equal(4, buffer.QueueCount);
 
             Assert.True(buffer.GetReadBufferData(out data, out offset, out size));

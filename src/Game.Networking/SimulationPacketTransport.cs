@@ -1,4 +1,6 @@
-﻿using System.IO;
+﻿using Game.Networking.Core;
+using System.Collections.Generic;
+using System.IO;
 using System.Net.Sockets;
 using System.Threading.Tasks;
 
@@ -15,6 +17,8 @@ namespace Game.Networking
         private UdpSocket ReceiveSocket;
         private UdpSocket SendSocket;
         private ReceiveBuffer ReceiveBuffer;
+
+        private Dictionary<PlayerId, >
 
         protected SimulationPacketTransport(SimulationUdpConfig config)
         {
