@@ -10,8 +10,8 @@ namespace Game.Server
 {
     public class UdpPacketTransportConfig
     {
-        public int MaxPacketSize = 512;
-        public int PacketReceiveQueueCapacity = 1024;
+        public int MaxPacketSize = 768;
+        public int PacketReceiveQueueCapacity = 256;
 
         public IPEndPoint HostIpEndPoint = new IPEndPoint(IPAddress.Parse("127.0.0.1"), 27000);
     }
@@ -40,7 +40,7 @@ namespace Game.Server
         }
 
         public async Task<Packet> ReceiveAsync()
-        {
+        { 
             var receiveResult = await this.Client.ReceiveAsync();
 
             var stream = new MemoryStream(receiveResult.Buffer, 0, receiveResult.Buffer.Length);

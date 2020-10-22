@@ -17,17 +17,19 @@ namespace Game.Networking
         [FieldOffset(0)]
         public PacketTypeEnum Type;
         [FieldOffset(4)]
-        public int PlayerId;
+        public PlayerId PlayerId;
 
         [FieldOffset(8)]
         SimulationPacket SimulationPacket;
         [FieldOffset(8)]
         ControlPacket ControlPacket;
 
-        public bool Serialize(Stream stream, byte[] encryptionKey)
+        public bool Serialize(Stream stream, IPacketEncryption packetEncryption)
         {
             stream.PacketWriteByte((byte) this.Type);
             stream.PacketWriteInt(this.PlayerId);
+
+            var encryptPos = stream.Position;
 
             switch (this.Type)
             {
@@ -37,10 +39,14 @@ namespace Game.Networking
                     return this.ControlPacket.Serialize(stream);
             }
 
+            stream.Seek(encryptPos, SeekOrigin.Begin);
+
+            packetEncryption.Encrypt(this.PlayerId, stream.)
+
             return false;
         }
 
-        public bool Deserialize(Stream stream)
+        public bool Deserialize(Stream stream, IPacketEncryption packetEncryption)
         {
             byte typeAsByte;
             stream.PacketReadByte(out typeAsByte);

@@ -11,6 +11,8 @@ namespace Game.Networking
             Id = id;
         }
 
+        public static implicit operator int(PlayerId id) => id.Id;
+
         public static bool operator ==(in PlayerId lhs, in PlayerId rhs)
         {
             return
