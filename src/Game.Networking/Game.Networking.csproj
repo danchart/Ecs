@@ -21,14 +21,15 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Ids\PlayerId.cs" />
-    <Compile Include="Packet.cs" />
+    <Compile Include="Packets\Packet.cs" />
     <Compile Include="PacketData\MovementData.cs" />
     <Compile Include="PacketData\PlayerInputData.cs" />
     <Compile Include="PacketData\TransformData.cs" />
+    <Compile Include="Packets\ControlPacket.cs" />
+    <Compile Include="Packets\SimulationPacket.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="SimulationPacketTransport.cs" />
     <Compile Include="ReceiveBuffer.cs" />
-    <Compile Include="UdpSocket.cs" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\Common.Core\Common.Core.csproj">

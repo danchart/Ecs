@@ -4,9 +4,9 @@ namespace Game.Networking
 {
     public struct PlayerId : IEquatable<PlayerId>
     {
-        internal readonly ushort Id;
+        internal readonly int Id;
 
-        public PlayerId(ushort id)
+        public PlayerId(int id)
         {
             Id = id;
         }

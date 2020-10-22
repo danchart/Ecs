@@ -7,53 +7,6 @@ using System.Runtime.InteropServices;
 
 namespace Game.Networking
 {
-    [StructLayout(LayoutKind.Explicit, Pack = 1)]
-    public struct Packet
-    {
-        [FieldOffset(0)]
-        public PacketTypeEnum Type;
-        [FieldOffset(4)]
-        public ushort PlayerId;
-
-        [FieldOffset(8)]
-        SimulationPacket SimulationPacket;
-
-        public bool Serialize(Stream stream, byte[] encryptionKey)
-        {
-            stream.PacketWriteByte((byte) this.Type);
-            stream.PacketWriteUShort(this.PlayerId);
-
-            if (this.Type == PacketTypeEnum.Simulation)
-            {
-                this.SimulationPacket.Serialize(stream);
-            }
-
-            return true;
-        }
-
-        public bool Deserialize(Stream stream)
-        {
-            byte typeAsByte;
-            stream.PacketReadByte(out typeAsByte);
-            this.Type = (PacketTypeEnum) typeAsByte;
-            stream.PacketReadUShort(out this.PlayerId);
-
-            if (this.Type == PacketTypeEnum.Simulation)
-            {
-                this.SimulationPacket.Deserialize(stream);
-            }
-
-            return true;
-        }
-    }
-
-
-    public enum PacketTypeEnum
-    {
-        Simulation = 0,
-        Management = 1,
-    }
-
     public struct SimulationPacket
     {
         public uint Frame;
@@ -66,7 +19,7 @@ namespace Game.Networking
             stream.PacketWriteUInt(Frame);
             // entity count
             stream.PacketWriteByte(EntityCount);
-            
+
             for (int i = 0; i < EntityCount; i++)
             {
                 EntityData[i].Serialize(stream);
@@ -173,7 +126,7 @@ namespace Game.Networking
             // item type
             stream.PacketReadUShort(out Type);
 
-            if (!Enum.IsDefined(typeof(TypeEnum), (int) Type))
+            if (!Enum.IsDefined(typeof(TypeEnum), (int)Type))
             {
                 return false;
             }

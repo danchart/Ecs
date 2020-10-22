@@ -9,7 +9,7 @@ namespace Game.Networking
         public int MaxPacketSize = 512;
         public int PacketReceiveQueueCapacity = 1024;
     }
-
+#if NEVER
     abstract class SimulationPacketTransport
     {
         private UdpSocket ReceiveSocket;
@@ -35,4 +35,5 @@ namespace Game.Networking
             return packet;
         }
     }
+#endif
 }
