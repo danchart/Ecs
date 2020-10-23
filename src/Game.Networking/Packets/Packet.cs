@@ -24,7 +24,7 @@ namespace Game.Networking
         [FieldOffset(8)]
         ControlPacket ControlPacket;
 
-        public bool Serialize(Stream stream, IPacketEncryption packetEncryption)
+        public bool Serialize(Stream stream)
         {
             stream.PacketWriteByte((byte) this.Type);
             stream.PacketWriteInt(this.PlayerId);
@@ -39,10 +39,6 @@ namespace Game.Networking
                     return this.ControlPacket.Serialize(stream);
             }
 
-            stream.Seek(encryptPos, SeekOrigin.Begin);
-
-            packetEncryption.Encrypt(this.PlayerId, stream.)
-
             return false;
         }
 
@@ -51,7 +47,9 @@ namespace Game.Networking
             byte typeAsByte;
             stream.PacketReadByte(out typeAsByte);
             this.Type = (PacketTypeEnum) typeAsByte;
-            stream.PacketReadInt(out this.PlayerId);
+            int playerId;
+            stream.PacketReadInt(out playerId);
+            this.PlayerId = new PlayerId(playerId);
 
             switch (this.Type)
             {
