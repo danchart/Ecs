@@ -43,10 +43,10 @@
   <ItemGroup>
     <Compile Include="GameSever.cs" />
     <Compile Include="GameWorld.cs" />
-    <Compile Include="Logging\ILogger.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="ServerChannelManager.cs" />
     <Compile Include="ServerConfig.cs" />
-    <Compile Include="UdpPacketTransport.cs" />
+    <Compile Include="ServerUdpPacketTransport.cs" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\Common.Core\Common.Core.csproj">

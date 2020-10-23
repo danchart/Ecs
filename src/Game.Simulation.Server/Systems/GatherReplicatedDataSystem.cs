@@ -28,7 +28,6 @@ namespace Game.Simulation.Server
                 _transformQuery
                     .GetReadonly2(index)
                     .ToPacket(ref component.Transform);
-                component.FieldCount = TransformData.FieldCount;
             }
 
             // MovementComponent
@@ -40,7 +39,6 @@ namespace Game.Simulation.Server
                 _movementQuery
                     .GetReadonly2(index)
                     .ToPacket(ref component.Movement);
-                component.FieldCount = MovementData.FieldCount;
             }
 
             ReplicationDataBroker.EndDataCollection();

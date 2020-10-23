@@ -11,12 +11,10 @@ namespace Game.Simulation.Server
     {
         [FieldOffset(0)]
         public ComponentId ComponentId;
-        [FieldOffset(2)]
-        public ushort FieldCount;
 
-        [FieldOffset(4)]
+        [FieldOffset(2)]
         public TransformData Transform;
-        [FieldOffset(4)]
+        [FieldOffset(2)]
         public MovementData Movement;
 
         public int ComponentIdAsIndex => (int)ComponentId;

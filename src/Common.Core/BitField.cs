@@ -225,7 +225,7 @@ namespace Common.Core
         /// Creats bitfield with all bits set up to and including n.
         /// </summary>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static BitField NewSetAll(int index)
+        public static BitField NewSetAll(int index = 32)
         {
             return new BitField((1U << index) - 1U);
         }

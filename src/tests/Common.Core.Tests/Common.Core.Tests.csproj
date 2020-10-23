@@ -37,6 +37,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="BitFieldTests.cs" />
+    <Compile Include="ByteArrayPoolTests.cs" />
     <Compile Include="FixedIndexDictionaryTests.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="RefDictionaryTests.cs" />

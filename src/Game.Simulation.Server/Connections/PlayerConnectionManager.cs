@@ -3,7 +3,7 @@ using Game.Networking;
 
 namespace Game.Simulation.Server
 {
-    public class PlayerConnectionManager
+    public sealed class PlayerConnectionManager
     {
         internal readonly RefDictionary<PlayerId, PlayerConnection> _connections;
         

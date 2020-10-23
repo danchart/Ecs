@@ -5,7 +5,7 @@ using System.Collections.Generic;
 
 namespace Game.Simulation.Server
 {
-    public class ReplicationPacketPriorityComponents
+    public sealed class ReplicationPacketPriorityComponents
     {
         private PrioritizationComponentRefs[] _components;
 

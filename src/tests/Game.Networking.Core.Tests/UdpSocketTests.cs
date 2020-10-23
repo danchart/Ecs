@@ -1,6 +1,7 @@
 ﻿using System.Net;
 using System.Text;
 using System.Threading;
+using Test.Common;
 using Xunit;
 
 namespace Game.Networking.Core.Tests
@@ -10,13 +11,14 @@ namespace Game.Networking.Core.Tests
         [Fact]
         public void ClientServerSendReceive()
         {
+            var logger = new TestLogger();
             var serverBuffer = new ReceiveBuffer(maxPacketSize: 64, packetQueueCapacity: 4);
 
-            var server = new UdpSocketServer(serverBuffer);
+            var server = new UdpSocketServer(logger, serverBuffer);
             server.Start(new IPEndPoint(IPAddress.Parse("127.0.0.1"), 27000));
 
             var clientBuffer = new ReceiveBuffer(maxPacketSize: 64, packetQueueCapacity: 4);
-            var client = new UdpSocketClient(clientBuffer);
+            var client = new UdpSocketClient(logger, clientBuffer);
             client.Start(new IPEndPoint(IPAddress.Parse("127.0.0.1"), 27000));
 
             // Simulate TCP style SYN > SYN-ACK > ACK handshake...

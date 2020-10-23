@@ -4,7 +4,7 @@ using System.Runtime.CompilerServices;
 
 namespace Ecs.Core.Collections
 {
-    public class EntityMapList<T>
+    public sealed class EntityMapList<T>
         where T : struct
     {
         private EntityItem[] _entityItems;
@@ -112,7 +112,7 @@ namespace Ecs.Core.Collections
             }
         }
 
-        public class ItemList
+        public sealed class ItemList
         {
             internal T[] _items;
             internal int _count;

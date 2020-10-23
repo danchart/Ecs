@@ -4,7 +4,7 @@ using System.Collections.Generic;
 
 namespace Game.Simulation.Server
 {
-    public class PlayerConnectionRefs
+    public sealed class PlayerConnectionRefs
     {
         private readonly Dictionary<PlayerId, PlayerConnectionRef> _connectionRefs = new Dictionary<PlayerId, PlayerConnectionRef>();
         private readonly PlayerConnectionManager _connectionManager;

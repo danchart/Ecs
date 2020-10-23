@@ -20,8 +20,11 @@ namespace Game.Simulation.Server
         private float _tickTime;
         private readonly int[] _queueTicks;
 
-        public PlayerReplicationData(int capacity, float tickTime, int[] queueTicks)
+        private readonly int _componentCapacity;
+
+        public PlayerReplicationData(int capacity, int componentCapacity, float tickTime, int[] queueTicks)
         {
+            this._componentCapacity = componentCapacity;
             this._replicatedEntities = new ReplicatedEntity[capacity];
             this._freeIndices = new int[capacity];
             this._entityToIndex = new Dictionary<Entity, int>(capacity);
@@ -83,6 +86,12 @@ namespace Game.Simulation.Server
                 }
 
                 this._entityToIndex[entity] = index;
+
+                if (this._replicatedEntities[index]._components == null)
+                {
+                    this._replicatedEntities[index]._components = new FixedIndexDictionary<ReplicatedEntity.Component>(this._componentCapacity);
+                    this._replicatedEntities[index]._prevReplicatedComponentFields = new Dictionary<ComponentId, BitField>(this._componentCapacity);
+                }
             }
             else
             {
@@ -122,7 +131,7 @@ namespace Game.Simulation.Server
                         new ReplicatedEntity.Component
                         {
                             // Replicate all fields
-                            HasFields = BitField.NewSetAll(modifiedComponent.FieldCount),
+                            HasFields = BitField.NewSetAll(),
                             // Copy data
                             Data = modifiedComponent
                         };
@@ -147,7 +156,7 @@ namespace Game.Simulation.Server
         {
             public QueuePriority Priority;
 
-            public Dictionary<ComponentId, BitField> _prevReplicatedComponentFields;
+            public Dictionary<ComponentId , BitField> _prevReplicatedComponentFields;
             public FixedIndexDictionary<Component> _components;
 
             public ReplicatedEntity(int componentCapacity) : this()

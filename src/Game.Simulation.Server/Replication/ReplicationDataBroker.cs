@@ -13,7 +13,7 @@ namespace Game.Simulation.Server
         void EndDataCollection();
     }
 
-    public class ReplicationDataBroker : IReplicationDataBroker
+    public sealed class ReplicationDataBroker : IReplicationDataBroker
     {
         private readonly IWorldReplicationManager _replicationManager;
 

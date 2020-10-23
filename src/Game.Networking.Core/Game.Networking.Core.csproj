@@ -25,5 +25,11 @@
     <Compile Include="ReceiveBuffer.cs" />
     <Compile Include="UdpSocket.cs" />
   </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\Common.Core\Common.Core.csproj">
+      <Project>{83DE9636-9348-4678-B986-02987685B57D}</Project>
+      <Name>Common.Core</Name>
+    </ProjectReference>
+  </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>

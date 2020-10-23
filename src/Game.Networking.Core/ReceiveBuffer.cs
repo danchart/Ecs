@@ -28,6 +28,8 @@ namespace Game.Networking.Core
             this._queuedCount = 0;
         }
 
+        public bool IsWriteQueueFull => this._queuedCount == this.PacketQueueCapacity;
+
         public int QueueCount => _queuedCount;
 
         public bool GetWriteBufferData(out byte[] data, out int offset, out int size)

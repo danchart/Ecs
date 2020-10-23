@@ -1,20 +1,23 @@
-﻿using System;
+﻿using Common.Core;
+using System;
 using System.Net;
 using System.Net.Sockets;
+using System.Threading;
 
 namespace Game.Networking.Core
 {
     public abstract class UdpSocketBase
     {
-        protected State state;
+        protected readonly State _state;
 
-        protected UdpSocketBase(ReceiveBuffer receiveBuffer)
+        protected UdpSocketBase(ILogger logger, ReceiveBuffer receiveBuffer)
         {
-            this.state = new State
+            this._state = new State
             {
                 Socket = new Socket(AddressFamily.InterNetwork, SocketType.Dgram, ProtocolType.Udp),
-                ReceiveBuffer = receiveBuffer,
+                ReceiveBuffer = receiveBuffer ?? throw new ArgumentNullException(nameof(receiveBuffer)),
                 EndPointFrom = new IPEndPoint(IPAddress.Any, 0),
+                Logger = logger ?? throw new ArgumentNullException(nameof(logger))
             };
         }
 
@@ -23,6 +26,7 @@ namespace Game.Networking.Core
             public Socket Socket;
             public ReceiveBuffer ReceiveBuffer;
             public EndPoint EndPointFrom;
+            public ILogger Logger;
         }
 
         public void Server(string address, int port)
@@ -32,8 +36,8 @@ namespace Game.Networking.Core
 
         public void Server(IPEndPoint ipEndPoint)
         {
-            this.state.Socket.SetSocketOption(SocketOptionLevel.IP, SocketOptionName.ReuseAddress, true);
-            this.state.Socket.Bind(ipEndPoint);
+            this._state.Socket.SetSocketOption(SocketOptionLevel.IP, SocketOptionName.ReuseAddress, true);
+            this._state.Socket.Bind(ipEndPoint);
             Receive();
         }
 
@@ -41,16 +45,16 @@ namespace Game.Networking.Core
         {
             byte[] data;
             int offset, size;
-            state.ReceiveBuffer.GetWriteBufferData(out data, out offset, out size);
+            _state.ReceiveBuffer.GetWriteBufferData(out data, out offset, out size);
 
-            this.state.Socket.BeginReceiveFrom(
+            this._state.Socket.BeginReceiveFrom(
                 data,
                 offset,
                 size,
                 SocketFlags.None,
-                ref state.EndPointFrom,
+                ref _state.EndPointFrom,
                 ReceiveAsyncCallback,
-                state);
+                _state);
         }
 
         private static void ReceiveAsyncCallback(IAsyncResult ar)
@@ -63,7 +67,18 @@ namespace Game.Networking.Core
             // Chain next receive.
             byte[] data;
             int offset, size;
-            state.ReceiveBuffer.GetWriteBufferData(out data, out offset, out size);
+            bool isWriteBufferWait = false;
+            while (!state.ReceiveBuffer.GetWriteBufferData(out data, out offset, out size))
+            {
+                if (!isWriteBufferWait)
+                {
+                    isWriteBufferWait = true;
+
+                    state.Logger.Error("UDP socket is out of writable buffer space.");
+                }
+                // Wait for write queue to become available.
+                Thread.Sleep(1);
+            }
 
             state.Socket.BeginReceiveFrom(
                 data,
@@ -73,44 +88,43 @@ namespace Game.Networking.Core
                 ref state.EndPointFrom,
                 ReceiveAsyncCallback,
                 state);
-
-            //Console.WriteLine("RECV: {0}: {1}, {2}", epFrom.ToString(), bytes, Encoding.ASCII.GetString(state.buffer, 0, bytes));
         }
     }
 
     public class UdpSocketClient : UdpSocketBase
     {
-        public UdpSocketClient(ReceiveBuffer receiveBuffer) : base(receiveBuffer)
+        public UdpSocketClient(ILogger logger, ReceiveBuffer receiveBuffer) 
+            : base(logger, receiveBuffer)
         {
         }
 
         public void Start(IPEndPoint ipEndPoint)
         {
-            this.state.Socket.Connect(ipEndPoint);
+            this._state.Socket.Connect(ipEndPoint);
             Receive();
         }
 
         public void Send(byte[] data)
         {
-            this.state.Socket.BeginSend(
+            this._state.Socket.BeginSend(
                 data,
                 0,
                 data.Length,
                 SocketFlags.None,
                 SendAsyncCallback,
-                state);
+                _state);
         }
 
         public void SendTo(byte[] data)
         {
-            this.state.Socket.BeginSendTo(
+            this._state.Socket.BeginSendTo(
                 data,
                 0,
                 data.Length,
                 SocketFlags.None,
                 new IPEndPoint(IPAddress.Any, 0),
                 SendAsyncCallback,
-                state);
+                _state);
         }
 
         protected static void SendAsyncCallback(IAsyncResult ar)
@@ -122,20 +136,22 @@ namespace Game.Networking.Core
 
     public class UdpSocketServer : UdpSocketBase
     {
-        public UdpSocketServer(ReceiveBuffer receiveBuffer) : base(receiveBuffer)
+        public UdpSocketServer(ILogger logger, ReceiveBuffer receiveBuffer) 
+            : base(logger, receiveBuffer)
         {
         }
 
         public void Start(IPEndPoint ipEndPoint)
         {
-            this.state.Socket.SetSocketOption(SocketOptionLevel.IP, SocketOptionName.ReuseAddress, true);
-            this.state.Socket.Bind(ipEndPoint);
+            this._state.Socket.SetSocketOption(SocketOptionLevel.IP, SocketOptionName.ReuseAddress, true);
+            this._state.Socket.Bind(ipEndPoint);
+
             Receive();
         }
 
         public void SendTo(byte[] data, IPEndPoint ipEndPoint)
         {
-            this.state.Socket.SendTo(
+            this._state.Socket.SendTo(
                 data,
                 ipEndPoint);
         }

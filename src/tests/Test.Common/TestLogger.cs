@@ -1,6 +1,7 @@
-﻿using System.Collections.Generic;
+﻿using Common.Core;
+using System.Collections.Generic;
 
-namespace Game.Server.Tests.Helpers
+namespace Test.Common
 {
     public class TestLogger : ILogger
     {

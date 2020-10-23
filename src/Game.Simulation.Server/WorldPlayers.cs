@@ -5,7 +5,7 @@ using System.Collections.Generic;
 
 namespace Game.Simulation.Server
 {
-    public class WorldPlayers
+    public sealed class WorldPlayers
     {
         private WorldPlayer[] _players;
 
@@ -94,26 +94,26 @@ namespace Game.Simulation.Server
                 ? true 
                 : false;
         }
+    }
 
-        public struct WorldPlayer
+    public struct WorldPlayer
+    {
+        public PlayerConnectionRef ConnectionRef;
+
+        public Entity Entity;
+
+        public int PlayerReplicationDataIndex;
+
+        private readonly PlayerReplicationDataPool _replicationDataPool;
+
+        internal WorldPlayer(PlayerReplicationDataPool replicationDataPool) : this()
         {
-            public PlayerConnectionRef ConnectionRef;
+            this._replicationDataPool = replicationDataPool ?? throw new ArgumentNullException(nameof(replicationDataPool));
+        }
 
-            public Entity Entity;
-
-            public int PlayerReplicationDataIndex;
-
-            private readonly PlayerReplicationDataPool _replicationDataPool;
-
-            internal WorldPlayer(PlayerReplicationDataPool replicationDataPool) : this()
-            {
-                this._replicationDataPool = replicationDataPool ?? throw new ArgumentNullException(nameof(replicationDataPool));
-            }
-
-            public PlayerReplicationData ReplicationData
-            {
-                get => this._replicationDataPool.GetItem(PlayerReplicationDataIndex);
-            }
+        public PlayerReplicationData ReplicationData
+        {
+            get => this._replicationDataPool.GetItem(PlayerReplicationDataIndex);
         }
     }
 }

@@ -1,5 +1,5 @@
-﻿using Game.Server.Tests.Helpers;
-using Game.Simulation.Server;
+﻿using Game.Simulation.Server;
+using Test.Common;
 using Xunit;
 
 namespace Game.Server.Tests

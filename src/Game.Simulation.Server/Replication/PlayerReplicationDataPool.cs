@@ -19,6 +19,8 @@ namespace Game.Simulation.Server
             this._freeItemIndices = new int[capacity];
         }
 
+        public int Count => this._itemCount - this._freeItemCount;
+
         public int New()
         {
             int newPoolIndex;
@@ -43,9 +45,10 @@ namespace Game.Simulation.Server
                 if (this._items[newPoolIndex] == null)
                 {
                     this._items[newPoolIndex] = new PlayerReplicationData(
-                        this._replicationConfig.Capacity.InitialReplicatedEntityCapacity,
-                        this._replicationConfig.Networking.PriorityQueueDelayBaseTick,
-                        this._replicationConfig.Networking.PriorityQueueDelay);
+                        capacity: this._replicationConfig.Capacity.InitialReplicatedEntityCapacity,
+                        componentCapacity: this._replicationConfig.Capacity.InitialReplicatedComponentCapacity,
+                        tickTime: this._replicationConfig.Networking.PriorityQueueDelayBaseTick,
+                        queueTicks: this._replicationConfig.Networking.PriorityQueueDelay);
                 }
                 else
                 {

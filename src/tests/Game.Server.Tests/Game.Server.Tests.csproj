@@ -37,7 +37,6 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="GameWorldTests.cs" />
-    <Compile Include="Helpers\TestLogger.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <ItemGroup>
@@ -52,6 +51,10 @@
     <ProjectReference Include="..\..\Game.Simulation.Server\Game.Simulation.Server.csproj">
       <Project>{DC15907F-CF6C-44EA-B3CB-B01C74D0E388}</Project>
       <Name>Game.Simulation.Server</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\Test.Common\Test.Common.csproj">
+      <Project>{C3F2CC20-4D19-4D07-BDE2-63D92DF2746B}</Project>
+      <Name>Test.Common</Name>
     </ProjectReference>
   </ItemGroup>
   <ItemGroup>

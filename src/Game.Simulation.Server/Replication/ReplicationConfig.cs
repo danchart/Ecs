@@ -1,6 +1,6 @@
 ﻿namespace Game.Simulation.Server
 {
-    public class ReplicationConfig
+    public sealed class ReplicationConfig
     {
         public static readonly ReplicationConfig Default = new ReplicationConfig();
 
