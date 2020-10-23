@@ -23,20 +23,20 @@ namespace Game.Networking
         [FieldOffset(2)]
         public ControlAckPacketData ControlAckPacketData;
 
-        public bool Serialize(Stream stream)
+        public int Serialize(Stream stream, bool measureOnly)
         {
-            stream.PacketWriteUShort((ushort) this.ControlMessage);
+            int size = stream.PacketWriteUShort((ushort) this.ControlMessage, measureOnly);
 
             switch (this.ControlMessage)
             {
                 case ControlMessageEnum.ConnectSyn:
-                    return this.ControlSynPacketData.Serialize(stream);
+                    return size + this.ControlSynPacketData.Serialize(stream, measureOnly);
                 case ControlMessageEnum.ConnectSynAck:
                 case ControlMessageEnum.ConnectAck:
-                    return this.ControlAckPacketData.Serialize(stream);
+                    return size + this.ControlAckPacketData.Serialize(stream, measureOnly);
             }
 
-            return false;
+            return -1;
         }
 
         public bool Deserialize(Stream stream)
@@ -62,11 +62,11 @@ namespace Game.Networking
     {
         public uint SequenceNumber;
 
-        public bool Serialize(Stream stream)
+        public int Serialize(Stream stream, bool measureOnly)
         {
-            stream.PacketWriteUInt(this.SequenceNumber);
+            int size = stream.PacketWriteUInt(this.SequenceNumber, measureOnly);
 
-            return true;
+            return size;
         }
 
         public bool Deserialize(Stream stream)
@@ -82,12 +82,12 @@ namespace Game.Networking
         public uint SequenceNumber;
         public uint AcknowledgeNumber;
 
-        public bool Serialize(Stream stream)
+        public int Serialize(Stream stream, bool measureOnly)
         {
-            stream.PacketWriteUInt(this.SequenceNumber);
-            stream.PacketWriteUInt(this.AcknowledgeNumber);
+            int size = stream.PacketWriteUInt(this.SequenceNumber, measureOnly);
+            size += stream.PacketWriteUInt(this.AcknowledgeNumber, measureOnly);
 
-            return true;
+            return size;
         }
 
         public bool Deserialize(Stream stream)

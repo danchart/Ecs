@@ -14,21 +14,23 @@ namespace Game.Networking.PacketData
         // 1
         public float velocity_y;
 
-        public bool Serialize(BitField hasFields, Stream stream)
+        public int Serialize(BitField hasFields, Stream stream, bool measureOnly)
         {
+            int size = 0;
+
             if (hasFields.IsSet(0))
             {
-                stream.PacketWriteByte(0);
-                stream.PacketWriteFloat(velocity_x);
+                size += stream.PacketWriteByte(0, measureOnly);
+                size += stream.PacketWriteFloat(velocity_x, measureOnly);
             }
 
             if (hasFields.IsSet(1))
             {
-                stream.PacketWriteByte(1);
-                stream.PacketWriteFloat(velocity_y);
+                size += stream.PacketWriteByte(1, measureOnly);
+                size += stream.PacketWriteFloat(velocity_y, measureOnly);
             }
 
-            return true;
+            return size;
         }
 
         public bool Deserialize(byte fieldCount, ref BitField hasFields, Stream stream)

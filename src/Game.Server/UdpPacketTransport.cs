@@ -39,17 +39,17 @@ namespace Game.Server
             this.UdpSocket.Start(this._config.HostIpEndPoint);
         }
 
-        public async Task<Packet> ReceiveAsync()
-        { 
-            var receiveResult = await this.Client.ReceiveAsync();
+        //public async Task<Packet> ReceiveAsync()
+        //{ 
+        //    var receiveResult = await this.Client.ReceiveAsync();
 
-            var stream = new MemoryStream(receiveResult.Buffer, 0, receiveResult.Buffer.Length);
+        //    var stream = new MemoryStream(receiveResult.Buffer, 0, receiveResult.Buffer.Length);
 
-            Packet packet = new Packet();
+        //    Packet packet = new Packet();
 
-            packet.Deserialize(stream);
+        //    packet.Deserialize(stream);
 
-            return packet;
-        }
+        //    return packet;
+        //}
     }
 }

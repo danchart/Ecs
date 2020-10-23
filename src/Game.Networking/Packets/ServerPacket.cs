@@ -12,7 +12,7 @@ namespace Game.Networking
     }
 
     [StructLayout(LayoutKind.Explicit, Pack = 1)]
-    public struct Packet
+    public struct ServerPacket
     {
         [FieldOffset(0)]
         public PacketTypeEnum Type;
@@ -24,22 +24,20 @@ namespace Game.Networking
         [FieldOffset(8)]
         ControlPacket ControlPacket;
 
-        public bool Serialize(Stream stream)
+        public int Serialize(Stream stream, bool measureOnly, IPacketEncryption packetEncryption)
         {
-            stream.PacketWriteByte((byte) this.Type);
-            stream.PacketWriteInt(this.PlayerId);
-
-            var encryptPos = stream.Position;
+            int size = stream.PacketWriteByte((byte) this.Type, measureOnly);
+            size += stream.PacketWriteInt(this.PlayerId, measureOnly);
 
             switch (this.Type)
             {
                 case PacketTypeEnum.Simulation:
-                    return this.SimulationPacket.Serialize(stream);
+                    return size + this.SimulationPacket.Serialize(stream, measureOnly);
                 case PacketTypeEnum.Control:
-                    return this.ControlPacket.Serialize(stream);
+                    return size + this.ControlPacket.Serialize(stream, measureOnly);
             }
 
-            return false;
+            return -1;
         }
 
         public bool Deserialize(Stream stream, IPacketEncryption packetEncryption)

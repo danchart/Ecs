@@ -28,13 +28,15 @@ namespace Game.Networking.Core.Tests
 
             using (var writeStream = new MemoryStream())
             {
-                writeStream.PacketWriteByte(byteValue);
-                writeStream.PacketWriteUShort(ushortValue);
-                writeStream.PacketWriteInt(intValue);
-                writeStream.PacketWriteUInt(uintValue);
-                writeStream.PacketWriteFloat(floatValue);
+                int size = writeStream.PacketWriteByte(byteValue, measureOnly: false);
+                size += writeStream.PacketWriteUShort(ushortValue, measureOnly: false);
+                size += writeStream.PacketWriteInt(intValue, measureOnly: false);
+                size += writeStream.PacketWriteUInt(uintValue, measureOnly: false);
+                size += writeStream.PacketWriteFloat(floatValue, measureOnly: false);
 
                 var bytes = writeStream.ToArray();
+
+                Assert.Equal(bytes.Length, size);
 
                 using (var readStream = new MemoryStream(bytes))
                 {

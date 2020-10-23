@@ -5,11 +5,14 @@ namespace Game.Networking.Core
 {
     public static class PacketStreamExtensions
     {
-        public static bool PacketWriteByte(this Stream stream, byte value)
+        public static int PacketWriteByte(this Stream stream, byte value, bool measureOnly)
         {
-            stream.WriteByte(value);
+            if (!measureOnly)
+            {
+                stream.WriteByte(value);
+            }
 
-            return true;
+            return sizeof(byte);
         }
 
         public static bool PacketReadByte(this Stream stream, out byte value)
@@ -19,13 +22,16 @@ namespace Game.Networking.Core
             return true;
         }
 
-        public static bool PacketWriteUShort(this Stream stream, ushort value)
+        public static int PacketWriteUShort(this Stream stream, ushort value, bool measureOnly)
         {
-            var bytes = BitConverter.GetBytes(value);
+            if (!measureOnly)
+            {
+                var bytes = BitConverter.GetBytes(value);
 
-            stream.Write(bytes, 0, bytes.Length);
+                stream.Write(bytes, 0, bytes.Length);
+            }
 
-            return true;
+            return sizeof(ushort);
         }
 
         public static bool PacketReadUShort(this Stream stream, out ushort value)
@@ -39,13 +45,16 @@ namespace Game.Networking.Core
             return true;
         }
 
-        public static bool PacketWriteUInt(this Stream stream, uint value)
+        public static int PacketWriteUInt(this Stream stream, uint value, bool measureOnly)
         {
-            var bytes = BitConverter.GetBytes(value);
+            if (!measureOnly)
+            {
+                var bytes = BitConverter.GetBytes(value);
 
-            stream.Write(bytes, 0, bytes.Length);
+                stream.Write(bytes, 0, bytes.Length);
+            }
 
-            return true;
+            return sizeof(uint);
         }
 
         public static bool PacketReadUInt(this Stream stream, out uint value)
@@ -59,13 +68,16 @@ namespace Game.Networking.Core
             return true;
         }
 
-        public static bool PacketWriteInt(this Stream stream, int value)
+        public static int PacketWriteInt(this Stream stream, int value, bool measureOnly)
         {
-            var bytes = BitConverter.GetBytes(value);
+            if (!measureOnly)
+            {
+                var bytes = BitConverter.GetBytes(value);
 
-            stream.Write(bytes, 0, bytes.Length);
+                stream.Write(bytes, 0, bytes.Length);
+            }
 
-            return true;
+            return sizeof(int);
         }
 
         public static bool PacketReadInt(this Stream stream, out int value)
@@ -79,13 +91,16 @@ namespace Game.Networking.Core
             return true;
         }
 
-        public static bool PacketWriteFloat(this Stream stream, float value)
+        public static int PacketWriteFloat(this Stream stream, float value, bool measureOnly)
         {
-            var bytes = BitConverter.GetBytes(value);
+            if (!measureOnly)
+            {
+                var bytes = BitConverter.GetBytes(value);
 
-            stream.Write(bytes, 0, bytes.Length);
+                stream.Write(bytes, 0, bytes.Length);
+            }
 
-            return true;
+            return sizeof(float);
         }
 
         public static bool PacketReadFloat(this Stream stream, out float value)
