@@ -12,7 +12,7 @@ namespace Game.Server.Tests
             var logger = new TestLogger();
             var config = new DefaultServerConfig();
 
-            var playerConnections = new PlayerConnectionManager(config.ReplicationConfig, config.PlayerConnectionConfig);
+            var playerConnections = new PlayerConnectionManager(config.Replication, config.PlayerConnection);
 
             var gameWorld = new GameWorld(
                 id: 0,

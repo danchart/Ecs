@@ -4,13 +4,14 @@ using Ecs.Core.Collections;
 using Game.Simulation.Core;
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Runtime.CompilerServices;
 
 namespace Game.Simulation.Server
 {
-    public class PlayerReplicationData
+    public sealed class PlayerReplicationData
     {
-        private ReplicatedEntity[] _replicatedEntities;
+        private EntityReplicationData[] _replicatedEntities;
         private Dictionary<Entity, int> _entityToIndex;
 
         private int[] _freeIndices;
@@ -26,7 +27,7 @@ namespace Game.Simulation.Server
         public PlayerReplicationData(int capacity, int componentCapacity, float tickTime, int[] queueTicks)
         {
             this._componentCapacity = componentCapacity;
-            this._replicatedEntities = new ReplicatedEntity[capacity];
+            this._replicatedEntities = new EntityReplicationData[capacity];
             this._freeIndices = new int[capacity];
             this._entityToIndex = new Dictionary<Entity, int>(capacity);
             this._count = 0;
@@ -37,7 +38,7 @@ namespace Game.Simulation.Server
         }
 
         public int Count => this._count;
-        public ref readonly ReplicatedEntity this[int index] => ref this._replicatedEntities[index];
+        public ref readonly EntityReplicationData this[int index] => ref this._replicatedEntities[index];
 
         public void Clear()
         {
@@ -88,10 +89,10 @@ namespace Game.Simulation.Server
 
                 this._entityToIndex[entity] = index;
 
-                if (this._replicatedEntities[index]._components == null)
+                if (this._replicatedEntities[index].Components == null)
                 {
-                    this._replicatedEntities[index]._components = new FixedIndexDictionary<ReplicatedEntity.Component>(this._componentCapacity);
-                    this._replicatedEntities[index]._prevReplicatedComponentFields = new Dictionary<ComponentId, BitField>(this._componentCapacity);
+                    this._replicatedEntities[index].Components = new FixedIndexDictionary<EntityReplicationData.Component>(this._componentCapacity);
+                    this._replicatedEntities[index].LastReplicatedComponentFields = new Dictionary<ComponentId, BitField>(this._componentCapacity);
                 }
             }
             else
@@ -104,22 +105,22 @@ namespace Game.Simulation.Server
             // Update priority and relevance, but preserve the assigned queue time if there is one to ensure
             // this entity is dispatched at the correct time.
 
-            entityReplicationData.Priority.Priority = Math.Min(1.0f, priority);
-            entityReplicationData.Priority.Relevance = Math.Min(1.0f, relevance);
-            entityReplicationData.Priority.RequestedQueueTimeRemaining =
+            entityReplicationData.NetPriority.Priority = Math.Min(1.0f, priority);
+            entityReplicationData.NetPriority.Relevance = Math.Min(1.0f, relevance);
+            entityReplicationData.NetPriority.RemainingQueueTime =
                 wasUnassigned
                 // Assign new queue time.
-                ? GetQueueTimeFromPriority(entityReplicationData.Priority.Priority)
+                ? GetQueueTimeFromPriority(entityReplicationData.NetPriority.Priority)
                 // Keep the existing queue time.
-                : entityReplicationData.Priority.RequestedQueueTimeRemaining;
+                : entityReplicationData.NetPriority.RemainingQueueTime;
 
             foreach (ref var modifiedComponent in modifiedComponents)
             {
-                if (entityReplicationData._components.ContainsKey(modifiedComponent.ComponentIdAsIndex))
+                if (entityReplicationData.Components.ContainsKey(modifiedComponent.ComponentIdAsIndex))
                 {
                     // Merge component changes into the replication data.
 
-                    ref var replicationComponentData = ref entityReplicationData._components[modifiedComponent.ComponentIdAsIndex];
+                    ref var replicationComponentData = ref entityReplicationData.Components[modifiedComponent.ComponentIdAsIndex];
 
                     replicationComponentData.Merge(modifiedComponent);
                 }
@@ -127,8 +128,8 @@ namespace Game.Simulation.Server
                 {
                     // Add component to the replication data.
 
-                    entityReplicationData._components[modifiedComponent.ComponentIdAsIndex] =
-                        new ReplicatedEntity.Component
+                    entityReplicationData.Components[modifiedComponent.ComponentIdAsIndex] =
+                        new EntityReplicationData.Component
                         {
                             // Replicate all fields
                             HasFields = BitField.NewSetAll(),
@@ -159,7 +160,7 @@ namespace Game.Simulation.Server
 
         public struct Enumerator
         {
-            private readonly ReplicatedEntity[] _replicatedEntities;
+            private readonly EntityReplicationData[] _replicatedEntities;
             private Dictionary<Entity, int>.Enumerator _enumerator;
 
             internal Enumerator(PlayerReplicationData replicationData)
@@ -168,7 +169,7 @@ namespace Game.Simulation.Server
                 this._enumerator = replicationData._entityToIndex.GetEnumerator();
             }
 
-            public ref ReplicatedEntity Current
+            public ref EntityReplicationData Current
             {
                 [MethodImpl(MethodImplOptions.AggressiveInlining)]
                 get => ref this._replicatedEntities[this._enumerator.Current.Value];
@@ -178,26 +179,58 @@ namespace Game.Simulation.Server
             public bool MoveNext() => this._enumerator.MoveNext();
         }
 
-        public struct ReplicatedEntity
+        public struct EntityReplicationData
         {
-            public QueuePriority Priority;
+            public NetPriorityData NetPriority;
 
-            public Dictionary<ComponentId , BitField> _prevReplicatedComponentFields;
-            public FixedIndexDictionary<Component> _components;
+            public Dictionary<ComponentId , BitField> LastReplicatedComponentFields;
+            public FixedIndexDictionary<Component> Components;
 
-            public ReplicatedEntity(int componentCapacity) : this()
+            public EntityReplicationData(int componentCapacity) : this()
             {
-                this._prevReplicatedComponentFields = new Dictionary<ComponentId, BitField>(componentCapacity);
-                this._components = new FixedIndexDictionary<Component>((int)ComponentId.MaxValue);
+                this.LastReplicatedComponentFields = new Dictionary<ComponentId, BitField>(componentCapacity);
+                this.Components = new FixedIndexDictionary<Component>((int)ComponentId.MaxValue);
             }
 
             public void Clear()
             {
-                this._prevReplicatedComponentFields.Clear();
-                this._components.Clear();
+                this.LastReplicatedComponentFields.Clear();
+                this.Components.Clear();
             }
 
-            public struct QueuePriority
+            public int MeasurePacketSize(byte[] key)
+            {
+                int size = 0;
+
+                for (int i = 0; i < (int)ComponentId.MaxValue; i++)
+                {
+                    if (this.Components.ContainsKey(i))
+                    {
+                        ref var component = ref this.Components[i];
+
+                        switch (component.Data.ComponentId)
+                        {
+                            case ComponentId.Transform:
+
+                                size += component.Data.Transform.Serialize(component.HasFields, Stream.Null, measureOnly: true);
+                                break;
+
+                            case ComponentId.Movement:
+
+                                size += component.Data.Movement.Serialize(component.HasFields, Stream.Null, measureOnly: true);
+                                break;
+
+                            default:
+
+                                throw new InvalidOperationException($"Unknown {nameof(ComponentId)}, value={component.Data.ComponentId}");
+                        }
+                    }
+                }
+
+                return size;
+            }
+
+            public struct NetPriorityData
             {
                 /// <summary>
                 /// How much does this effect gameplay. [0..1]
@@ -212,7 +245,7 @@ namespace Game.Simulation.Server
                 /// <summary>
                 /// Desired update period, in seconds.
                 /// </summary>
-                public float RequestedQueueTimeRemaining;
+                public float RemainingQueueTime;
             }
 
             public struct Component

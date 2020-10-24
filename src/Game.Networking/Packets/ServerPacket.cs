@@ -20,9 +20,9 @@ namespace Game.Networking
         public PlayerId PlayerId;
 
         [FieldOffset(8)]
-        SimulationPacket SimulationPacket;
+        public SimulationPacket SimulationPacket;
         [FieldOffset(8)]
-        ControlPacket ControlPacket;
+        public ControlPacket ControlPacket;
 
         public int Serialize(Stream stream, bool measureOnly, IPacketEncryption packetEncryption)
         {

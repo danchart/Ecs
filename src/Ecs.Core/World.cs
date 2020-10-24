@@ -10,7 +10,7 @@ namespace Ecs.Core
     /// <summary>
     /// Contains all ECS state.
     /// </summary>
-    public class World
+    public sealed class World
     {
         internal readonly EcsConfig Config;
 

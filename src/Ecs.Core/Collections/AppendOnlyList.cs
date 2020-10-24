@@ -5,7 +5,7 @@ namespace Ecs.Core
     /// <summary>
     /// Fast append0only list.
     /// </summary>
-    public class AppendOnlyList<T>
+    public sealed class AppendOnlyList<T>
     {
         public T[] Items;
         public int Count;

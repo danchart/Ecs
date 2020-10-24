@@ -7,7 +7,7 @@ namespace Game.Simulation.Server
         private PlayerReplicationData[] _items;
         private int[] _freeItemIndices;
 
-        private int _itemCount = 0;
+        private int _count = 0;
         private int _freeItemCount = 0;
 
         private readonly ReplicationConfig _replicationConfig;
@@ -19,7 +19,7 @@ namespace Game.Simulation.Server
             this._freeItemIndices = new int[capacity];
         }
 
-        public int Count => this._itemCount - this._freeItemCount;
+        public int Count => this._count;
 
         public int New()
         {
@@ -33,13 +33,14 @@ namespace Game.Simulation.Server
             else
             {
                 // Resize pool when out-of-space
-                if (this._itemCount == this._items.Length)
+                if (this._count == this._items.Length)
                 {
-                    Array.Resize(ref this._items, this._itemCount * 2);
+                    Array.Resize(ref this._items, this._count * 2);
+                    Array.Resize(ref this._freeItemIndices, this._count * 2);
                 }
 
                 // Current count is new id, then increment.
-                newPoolIndex = this._itemCount++;
+                newPoolIndex = this._count++;
 
                 // Allocate object if needed, clear otherwise.
                 if (this._items[newPoolIndex] == null)
@@ -61,17 +62,13 @@ namespace Game.Simulation.Server
 
         public void Free(int index)
         {
-            // Clear item data
-            this._items[index] = default;
-
-            // Resize free item pool if out-of-space
-            if (this._freeItemCount == this._freeItemIndices.Length)
-            {
-                Array.Resize(ref this._freeItemIndices, this._freeItemCount * 2);
-            }
+            this._count--;
 
             // Add free index to free item pool
             this._freeItemIndices[this._freeItemCount++] = index;
+
+            // Clear item data
+            this._items[index] = default;
         }
 
         public ref PlayerReplicationData GetItem(int index)

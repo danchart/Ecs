@@ -8,13 +8,13 @@
         public PacketPriorityConfig PacketPriority = new PacketPriorityConfig();
         public NetworkingConfig Networking = new NetworkingConfig();
 
-        public class CapacityConfig
+        public sealed class CapacityConfig
         {
             public int InitialReplicatedEntityCapacity = 1024;
             public int InitialReplicatedComponentCapacity = 6;
         }
 
-        public class PacketPriorityConfig
+        public sealed class PacketPriorityConfig
         {
             public float
                 DistanceSquardRing0 = 12.0f,
@@ -28,7 +28,7 @@
                 Ring3Priority = 0.1f;
         }
 
-        public class NetworkingConfig
+        public sealed class NetworkingConfig
         {
             /// <summary>
             /// Base tick time for priority queue. 

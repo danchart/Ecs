@@ -1,6 +1,6 @@
 ﻿namespace Game.Simulation.Core
 {
-    public class SimulationConfig
+    public sealed class SimulationConfig
     {
         // in fixed update frames.
         public int SnapShotCount;

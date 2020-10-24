@@ -7,7 +7,7 @@ using System.Threading;
 
 namespace Game.Server
 {
-    public class GameWorld
+    public sealed class GameWorld
     {
         //
         // Configurations
@@ -49,17 +49,17 @@ namespace Game.Server
 
             this._players = new WorldPlayers(
                 playerConnections,
-                config.ReplicationConfig,
-                config.PlayerConnectionConfig.Capacity.InitialConnectionsCapacity);
+                config.Replication,
+                config.PlayerConnection.Capacity.InitialConnectionsCapacity);
 
-            this._replicationManager = new WorldReplicationManager(config.ReplicationConfig, this._players);
+            this._replicationManager = new WorldReplicationManager(config.Replication, this._players);
 
             this._systems =
                 new Systems(this._world)
                 .Add(new GatherReplicatedDataSystem())
                 .Inject(
                     new ReplicationDataBroker(
-                        config.ReplicationConfig.Capacity, 
+                        config.Replication.Capacity, 
                         this._replicationManager));
 
             this._simulation = new ServerSimulation<PlayerInputComponent>(

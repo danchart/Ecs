@@ -5,17 +5,30 @@ namespace Game.Server
 {
     public interface IServerConfig
     {
-        ReplicationConfig ReplicationConfig { get;  }
-        PlayerConnectionConfig PlayerConnectionConfig { get; }
-        EcsConfig EcsConfig { get; }
+        ReplicationConfig Replication { get; }
+        PlayerConnectionConfig PlayerConnection { get; }
+        EcsConfig Ecs { get; }
+        TransportConfig Transport { get;}
     }
 
-    public class DefaultServerConfig : IServerConfig
+    public sealed class DefaultServerConfig : IServerConfig
     {
-        public ReplicationConfig ReplicationConfig => ReplicationConfig.Default;
+        public ReplicationConfig Replication => ReplicationConfig.Default;
 
-        public PlayerConnectionConfig PlayerConnectionConfig => PlayerConnectionConfig.Default;
+        public PlayerConnectionConfig PlayerConnection => PlayerConnectionConfig.Default;
 
-        public EcsConfig EcsConfig => EcsConfig.Default;
+        public EcsConfig Ecs => EcsConfig.Default;
+
+        public TransportConfig Transport => TransportConfig.Default;
+    }
+
+    public sealed class TransportConfig
+    {
+        public int MaxPacketSize;
+
+        public static readonly TransportConfig Default = new TransportConfig
+        {
+            MaxPacketSize = 512
+        };
     }
 }

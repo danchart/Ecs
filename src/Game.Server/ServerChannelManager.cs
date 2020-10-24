@@ -1,7 +1,9 @@
-﻿using Game.Simulation.Server;
+﻿using Common.Core;
+using Game.Networking;
+using Game.Simulation.Core;
+using Game.Simulation.Server;
 using System;
 using System.Collections.Generic;
-using System.Threading;
 
 namespace Game.Server
 {
@@ -10,8 +12,11 @@ namespace Game.Server
         private ServerUdpPacketTransport _transport;
         private Dictionary<int, WorldPlayers> _worldPlayersMap;
 
-        public ServerChannelManager(ServerUdpPacketTransport transport)
+        private readonly TransportConfig _config;
+
+        public ServerChannelManager(TransportConfig config, ServerUdpPacketTransport transport)
         {
+            this._config = config ?? throw new ArgumentNullException(nameof(config));
             this._transport = transport ?? throw new ArgumentNullException(nameof(transport));
 
             this._worldPlayersMap = new Dictionary<int, WorldPlayers>(8);
@@ -30,15 +35,51 @@ namespace Game.Server
         // TODO: Queue replication packets to transport
         // TODO: Sort client input to worlds
 
-        public void UpdateClients()
+        public void UpdateClients(ushort frame)
         {
+            RefDictionary<int, PlayerReplicationData.EntityReplicationData> playerReplicatedEntities = new RefDictionary<int, PlayerReplicationData.EntityReplicationData>(16);
+
             foreach (var pair in this._worldPlayersMap)
             {
                 var worldPlayers = pair.Value;
 
                 foreach (ref var player in worldPlayers)
                 {
-                    player.ReplicationData.
+                    playerReplicatedEntities.Clear();
+
+                    ref readonly var playerConnection = ref player.ConnectionRef.Unref();
+
+                    ServerPacket packet;
+
+                    packet.Type = ServerPacketType.Simulation;
+                    packet.PlayerId = playerConnection.PlayerId;
+                    packet.SimulationPacket.Frame = frame;
+                    //packet.SimulationPacket.EntityCount =
+                    //packet.SimulationPacket.EntityData =
+
+                    // HACK: This is SUPER fragile!!
+                    const int ServerPacketHeaderSize = 16; 
+
+                    int size = 0;
+
+                    foreach (var replicatedEntity in player.ReplicationData)
+                    {
+                        if (replicatedEntity.NetPriority.RemainingQueueTime <= 0)
+                        {
+                            var entitySize = replicatedEntity.MeasurePacketSize(playerConnection.PacketEncryptionKey);
+
+                            if (size + entitySize > this._config.MaxPacketSize - ServerPacketHeaderSize)
+                            {
+                                break;
+                            }
+                            else
+                            {
+                                size += entitySize;
+
+                                playerReplicatedEntities.Add(playerReplicatedEntities.Count, replicatedEntity);
+                            }
+                        }
+                    }
                 }
             }
         }

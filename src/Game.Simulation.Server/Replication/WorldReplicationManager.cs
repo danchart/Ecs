@@ -11,7 +11,7 @@ namespace Game.Simulation.Server
         void ApplyEntityChanges(EntityMapList<ReplicatedComponentData> entityComponents);
     }
 
-    public class WorldReplicationManager : IWorldReplicationManager
+    public sealed class WorldReplicationManager : IWorldReplicationManager
     {
         private readonly ReplicationPacketPriorityComponents _packetPriorityComponents;
         private readonly WorldPlayers _players;

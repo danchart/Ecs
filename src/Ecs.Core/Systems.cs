@@ -4,7 +4,7 @@ using System.Reflection;
 
 namespace Ecs.Core
 {
-    public class Systems
+    public sealed class Systems
     {
         public readonly World World;
 

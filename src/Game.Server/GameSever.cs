@@ -25,7 +25,7 @@ namespace Game.Server
             this._serverConfig = serverConfig  ?? throw new ArgumentNullException(nameof(serverConfig));
             this._logger = logger ?? throw new ArgumentNullException(nameof(logger));
 
-            this._playerConnectionManager = new PlayerConnectionManager(this._serverConfig.ReplicationConfig, this._serverConfig.PlayerConnectionConfig);
+            this._playerConnectionManager = new PlayerConnectionManager(this._serverConfig.Replication, this._serverConfig.PlayerConnection);
             this._nextWorldId = 0;
         }
 
