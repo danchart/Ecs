@@ -4,7 +4,7 @@ using System.Runtime.InteropServices;
 
 namespace Game.Networking
 {
-    public enum ServerPacketTypeEnum
+    public enum ServerPacketType
     {
         Reserved = 0,
         Simulation = 1,
@@ -15,7 +15,7 @@ namespace Game.Networking
     public struct ServerPacket
     {
         [FieldOffset(0)]
-        public ServerPacketTypeEnum Type;
+        public ServerPacketType Type;
         [FieldOffset(4)]
         public PlayerId PlayerId;
 
@@ -31,9 +31,9 @@ namespace Game.Networking
 
             switch (this.Type)
             {
-                case ServerPacketTypeEnum.Simulation:
+                case ServerPacketType.Simulation:
                     return size + this.SimulationPacket.Serialize(stream, measureOnly);
-                case ServerPacketTypeEnum.Control:
+                case ServerPacketType.Control:
                     return size + this.ControlPacket.Serialize(stream, measureOnly);
             }
 
@@ -44,16 +44,16 @@ namespace Game.Networking
         {
             byte typeAsByte;
             stream.PacketReadByte(out typeAsByte);
-            this.Type = (ServerPacketTypeEnum) typeAsByte;
+            this.Type = (ServerPacketType) typeAsByte;
             int playerId;
             stream.PacketReadInt(out playerId);
             this.PlayerId = new PlayerId(playerId);
 
             switch (this.Type)
             {
-                case ServerPacketTypeEnum.Simulation:
+                case ServerPacketType.Simulation:
                     return this.SimulationPacket.Deserialize(stream);
-                case ServerPacketTypeEnum.Control:
+                case ServerPacketType.Control:
                     return this.ControlPacket.Deserialize(stream);
             }
 

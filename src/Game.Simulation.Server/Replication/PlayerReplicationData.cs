@@ -4,6 +4,7 @@ using Ecs.Core.Collections;
 using Game.Simulation.Core;
 using System;
 using System.Collections.Generic;
+using System.Runtime.CompilerServices;
 
 namespace Game.Simulation.Server
 {
@@ -69,12 +70,6 @@ namespace Game.Simulation.Server
             {
                 wasUnassigned = true;
 
-                if (this._count == this._replicatedEntities.Length)
-                {
-                    Array.Resize(ref this._replicatedEntities, 2 * this._count);
-                    Array.Resize(ref this._freeIndices, 2 * this._count);
-                }
-
                 if (this._freeCount > 0)
                 {
                     // Use index from the free pool first.
@@ -82,6 +77,12 @@ namespace Game.Simulation.Server
                 }
                 else
                 {
+                    if (this._count == this._replicatedEntities.Length)
+                    {
+                        Array.Resize(ref this._replicatedEntities, 2 * this._count);
+                        Array.Resize(ref this._freeIndices, 2 * this._count);
+                    }
+
                     index = this._count++;
                 }
 
@@ -111,7 +112,6 @@ namespace Game.Simulation.Server
                 ? GetQueueTimeFromPriority(entityReplicationData.Priority.Priority)
                 // Keep the existing queue time.
                 : entityReplicationData.Priority.RequestedQueueTimeRemaining;
-
 
             foreach (ref var modifiedComponent in modifiedComponents)
             {
@@ -150,6 +150,32 @@ namespace Game.Simulation.Server
                 (int)(0.5f + this._queueTicks.Length * queuePriority));
 
             return this._tickTime * this._queueTicks[index];
+        }
+
+        public Enumerator GetEnumerator()
+        {
+            return new Enumerator(this);
+        }
+
+        public struct Enumerator
+        {
+            private readonly ReplicatedEntity[] _replicatedEntities;
+            private Dictionary<Entity, int>.Enumerator _enumerator;
+
+            internal Enumerator(PlayerReplicationData replicationData)
+            {
+                this._replicatedEntities = replicationData._replicatedEntities;
+                this._enumerator = replicationData._entityToIndex.GetEnumerator();
+            }
+
+            public ref ReplicatedEntity Current
+            {
+                [MethodImpl(MethodImplOptions.AggressiveInlining)]
+                get => ref this._replicatedEntities[this._enumerator.Current.Value];
+            }
+
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
+            public bool MoveNext() => this._enumerator.MoveNext();
         }
 
         public struct ReplicatedEntity

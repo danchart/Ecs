@@ -6,7 +6,7 @@ using System.Runtime.InteropServices;
 
 namespace Game.Networking
 {
-    public struct ClientInputPacket
+    public struct ClientPlayerInputPacket
     {
         public uint Frame;
         public byte InputCount;

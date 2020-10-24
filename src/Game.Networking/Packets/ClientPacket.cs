@@ -4,16 +4,25 @@ using System.Runtime.InteropServices;
 
 namespace Game.Networking.Packets
 {
+    public enum ClientPacketType : byte
+    {
+        Reserved = 0,
+        PlayerInput = 1,
+        Control = 2,
+    }
+
     [StructLayout(LayoutKind.Explicit, Pack = 1)]
     public struct ClientPacket
     {
         [FieldOffset(0)]
-        public ServerPacketTypeEnum Type;
-        [FieldOffset(4)]
+        public ClientPacketType Type;
+        [FieldOffset(1)]
         public PlayerId PlayerId;
+        [FieldOffset(3)]
+        public ushort FrameId;
 
-        [FieldOffset(8)]
-        ClientInputPacket InputPacket;
+        [FieldOffset(5)]
+        ClientPlayerInputPacket PlayerInputPacket;
 
         public int Serialize(Stream stream, bool measureOnly, IPacketEncryption packetEncryption)
         {
@@ -23,8 +32,8 @@ namespace Game.Networking.Packets
 
             switch (this.Type)
             {
-                case ServerPacketTypeEnum.Simulation:
-                    return size + this.SimulationPacket.Serialize(stream, measureOnly);
+                case ClientPacketType.PlayerInput:
+                    return size + this.PlayerInputPacket.Serialize(stream, measureOnly);
             }
 
             return -1;
@@ -34,7 +43,7 @@ namespace Game.Networking.Packets
         {
             byte typeAsByte;
             stream.PacketReadByte(out typeAsByte);
-            this.Type = (ServerPacketTypeEnum)typeAsByte;
+            this.Type = (ClientPacketType)typeAsByte;
             int playerId;
             stream.PacketReadInt(out playerId);
             this.PlayerId = new PlayerId(playerId);
@@ -42,12 +51,11 @@ namespace Game.Networking.Packets
 
             switch (this.Type)
             {
-                case ServerPacketTypeEnum.Simulation:
-                    return this.SimulationPacket.Deserialize(stream);
+                case ClientPacketType.PlayerInput:
+                    return this.PlayerInputPacket.Deserialize(stream);
             }
 
             return false;
         }
-
     }
 }
