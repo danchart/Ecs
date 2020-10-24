@@ -76,7 +76,7 @@ namespace Game.Server
 
                             if (size + entitySize > this._config.MaxPacketSize - ServerPacketHeaderSize)
                             {
-                                // Reached packet size
+                                // Reached packet size 
                                 break;
                             }
                             else
