@@ -1,6 +1,7 @@
 ﻿using Common.Core;
 using Ecs.Core;
 using Ecs.Core.Collections;
+using Game.Networking;
 using Game.Simulation.Core;
 using System;
 using System.Collections.Generic;
@@ -183,7 +184,7 @@ namespace Game.Simulation.Server
         {
             public NetPriorityData NetPriority;
 
-            public Dictionary<ComponentId , BitField> LastReplicatedComponentFields;
+            public Dictionary<ComponentId, BitField> LastReplicatedComponentFields;
             public FixedIndexDictionary<Component> Components;
 
             public EntityReplicationData(int componentCapacity) : this()
@@ -196,38 +197,6 @@ namespace Game.Simulation.Server
             {
                 this.LastReplicatedComponentFields.Clear();
                 this.Components.Clear();
-            }
-
-            public int MeasurePacketSize(byte[] key)
-            {
-                int size = 0;
-
-                for (int i = 0; i < (int)ComponentId.MaxValue; i++)
-                {
-                    if (this.Components.ContainsKey(i))
-                    {
-                        ref var component = ref this.Components[i];
-
-                        switch (component.Data.ComponentId)
-                        {
-                            case ComponentId.Transform:
-
-                                size += component.Data.Transform.Serialize(component.HasFields, Stream.Null, measureOnly: true);
-                                break;
-
-                            case ComponentId.Movement:
-
-                                size += component.Data.Movement.Serialize(component.HasFields, Stream.Null, measureOnly: true);
-                                break;
-
-                            default:
-
-                                throw new InvalidOperationException($"Unknown {nameof(ComponentId)}, value={component.Data.ComponentId}");
-                        }
-                    }
-                }
-
-                return size;
             }
 
             public struct NetPriorityData
@@ -258,6 +227,85 @@ namespace Game.Simulation.Server
                     this.Data.Merge(modifiedData, ref this.HasFields);
                 }
             }
+        }
+    }
+
+    public static class PlayerReplicationDataExtensions
+    {
+        public static int MeasurePacketSize(this PlayerReplicationData.EntityReplicationData replicationData)
+        {
+            int size = 0;
+
+            for (int i = 0; i < (int)ComponentId.MaxValue; i++)
+            {
+                if (replicationData.Components.ContainsKey(i))
+                {
+                    ref var component = ref replicationData.Components[i];
+
+                    switch (component.Data.ComponentId)
+                    {
+                        case ComponentId.Transform:
+
+                            size += component.Data.Transform.Serialize(component.HasFields, Stream.Null, measureOnly: true);
+                            break;
+
+                        case ComponentId.Movement:
+
+                            size += component.Data.Movement.Serialize(component.HasFields, Stream.Null, measureOnly: true);
+                            break;
+
+                        default:
+
+                            throw new InvalidOperationException($"Unknown {nameof(ComponentId)}, value={component.Data.ComponentId}");
+                    }
+                }
+            }
+
+            return size;
+        }
+
+        public static bool ToPacketDataItems(
+            this PlayerReplicationData.EntityReplicationData replicationData, 
+            ref PacketDataItem[] items, 
+            ref byte index)
+        {
+            for (int i = 0; i < (int)ComponentId.MaxValue; i++)
+            {
+                if (replicationData.Components.ContainsKey(i))
+                {
+                    if (index == items.Length)
+                    {
+                        Array.Resize(ref items, 2 * index);
+                    }
+
+                    ref var component = ref replicationData.Components[i];
+
+                    switch (component.Data.ComponentId)
+                    {
+                        case ComponentId.Transform:
+
+                            items[index].Type = PacketDataItem.TypeEnum.Transform;
+                            items[index].Transform = component.Data.Transform;
+                            break;
+
+                        case ComponentId.Movement:
+
+                            items[index].Type = PacketDataItem.TypeEnum.Movement;
+                            items[index].Movement = component.Data.Movement;
+                            break;
+
+                        default:
+
+                            throw new InvalidOperationException($"Unknown {nameof(ComponentId)}, value={component.Data.ComponentId}");
+                    }
+
+                    items[index].HasFields = component.HasFields;
+
+                    index++;
+                }
+            }
+
+            return true;
         }
     }
 }

@@ -88,14 +88,14 @@ namespace Game.Networking
     [StructLayout(LayoutKind.Explicit, Pack = 1)]
     public struct PacketDataItem
     {
-        enum TypeEnum
+        public enum TypeEnum : ushort
         {
             Transform,
             Movement,
         };
 
         [FieldOffset(0)]
-        ushort Type; // value of "TypeEnum"
+        public TypeEnum Type;
         [FieldOffset(2)]
         public BitField HasFields;
 
@@ -106,7 +106,7 @@ namespace Game.Networking
 
         public int Serialize(Stream stream, bool measureOnly)
         {
-            int size = stream.PacketWriteUShort(Type, measureOnly);
+            int size = stream.PacketWriteUShort((ushort) Type, measureOnly);
             byte fieldCount = (byte)HasFields.Count();
             size += stream.PacketWriteByte(fieldCount, measureOnly);
 
@@ -130,7 +130,9 @@ namespace Game.Networking
         public bool Deserialize(Stream stream)
         {
             // item type
-            stream.PacketReadUShort(out Type);
+            ushort typeAsUShort;
+            stream.PacketReadUShort(out typeAsUShort);
+            Type = (TypeEnum)typeAsUShort;
 
             if (!Enum.IsDefined(typeof(TypeEnum), (int)Type))
             {

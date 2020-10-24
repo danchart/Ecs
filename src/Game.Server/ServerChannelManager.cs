@@ -15,6 +15,8 @@ namespace Game.Server
 
         private readonly TransportConfig _config;
 
+        private ServerPacket _packet;
+
         public ServerChannelManager(TransportConfig config, ServerUdpPacketTransport transport)
         {
             this._config = config ?? throw new ArgumentNullException(nameof(config));
@@ -39,8 +41,10 @@ namespace Game.Server
 
         public void UpdateClients(ushort frame)
         {
-            RefDictionary<int, PlayerReplicationData.EntityReplicationData> playerReplicatedEntities = new RefDictionary<int, PlayerReplicationData.EntityReplicationData>(16);
-            AppendOnlyList< PlayerReplicationData.EntityReplicationData >
+            // TODO: Do we need a packet pool?
+            ref var packet = ref this._packet;
+
+            packet.Type = ServerPacketType.Simulation;
 
             foreach (var pair in this._worldPlayersMap)
             {
@@ -48,17 +52,16 @@ namespace Game.Server
 
                 foreach (ref var player in worldPlayers)
                 {
-                    playerReplicatedEntities.Clear();
-
                     ref readonly var playerConnection = ref player.ConnectionRef.Unref();
 
-                    ServerPacket packet;
-
-                    packet.Type = ServerPacketType.Simulation;
                     packet.PlayerId = playerConnection.PlayerId;
                     packet.SimulationPacket.Frame = frame;
-                    //packet.SimulationPacket.EntityCount =
-                    //packet.SimulationPacket.EntityData =
+                    packet.SimulationPacket.EntityCount = 0;
+
+                    if (packet.SimulationPacket.EntityData == null)
+                    {
+                        packet.SimulationPacket.EntityData = new EntityPacketData[64];
+                    }
 
                     // HACK: This is SUPER fragile!!
                     const int ServerPacketHeaderSize = 16; 
@@ -69,7 +72,7 @@ namespace Game.Server
                     {
                         if (replicatedEntity.NetPriority.RemainingQueueTime <= 0)
                         {
-                            var entitySize = replicatedEntity.MeasurePacketSize(playerConnection.PacketEncryptionKey);
+                            var entitySize = replicatedEntity.MeasurePacketSize();
 
                             if (size + entitySize > this._config.MaxPacketSize - ServerPacketHeaderSize)
                             {
@@ -78,9 +81,20 @@ namespace Game.Server
                             }
                             else
                             {
+                                packet.SimulationPacket.EntityCount++;
                                 size += entitySize;
 
-                                playerReplicatedEntities.Add(playerReplicatedEntities.Count, replicatedEntity);
+                                if (packet.SimulationPacket.EntityData[packet.SimulationPacket.EntityCount].Items == null)
+                                {
+                                    packet.SimulationPacket.EntityData[packet.SimulationPacket.EntityCount].Items = new PacketDataItem[128];
+                                }
+
+                                packet.SimulationPacket.EntityData[packet.SimulationPacket.EntityCount].ItemCount = 0;
+
+                                // TODO: Move this to  PacketDataItem
+                                replicatedEntity.ToPacketDataItems(
+                                    ref packet.SimulationPacket.EntityData[packet.SimulationPacket.EntityCount].Items, 
+                                    ref packet.SimulationPacket.EntityData[packet.SimulationPacket.EntityCount].ItemCount);
                             }
                         }
                     }

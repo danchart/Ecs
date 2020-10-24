@@ -45,7 +45,7 @@ namespace Game.Server
             this.UdpSocket.Start(this._config.HostIpEndPoint);
         }
 
-        public void SendPacket(PlayerId playerId, ServerPacket packet)
+        public void SendPacket(PlayerId playerId, in ServerPacket packet)
         {
             var client = this.PlayerIdToIpEndPoint[playerId];
 
