@@ -63,7 +63,7 @@ namespace Game.Simulation.Server.Tests
 
             // Pool resize
             var idx3 = pool.New();
-            Assert.Equal(idx3, pool.Count);
+            Assert.Equal(3, pool.Count);
 
             pool.Free(idx1);
 
