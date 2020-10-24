@@ -19,7 +19,7 @@ namespace Game.Simulation.Server
             this._freeItemIndices = new int[capacity];
         }
 
-        public int Count => this._count;
+        public int Count => this._count - this._freeItemCount;
 
         public int New()
         {
@@ -62,8 +62,6 @@ namespace Game.Simulation.Server
 
         public void Free(int index)
         {
-            this._count--;
-
             // Add free index to free item pool
             this._freeItemIndices[this._freeItemCount++] = index;
 

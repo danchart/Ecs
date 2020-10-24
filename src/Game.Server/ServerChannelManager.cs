@@ -1,4 +1,5 @@
 ﻿using Common.Core;
+using Ecs.Core;
 using Game.Networking;
 using Game.Simulation.Core;
 using Game.Simulation.Server;
@@ -32,12 +33,14 @@ namespace Game.Server
             this._worldPlayersMap.Remove(worldId);
         }
 
-        // TODO: Queue replication packets to transport
-        // TODO: Sort client input to worlds
+        // TODO:
+        // 1) Queue replication packets to transport
+        // 2) Sort client input to worlds
 
         public void UpdateClients(ushort frame)
         {
             RefDictionary<int, PlayerReplicationData.EntityReplicationData> playerReplicatedEntities = new RefDictionary<int, PlayerReplicationData.EntityReplicationData>(16);
+            AppendOnlyList< PlayerReplicationData.EntityReplicationData >
 
             foreach (var pair in this._worldPlayersMap)
             {

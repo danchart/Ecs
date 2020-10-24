@@ -30,7 +30,7 @@ namespace Common.Core
         public int Count
         {
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
-            get => this._count;
+            get => this._count - this._freeCount;
         }
 
         public ref TValue this[TKey key]
@@ -83,8 +83,6 @@ namespace Common.Core
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void Remove(TKey key)
         {
-            this._count--;
-
             this._freeIndices[_freeCount++] = this._idToIndex[key];
             this._idToIndex.Remove(key);
         }

@@ -67,6 +67,12 @@ namespace Game.Simulation.Server.Tests
 
             pool.Free(idx1);
 
+            var idx4 = pool.New();
+
+            Assert.Equal(3, pool.Count);
+
+            pool.Free(idx4);
+
             Assert.Equal(2, pool.Count);
 
             pool.Free(idx2);

@@ -35,6 +35,14 @@ namespace Common.Core.Tests
             Assert.False(dict.ContainsKey(1));
             Assert.Throws<KeyNotFoundException>(() => dict[1]);
 
+            dict.Add(11, new DataStruct { a = 3 });
+
+            Assert.Equal(3, dict.Count);
+
+            dict.Remove(11);
+
+            Assert.Equal(2, dict.Count);
+
             dict.Clear();
 
             Assert.Equal(0, dict.Count);
