@@ -90,7 +90,7 @@ namespace Game.Networking
     {
         public enum TypeEnum : ushort
         {
-            Transform,
+            Transform = 0,
             Movement,
         };
 
@@ -132,12 +132,13 @@ namespace Game.Networking
             // item type
             ushort typeAsUShort;
             stream.PacketReadUShort(out typeAsUShort);
-            Type = (TypeEnum)typeAsUShort;
 
-            if (!Enum.IsDefined(typeof(TypeEnum), (int)Type))
+            if (!Enum.IsDefined(typeof(TypeEnum), (ushort)Type))
             {
                 return false;
             }
+
+            Type = (TypeEnum)typeAsUShort;
 
             HasFields = new BitField();
 

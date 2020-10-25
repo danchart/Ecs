@@ -1,7 +1,6 @@
 ﻿using Common.Core;
 using Game.Networking;
 using Game.Networking.Core;
-using System.Collections.Generic;
 using System.IO;
 using System.Net;
 
@@ -25,8 +24,6 @@ namespace Game.Server
 
         private readonly UdpPacketTransportConfig _config;
 
-        private Dictionary<PlayerId, TransportClient> PlayerIdToIpEndPoint;
-
         private ByteArrayPool _packetSerializationBytePool;
 
         public ServerUdpPacketTransport(ILogger logger, UdpPacketTransportConfig config)
@@ -35,7 +32,6 @@ namespace Game.Server
 
             this.ReceiveBuffer = new ReceiveBuffer(config.MaxPacketSize, config.PacketReceiveQueueCapacity);
             this.UdpSocket = new UdpSocketServer(logger, this.ReceiveBuffer);
-            this.PlayerIdToIpEndPoint = new Dictionary<PlayerId, TransportClient>();
 
             this._packetSerializationBytePool = new ByteArrayPool(config.MaxPacketSize, config.PacketSendQueueCapacity);
         }
@@ -45,19 +41,18 @@ namespace Game.Server
             this.UdpSocket.Start(this._config.HostIpEndPoint);
         }
 
-        public void SendPacket(PlayerId playerId, in ServerPacket packet)
+        public void SendPacket(IPEndPoint endPoint, in ServerPacket packet)
         {
-            var client = this.PlayerIdToIpEndPoint[playerId];
-
             var bufferPoolIndex = this._packetSerializationBytePool.New();
             var data = this._packetSerializationBytePool.GetBuffer(bufferPoolIndex);
 
+            int size;
             using (var stream = new MemoryStream(data))
             {
-                packet.Serialize(stream, measureOnly: false, packetEncryption: this._config.PacketEncryption);
+                size = packet.Serialize(stream, measureOnly: false, packetEncryption: this._config.PacketEncryption);
             }
 
-            this.UdpSocket.SendTo(data, client.EndPoint);
+            this.UdpSocket.SendTo(data, endPoint);
 
             this._packetSerializationBytePool.Free(bufferPoolIndex);
         }
@@ -74,11 +69,5 @@ namespace Game.Server
 
         //    return packet;
         //}
-
-        private class TransportClient
-        {
-            public IPEndPoint EndPoint;
-            public byte[] Key;
-        }
     }
 }

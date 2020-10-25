@@ -96,7 +96,7 @@ namespace Game.Server
                         }
                     }
 
-
+                    this._transport.SendPacket(playerConnection.EndPoint, in packet);
                 }
             }
         }

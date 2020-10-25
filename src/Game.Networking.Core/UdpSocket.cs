@@ -153,6 +153,19 @@ namespace Game.Networking.Core
         {
             this._state.Socket.SendTo(
                 data,
+                0,
+                data.Length,
+                SocketFlags.None,
+                ipEndPoint);
+        }
+
+        public void SendTo(byte[] data, int offset, int length, IPEndPoint ipEndPoint)
+        {
+            this._state.Socket.SendTo(
+                data,
+                offset,
+                length,
+                SocketFlags.None,
                 ipEndPoint);
         }
     }

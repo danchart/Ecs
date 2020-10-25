@@ -1,4 +1,5 @@
 ﻿using Game.Networking;
+using System.Net;
 
 namespace Game.Simulation.Server
 {
@@ -6,5 +7,7 @@ namespace Game.Simulation.Server
     {
         public PlayerId PlayerId;
         public byte[] PacketEncryptionKey;
+
+        public IPEndPoint EndPoint;
     }
 }

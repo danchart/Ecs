@@ -1,4 +1,5 @@
 ﻿using Game.Networking;
+using System.Net;
 using Xunit;
 
 namespace Game.Simulation.Server.Tests
@@ -19,10 +20,11 @@ namespace Game.Simulation.Server.Tests
             Assert.Equal(0, connections.Count);
 
             var encryptionKey = new byte[] { 0x1 };
+            var endPoint = new IPEndPoint(0, 0);
 
-            connections.Add(new PlayerId(0), encryptionKey);
-            connections.Add(new PlayerId(1), encryptionKey);
-            connections.Add(new PlayerId(2), encryptionKey);
+            connections.Add(new PlayerId(0), encryptionKey, endPoint);
+            connections.Add(new PlayerId(1), encryptionKey, endPoint);
+            connections.Add(new PlayerId(2), encryptionKey, endPoint);
 
             Assert.Equal(3, connections.Count);
 
@@ -37,9 +39,9 @@ namespace Game.Simulation.Server.Tests
             Assert.Equal(2, connections.Count);
             Assert.False(connections.HasPlayer(new PlayerId(1)));
 
-            connections.Add(new PlayerId(3), encryptionKey);
+            connections.Add(new PlayerId(3), encryptionKey, endPoint);
 
-            Assert.Equal(2, connections.Count);
+            Assert.Equal(3, connections.Count);
 
             ref readonly var connection4 = ref connections[new PlayerId(3)];
 

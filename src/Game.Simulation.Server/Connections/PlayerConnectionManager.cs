@@ -1,5 +1,6 @@
 ﻿using Common.Core;
 using Game.Networking;
+using System.Net;
 
 namespace Game.Simulation.Server
 {
@@ -29,7 +30,7 @@ namespace Game.Simulation.Server
             return new PlayerConnectionRef(id, this);
         }
 
-        public void Add(PlayerId playerId, byte[] encryptionKey)
+        public void Add(PlayerId playerId, byte[] encryptionKey, IPEndPoint endPoint)
         {
             this._connections.Add(playerId);
 
@@ -37,6 +38,7 @@ namespace Game.Simulation.Server
 
             connection.PlayerId = playerId;
             connection.PacketEncryptionKey = encryptionKey;
+            connection.EndPoint = endPoint;
         }
 
         public void Remove(PlayerId playerId)
