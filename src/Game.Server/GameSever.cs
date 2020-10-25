@@ -1,19 +1,18 @@
 ﻿using Common.Core;
 using Game.Networking;
-using Game.Simulation.Server;
 using System;
 using System.Threading;
 
 namespace Game.Server
 {
-    public class GameServer
+    public sealed class GameServer
     {
         private SpawnedWorld[] SpawnedWorlds;
         private ushort _worldCount;
         private ushort[] _freeWorldIds;
         private ushort _freeWorldCount;
 
-        private PlayerConnectionManager _playerConnectionManager;
+        private readonly PlayerConnectionManager _playerConnectionManager;
 
         private readonly ILogger _logger;
         private readonly IServerConfig _serverConfig;
@@ -25,7 +24,7 @@ namespace Game.Server
             this._serverConfig = serverConfig  ?? throw new ArgumentNullException(nameof(serverConfig));
             this._logger = logger ?? throw new ArgumentNullException(nameof(logger));
 
-            this._playerConnectionManager = new PlayerConnectionManager(this._serverConfig.Replication, this._serverConfig.PlayerConnection);
+            this._playerConnectionManager = new PlayerConnectionManager(this._serverConfig.PlayerConnection);
 
             this.SpawnedWorlds = new SpawnedWorld[8];
             this._freeWorldIds = new ushort[8];
@@ -75,8 +74,7 @@ namespace Game.Server
             var world = new GameWorld(
                 new WorldId(worldId), 
                 this._logger,
-                this._serverConfig,
-                this._playerConnectionManager);
+                this._serverConfig);
             var thread = new Thread(world.Run);
             thread.Start();
 

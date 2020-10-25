@@ -2,7 +2,7 @@
 using System;
 using System.Collections.Generic;
 
-namespace Game.Simulation.Server
+namespace Game.Networking
 {
     public sealed class PlayerConnectionRefs
     {

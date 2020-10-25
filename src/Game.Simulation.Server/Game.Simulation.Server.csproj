@@ -23,11 +23,6 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="Connections\PlayerConnection.cs" />
-    <Compile Include="Connections\PlayerConnectionConfig.cs" />
-    <Compile Include="Connections\PlayerConnectionRef.cs" />
-    <Compile Include="Connections\PlayerConnectionManager.cs" />
-    <Compile Include="Connections\PlayerConnectionRefs.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Replication\PlayerReplicationData.cs" />
     <Compile Include="Replication\ReplicatedComponentData.cs" />

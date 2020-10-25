@@ -20,6 +20,11 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="ServerConnections\PlayerConnection.cs" />
+    <Compile Include="ServerConnections\PlayerConnectionConfig.cs" />
+    <Compile Include="ServerConnections\PlayerConnectionManager.cs" />
+    <Compile Include="ServerConnections\PlayerConnectionRef.cs" />
+    <Compile Include="ServerConnections\PlayerConnectionRefs.cs" />
     <Compile Include="Ids\WorldId.cs" />
     <Compile Include="Ids\PlayerId.cs" />
     <Compile Include="PacketEncryption.cs" />

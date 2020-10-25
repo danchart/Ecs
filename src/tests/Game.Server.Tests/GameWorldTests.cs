@@ -1,5 +1,4 @@
 ﻿using Game.Networking;
-using Game.Simulation.Server;
 using Test.Common;
 using Xunit;
 
@@ -13,7 +12,7 @@ namespace Game.Server.Tests
             var logger = new TestLogger();
             var config = new DefaultServerConfig();
 
-            var playerConnections = new PlayerConnectionManager(config.Replication, config.PlayerConnection);
+            var playerConnections = new PlayerConnectionManager(config.PlayerConnection);
 
             var gameWorld = new GameWorld(
                 id: new WorldId(0),

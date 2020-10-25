@@ -1,22 +1,20 @@
-﻿using Game.Networking;
-using System.Net;
+﻿using System.Net;
 using Xunit;
 
-namespace Game.Simulation.Server.Tests
+namespace Game.Networking.Tests
 {
     public class PlayerConnectionsTests
     {
         [Fact]
         public void Test()
         {
-            var connections = new PlayerConnectionManager(
-                new PlayerConnectionConfig
+            var connections = new PlayerConnectionManager(new PlayerConnectionConfig
+            {
+                Capacity = new PlayerConnectionConfig.CapacityConfig
                 {
-                    Capacity = new PlayerConnectionConfig.CapacityConfig
-                    {
-                        InitialConnectionsCapacity = 1
-                    }
-                });
+                    InitialConnectionsCapacity = 1
+                }
+            });
 
             Assert.Equal(0, connections.Count);
 

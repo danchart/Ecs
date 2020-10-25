@@ -1,7 +1,7 @@
 ﻿using Game.Networking;
 using System.Net;
 
-namespace Game.Simulation.Server
+namespace Game.Networking
 {
     public struct PlayerConnection
     {

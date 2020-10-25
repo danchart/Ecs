@@ -1,14 +1,13 @@
 ﻿using Common.Core;
-using Game.Networking;
 using System.Net;
 
-namespace Game.Simulation.Server
+namespace Game.Networking
 {
     public sealed class PlayerConnectionManager
     {
         internal readonly RefDictionary<PlayerId, PlayerConnection> _connections;
         
-        public PlayerConnectionManager(ReplicationConfig replicationConfig, PlayerConnectionConfig playerConnectionConfig)
+        public PlayerConnectionManager(PlayerConnectionConfig playerConnectionConfig)
         {
             this._connections = new RefDictionary<PlayerId, PlayerConnection>(playerConnectionConfig.Capacity.InitialConnectionsCapacity);
         }

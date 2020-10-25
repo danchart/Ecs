@@ -14,14 +14,11 @@ namespace Game.Simulation.Server
         private int _count;
 
         private readonly PlayerReplicationDataPool _replicationDataPool;
-        private readonly PlayerConnectionManager _connectionManager;
 
         public WorldPlayers(
-            PlayerConnectionManager connectionManager,
             ReplicationConfig replicationConfig,
             int capacity)
         {
-            this._connectionManager = connectionManager ?? throw new ArgumentNullException(nameof(connectionManager));
             this._replicationDataPool = new PlayerReplicationDataPool(replicationConfig, capacity);
             this._playerIdToIndex = new Dictionary<PlayerId, int>(capacity);
             this._players = new WorldPlayer[capacity];
@@ -31,7 +28,7 @@ namespace Game.Simulation.Server
         public ref WorldPlayer GetItem(PlayerId id) => ref this._players[this._playerIdToIndex[id]];
 
         public void Add(
-            PlayerId playerId,
+            in PlayerConnectionRef playerConnectionRef,
             in Entity entity)
         {
             if (this._count == this._players.Length)
@@ -43,9 +40,11 @@ namespace Game.Simulation.Server
 
             ref var player = ref this._players[index];
 
-            player.ConnectionRef = this._connectionManager.GetRef(playerId);
+            player.ConnectionRef = playerConnectionRef;
             player.Entity = entity;
             player.PlayerReplicationDataIndex = this._replicationDataPool.New();
+
+            var playerId = playerConnectionRef.Unref().PlayerId;
 
             this._playerIdToIndex[playerId] = index;
         }

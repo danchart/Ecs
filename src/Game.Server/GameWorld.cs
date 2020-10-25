@@ -24,19 +24,17 @@ namespace Game.Server
         private readonly WorldPlayers _players;
 
         private readonly IWorldReplicationManager _replicationManager;
-        private readonly PlayerConnectionManager _playerConnections;
 
         private readonly ILogger _logger;
 
-        private readonly WorldId _id;
+        private readonly WorldId _id; 
 
         private bool _isStopped;
 
         public GameWorld(
             WorldId id, 
             ILogger logger,
-            IServerConfig config,
-            PlayerConnectionManager playerConnections)
+            IServerConfig config)
         {
 
             //_simulationConfig.FixedTick = 0.5f;
@@ -44,12 +42,10 @@ namespace Game.Server
 
             this._id = id;
             this._logger = logger ?? throw new ArgumentNullException(nameof(logger));
-            this._playerConnections = playerConnections ?? throw new ArgumentNullException(nameof(playerConnections));
             this._isStopped = false;
             this._world = new World(this._ecsConfig);
 
             this._players = new WorldPlayers(
-                playerConnections,
                 config.Replication,
                 config.PlayerConnection.Capacity.InitialConnectionsCapacity);
 
