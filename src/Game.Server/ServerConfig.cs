@@ -10,6 +10,7 @@ namespace Game.Server
         PlayerConnectionConfig PlayerConnection { get; }
         EcsConfig Ecs { get; }
         TransportConfig Transport { get;}
+        WorldConfig World { get;  }
     }
 
     public sealed class DefaultServerConfig : IServerConfig
@@ -21,15 +22,30 @@ namespace Game.Server
         public EcsConfig Ecs => EcsConfig.Default;
 
         public TransportConfig Transport => TransportConfig.Default;
+
+        public WorldConfig World => WorldConfig.Default;
     }
 
     public sealed class TransportConfig
     {
         public int MaxPacketSize;
 
+        public UdpPacketTransportConfig UdpPacket;
+
         public static readonly TransportConfig Default = new TransportConfig
         {
-            MaxPacketSize = 512
+            MaxPacketSize = 512,
+            UdpPacket = UdpPacketTransportConfig.Default,
+        };
+    }
+
+    public sealed class WorldConfig
+    {
+        public int WorldsCapacity;
+
+        public static readonly WorldConfig Default = new WorldConfig
+        {
+            WorldsCapacity = 8
         };
     }
 }

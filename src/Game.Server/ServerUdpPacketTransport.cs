@@ -15,6 +15,8 @@ namespace Game.Server
         public IPEndPoint HostIpEndPoint = new IPEndPoint(IPAddress.Parse("127.0.0.1"), 27000);
 
         public IPacketEncryption PacketEncryption = new XorPacketEncryption();
+
+        public static readonly UdpPacketTransportConfig Default = new UdpPacketTransportConfig();
     }
 
     public class ServerUdpPacketTransport

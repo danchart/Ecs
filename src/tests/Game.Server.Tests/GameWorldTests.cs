@@ -17,8 +17,7 @@ namespace Game.Server.Tests
             var gameWorld = new GameWorld(
                 id: new WorldId(0),
                 logger: logger,
-                config: config,
-                playerConnections: playerConnections);
+                config: config);
         }
     }
 }
