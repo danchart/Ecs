@@ -30,12 +30,17 @@ namespace Game.Simulation.Server
             return new PlayerConnectionRef(id, this);
         }
 
-        public void Add(PlayerId playerId, byte[] encryptionKey, IPEndPoint endPoint)
+        public void Add(
+            WorldId worldId, 
+            PlayerId playerId, 
+            byte[] encryptionKey, 
+            IPEndPoint endPoint)
         {
             this._connections.Add(playerId);
 
             ref var connection = ref this._connections[playerId];
 
+            connection.WorldId = worldId;
             connection.PlayerId = playerId;
             connection.PacketEncryptionKey = encryptionKey;
             connection.EndPoint = endPoint;

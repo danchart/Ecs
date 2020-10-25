@@ -1,5 +1,6 @@
 ﻿using Common.Core;
 using Ecs.Core;
+using Game.Networking;
 using Game.Simulation.Core;
 using Game.Simulation.Server;
 using System;
@@ -27,12 +28,12 @@ namespace Game.Server
 
         private readonly ILogger _logger;
 
-        private readonly ushort _id;
+        private readonly WorldId _id;
 
         private bool _isStopped;
 
         public GameWorld(
-            ushort id, 
+            WorldId id, 
             ILogger logger,
             IServerConfig config,
             PlayerConnectionManager playerConnections)
@@ -70,7 +71,7 @@ namespace Game.Server
             this._simulation.Create();
         }
 
-        public ushort Id => this._id;
+        public WorldId Id => this._id;
 
         public void Run()
         {

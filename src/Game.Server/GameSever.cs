@@ -1,4 +1,5 @@
 ﻿using Common.Core;
+using Game.Networking;
 using Game.Simulation.Server;
 using System;
 using System.Threading;
@@ -53,9 +54,9 @@ namespace Game.Server
             }
         }
 
-        public uint SpawnWorld()
+        public WorldId SpawnWorld()
         {
-            ushort worldId;
+            int worldId;
 
             if (this._freeWorldCount > 0)
             {
@@ -72,7 +73,7 @@ namespace Game.Server
             }
 
             var world = new GameWorld(
-                worldId, 
+                new WorldId(worldId), 
                 this._logger,
                 this._serverConfig,
                 this._playerConnectionManager);
