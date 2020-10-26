@@ -8,13 +8,13 @@ using System.Threading.Tasks;
 
 namespace Game.Server
 {
-    public class ClientCommandController
+    public class ClientControlPlaneController
     {
         private readonly PlayerConnectionManager _playerConnections;
 
         private readonly ILogger _logger;
 
-        public ClientCommandController(ILogger logger, PlayerConnectionManager playerConnections)
+        public ClientControlPlaneController(ILogger logger, PlayerConnectionManager playerConnections)
         {
             this._logger = logger ?? throw new ArgumentNullException(nameof(logger));
             this._playerConnections = playerConnections ?? throw new ArgumentNullException(nameof(playerConnections));

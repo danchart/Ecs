@@ -41,7 +41,7 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="ClientCommandController.cs" />
+    <Compile Include="ClientControlPlaneController.cs" />
     <Compile Include="GameSever.cs" />
     <Compile Include="GameWorld.cs" />
     <Compile Include="GameWorlds.cs" />
