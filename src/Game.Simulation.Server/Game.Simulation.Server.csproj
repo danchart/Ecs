@@ -33,6 +33,7 @@
     <Compile Include="Replication\WorldReplicationManager.cs" />
     <Compile Include="ServerSimulation.cs" />
     <Compile Include="Systems\GatherReplicatedDataSystem.cs" />
+    <Compile Include="WorldPlayer.cs" />
     <Compile Include="WorldPlayers.cs" />
   </ItemGroup>
   <ItemGroup>

@@ -29,8 +29,8 @@
     <Compile Include="Ids\WorldId.cs" />
     <Compile Include="Ids\PlayerId.cs" />
     <Compile Include="PacketEncryption.cs" />
-    <Compile Include="Packets\ClientPacket.cs" />
-    <Compile Include="Packets\ServerPacket.cs" />
+    <Compile Include="Packets\ClientPacketEnvelope.cs" />
+    <Compile Include="Packets\ServerPacketEnvelope.cs" />
     <Compile Include="PacketData\MovementData.cs" />
     <Compile Include="PacketData\PlayerInputData.cs" />
     <Compile Include="PacketData\TransformData.cs" />

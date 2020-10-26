@@ -8,11 +8,9 @@ namespace Game.Simulation.Server
     public sealed class WorldPlayers
     {
         private WorldPlayer[] _players;
-
-        private Dictionary<PlayerId, int> _playerIdToIndex;
-
         private int _count;
 
+        private readonly Dictionary<PlayerId, int> _playerIdToIndex;
         private readonly PlayerReplicationDataPool _replicationDataPool;
 
         public WorldPlayers(
@@ -51,15 +49,15 @@ namespace Game.Simulation.Server
 
         public void Remove(PlayerId playerId)
         {
-            var index = this._playerIdToIndex[playerId];
+            var indexToRemove = this._playerIdToIndex[playerId];
 
-            this._replicationDataPool.Free(this._players[index].PlayerReplicationDataIndex);
+            this._replicationDataPool.Free(this._players[indexToRemove].PlayerReplicationDataIndex);
             this._playerIdToIndex.Remove(playerId);
 
             // Swap index with last if at least one element remains.
             if (--this._count > 0)
             {
-                this._players[index] = this._players[this._count];
+                this._players[indexToRemove] = this._players[this._count];
             }
         }
 
@@ -88,31 +86,7 @@ namespace Game.Simulation.Server
                 get => ref this._players[this._current];
             }
 
-            public bool MoveNext() => 
-                ++this._current < this._count 
-                ? true 
-                : false;
-        }
-    }
-
-    public struct WorldPlayer
-    {
-        public PlayerConnectionRef ConnectionRef;
-
-        public Entity Entity;
-
-        public int PlayerReplicationDataIndex;
-
-        private readonly PlayerReplicationDataPool _replicationDataPool;
-
-        internal WorldPlayer(PlayerReplicationDataPool replicationDataPool) : this()
-        {
-            this._replicationDataPool = replicationDataPool ?? throw new ArgumentNullException(nameof(replicationDataPool));
-        }
-
-        public PlayerReplicationData ReplicationData
-        {
-            get => this._replicationDataPool.GetItem(PlayerReplicationDataIndex);
+            public bool MoveNext() => ++this._current < this._count;
         }
     }
 }

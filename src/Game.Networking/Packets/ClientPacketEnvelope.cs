@@ -10,24 +10,25 @@ namespace Game.Networking.Packets
         Control = 2,
     }
 
-    public struct ClientPacket
+    public struct ClientPacketEnvelope
     {
         public ClientPacketType Type;
         public PlayerId PlayerId;
-        public ushort FrameId;
 
-        ClientPlayerInputPacket PlayerInputPacket;
+        public ClientPlayerInputPacket PlayerInputPacket;
+        public ControlPacket ControlPacket;
 
         public int Serialize(Stream stream, bool measureOnly, IPacketEncryption packetEncryption)
         {
             int size = stream.PacketWriteByte((byte)this.Type, measureOnly);
             size += stream.PacketWriteInt(this.PlayerId, measureOnly);
-            size += stream.PacketWriteUShort(this.FrameId, measureOnly);
 
             switch (this.Type)
             {
                 case ClientPacketType.PlayerInput:
                     return size + this.PlayerInputPacket.Serialize(stream, measureOnly);
+                case ClientPacketType.Control:
+                    return size + this.ControlPacket.Serialize(stream, measureOnly);
             }
 
             return -1;
@@ -41,12 +42,13 @@ namespace Game.Networking.Packets
             int playerId;
             stream.PacketReadInt(out playerId);
             this.PlayerId = new PlayerId(playerId);
-            stream.PacketReadUShort(out this.FrameId);
 
             switch (this.Type)
             {
                 case ClientPacketType.PlayerInput:
                     return this.PlayerInputPacket.Deserialize(stream);
+                case ClientPacketType.Control:
+                    return this.ControlPacket.Deserialize(stream);
             }
 
             return false;

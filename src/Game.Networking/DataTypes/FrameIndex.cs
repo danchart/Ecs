@@ -6,7 +6,7 @@ namespace Game.Networking
     {
         private readonly ushort _index;
 
-        private FrameIndex(ushort id) => this._index = id;
+        public FrameIndex(ushort id) => this._index = id;
 
         public FrameIndex GetNext() => new FrameIndex((ushort)(this._index + 1));
 

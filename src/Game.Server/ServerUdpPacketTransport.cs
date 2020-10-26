@@ -45,7 +45,7 @@ namespace Game.Server
             this._udpSocket.Start(this._config.HostIpEndPoint);
         }
 
-        public void SendPacket(IPEndPoint endPoint, in ServerPacket packet)
+        public void SendPacket(IPEndPoint endPoint, in ServerPacketEnvelope packet)
         {
             var bufferPoolIndex = this._packetSerializationBytePool.New();
             var data = this._packetSerializationBytePool.GetBuffer(bufferPoolIndex);

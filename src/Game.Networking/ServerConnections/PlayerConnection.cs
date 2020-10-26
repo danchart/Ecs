@@ -1,5 +1,4 @@
-﻿using Game.Networking;
-using System.Net;
+﻿using System.Net;
 
 namespace Game.Networking
 {
@@ -7,8 +6,28 @@ namespace Game.Networking
     {
         public WorldId WorldId;
         public PlayerId PlayerId;
-        public byte[] PacketEncryptionKey;
 
+        public ConnectionStateEnum ConnectionState;
+
+        public ConnectionHandshake Handshake;
+
+        public int LastInputFrame;
+        public int LastAckSimulationFrame;
+
+        public byte[] PacketEncryptionKey;
         public IPEndPoint EndPoint;
+
+        public enum ConnectionStateEnum
+        {
+            None,           // awaiting SYN packet
+            Connecting,     // awaiting ACK packet
+            Connected       // ACK'd
+        }
+
+        public struct ConnectionHandshake
+        {
+            public uint SequenceKey;
+            public uint AcknowledgementKey;
+        }
     }
 }

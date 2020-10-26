@@ -10,7 +10,7 @@ namespace Game.Networking
         Control = 2,
     }
 
-    public struct ServerPacket
+    public struct ServerPacketEnvelope
     {
         public ServerPacketType Type;
         public PlayerId PlayerId;

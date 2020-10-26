@@ -6,9 +6,12 @@ namespace Game.Networking
     public sealed class PlayerConnectionManager
     {
         internal readonly RefDictionary<PlayerId, PlayerConnection> _connections;
+
+        private readonly ILogger _logger;
         
-        public PlayerConnectionManager(PlayerConnectionConfig playerConnectionConfig)
+        public PlayerConnectionManager(ILogger logger, PlayerConnectionConfig playerConnectionConfig)
         {
+            this._logger = logger ?? throw new ArgumentNullException(nameof(logger));
             this._connections = new RefDictionary<PlayerId, PlayerConnection>(playerConnectionConfig.Capacity.InitialConnectionsCapacity);
         }
 
@@ -39,6 +42,7 @@ namespace Game.Networking
 
             ref var connection = ref this._connections[playerId];
 
+            connection.ConnectionState = PlayerConnection.ConnectionStateEnum.None;
             connection.WorldId = worldId;
             connection.PlayerId = playerId;
             connection.PacketEncryptionKey = encryptionKey;
@@ -54,5 +58,27 @@ namespace Game.Networking
         {
             return this._connections.GetEnumerator();
         }
+
+        public bool Syn(PlayerId playerId, uint sequenceKey)
+        {
+            if (!HasPlayer(playerId))
+            {
+                this._logger.VerboseError($"Client SYN request for non-existent player: Id={playerId}");
+
+                return false;
+            }
+
+            ref var connection = ref this._connections[playerId];
+
+            if (connection.ConnectionState != PlayerConnection.ConnectionStateEnum.None)
+            {
+                this._logger.VerboseError($"Invalid client SYN request for player: Id={playerId}: State={connection.ConnectionState}");
+
+                return false;
+            }
+
+
+        }
+
     }
 }

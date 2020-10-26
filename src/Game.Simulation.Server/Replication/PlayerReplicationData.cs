@@ -264,7 +264,7 @@ namespace Game.Simulation.Server
             return size;
         }
 
-        public static bool ToPacketDataItems(
+        public static bool ToEntityComponentPackets(
             this PlayerReplicationData.EntityReplicationData replicationData, 
             ref ComponentPacketData[] items, 
             ref byte index)

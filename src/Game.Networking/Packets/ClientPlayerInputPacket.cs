@@ -2,20 +2,19 @@
 using Game.Networking.Core;
 using Game.Networking.PacketData;
 using System.IO;
-using System.Runtime.InteropServices;
 
 namespace Game.Networking
 {
     public struct ClientPlayerInputPacket
     {
-        public uint Frame;
+        public FrameIndex Frame;
         public byte InputCount;
         public InputPacketData[] Inputs;
 
         public int Serialize(Stream stream, bool measureOnly)
         {
-            // frame #
-            int size = stream.PacketWriteUInt(Frame, measureOnly);
+            // frame index
+            int size = stream.PacketWriteUShort(Frame, measureOnly);
             // entity count
             size += stream.PacketWriteByte(InputCount, measureOnly);
 
@@ -29,9 +28,11 @@ namespace Game.Networking
 
         public bool Deserialize(Stream stream)
         {
-            // frame #
-            stream.PacketReadUInt(out Frame);
-            // packet count
+            // frame index
+            ushort frameIndexAsUshort;
+            stream.PacketReadUShort(out frameIndexAsUshort);
+            this.Frame = new FrameIndex(frameIndexAsUshort);
+            // input count
             stream.PacketReadByte(out InputCount);
 
             Inputs = new InputPacketData[InputCount];
@@ -45,13 +46,10 @@ namespace Game.Networking
         }
     }
 
-    [StructLayout(LayoutKind.Explicit, Pack = 1)]
     public struct InputPacketData
     {
-        [FieldOffset(0)]
         public BitField HasFields;
 
-        [FieldOffset(4)]
         public PlayerInputData Input;
 
         public int Serialize(Stream stream, bool measureOnly)

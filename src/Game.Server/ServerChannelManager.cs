@@ -1,4 +1,5 @@
-﻿using Game.Networking;
+﻿using Common.Core;
+using Game.Networking;
 using Game.Networking.Packets;
 using Game.Simulation.Server;
 using System;
@@ -12,25 +13,28 @@ namespace Game.Server
     /// </summary>
     public sealed class ServerChannelManager
     {
-        private ServerPacket _serverPacket;
-        private ClientPacket _clientPacket;
+        private ServerPacketEnvelope _serverPacketEnvelope;
+        private ClientPacketEnvelope _clientPacketEnvelope;
 
         private bool _isStopRequested;
 
         private readonly IPacketEncryption _packetEncryption;
         private readonly ServerUdpPacketTransport _transport;
         private readonly TransportConfig _config;
+        private readonly ILogger _logger;
 
         public ServerChannelManager(
             TransportConfig config, 
             ServerUdpPacketTransport transport,
-            IPacketEncryption packetEncryption)
+            IPacketEncryption packetEncryption,
+            ILogger logger)
         {
             this._isStopRequested = false;
 
             this._config = config ?? throw new ArgumentNullException(nameof(config));
             this._transport = transport ?? throw new ArgumentNullException(nameof(transport));
             this._packetEncryption = packetEncryption ?? throw new ArgumentNullException(nameof(packetEncryption));
+            this._logger = logger ?? throw new ArgumentNullException(nameof(logger));
         }
 
         public void Start()
@@ -60,15 +64,53 @@ namespace Game.Server
                     {
                         using (var stream = new MemoryStream(data, offset, count))
                         {
-                            _clientPacket.Deserialize(stream, this._packetEncryption);
+                            if (!_clientPacketEnvelope.Deserialize(stream, this._packetEncryption))
+                            {
+                                this._logger.Verbose("Failed to deserialize packet.");
+                            }
 
-                            // TODO: Process player packet / input
+                            // Process player packet / input
 
-                            //_clientPacket.PlayerId
+                            switch (_clientPacketEnvelope.Type)
+                            {
+                                case ClientPacketType.Control:
+
+                                    ProcessClientControlPacket(_clientPacketEnvelope.PlayerId, _clientPacketEnvelope.ControlPacket);
+                                    break;
+                                case ClientPacketType.PlayerInput:
+
+                                    ProcessPlayerInputPacket(_clientPacketEnvelope.PlayerId, _clientPacketEnvelope.PlayerInputPacket);
+                                    break;
+                                default:
+
+                                    this._logger.Error($"Unknown packet type {_clientPacketEnvelope.Type}");
+                                    break;
+                            }
                         }
                     }
                 }
             }
+        }
+
+        private void ProcessClientControlPacket(PlayerId playerId, ControlPacket controlPacket)
+        {
+            switch (controlPacket.ControlMessage)
+            {
+                case ControlMessageEnum.ConnectSyn:
+
+
+
+                    break;
+
+                case ControlMessageEnum.ConnectAck:
+
+                    break;
+            }
+        }
+
+        private void ProcessPlayerInputPacket(PlayerId playerId, ClientPlayerInputPacket playerInputPacket)
+        {
+
         }
 
         // TODO:
@@ -77,8 +119,8 @@ namespace Game.Server
 
         public void SendWorldUpdateToClients(ushort frame, WorldPlayers players)
         {
-            // TODO: Do we need a packet pool?
-            ref var packet = ref this._serverPacket;
+            // TODO: Do we need a packet pool? A singleton works single threaded only.
+            ref var packet = ref this._serverPacketEnvelope;
 
             packet.Type = ServerPacketType.Simulation;
 
@@ -123,8 +165,7 @@ namespace Game.Server
 
                             packet.SimulationPacket.EntityData[packet.SimulationPacket.EntityCount].ItemCount = 0;
 
-                            // TODO: Move this to  PacketDataItem
-                            replicatedEntity.ToPacketDataItems(
+                            replicatedEntity.ToEntityComponentPackets(
                                 ref packet.SimulationPacket.EntityData[packet.SimulationPacket.EntityCount].Components,
                                 ref packet.SimulationPacket.EntityData[packet.SimulationPacket.EntityCount].ItemCount);
                         }

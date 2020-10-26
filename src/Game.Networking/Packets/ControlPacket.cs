@@ -60,18 +60,21 @@ namespace Game.Networking
 
     public struct ControlSynPacketData
     {
-        public uint SequenceNumber;
+        /// <summary>
+        /// Client provided synchronization sequence #.
+        /// </summary>
+        public uint SequenceKey;
 
         public int Serialize(Stream stream, bool measureOnly)
         {
-            int size = stream.PacketWriteUInt(this.SequenceNumber, measureOnly);
+            int size = stream.PacketWriteUInt(this.SequenceKey, measureOnly);
 
             return size;
         }
 
         public bool Deserialize(Stream stream)
         {
-            stream.PacketReadUInt(out this.SequenceNumber);
+            stream.PacketReadUInt(out this.SequenceKey);
 
             return true;
         }
@@ -79,21 +82,28 @@ namespace Game.Networking
 
     public struct ControlAckPacketData
     {
-        public uint SequenceNumber;
-        public uint AcknowledgeNumber;
+        /// <summary>
+        /// Client provided synchronization sequence # from original SYN request.
+        /// </summary>
+        public uint SequenceKey;
+
+        /// <summary>
+        /// Server provided acknowledgement # from SYN-ACK request.
+        /// </summary>
+        public uint AcknowledgementKey;
 
         public int Serialize(Stream stream, bool measureOnly)
         {
-            int size = stream.PacketWriteUInt(this.SequenceNumber, measureOnly);
-            size += stream.PacketWriteUInt(this.AcknowledgeNumber, measureOnly);
+            int size = stream.PacketWriteUInt(this.SequenceKey, measureOnly);
+            size += stream.PacketWriteUInt(this.AcknowledgementKey, measureOnly);
 
             return size;
         }
 
         public bool Deserialize(Stream stream)
         {
-            stream.PacketReadUInt(out this.SequenceNumber);
-            stream.PacketReadUInt(out this.AcknowledgeNumber);
+            stream.PacketReadUInt(out this.SequenceKey);
+            stream.PacketReadUInt(out this.AcknowledgementKey);
 
             return true;
         }
