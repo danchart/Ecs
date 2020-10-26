@@ -1,103 +1,135 @@
 ﻿using Game.Networking;
+using Game.Networking.Packets;
 using Game.Simulation.Server;
 using System;
-using System.Collections.Generic;
+using System.IO;
+using System.Threading;
 
 namespace Game.Server
 {
+    /// <summary>
+    /// Handles queueing replication packets to clients in priority order.
+    /// </summary>
     public sealed class ServerChannelManager
     {
-        private ServerUdpPacketTransport _transport;
-        private Dictionary<int, WorldPlayers> _worldPlayersMap;
+        private ServerPacket _serverPacket;
+        private ClientPacket _clientPacket;
 
+        private bool _isStopRequested;
+
+        private readonly IPacketEncryption _packetEncryption;
+        private readonly ServerUdpPacketTransport _transport;
         private readonly TransportConfig _config;
 
-        private ServerPacket _packet;
-
-        public ServerChannelManager(TransportConfig config, ServerUdpPacketTransport transport)
+        public ServerChannelManager(
+            TransportConfig config, 
+            ServerUdpPacketTransport transport,
+            IPacketEncryption packetEncryption)
         {
+            this._isStopRequested = false;
+
             this._config = config ?? throw new ArgumentNullException(nameof(config));
             this._transport = transport ?? throw new ArgumentNullException(nameof(transport));
-
-            this._worldPlayersMap = new Dictionary<int, WorldPlayers>(8);
+            this._packetEncryption = packetEncryption ?? throw new ArgumentNullException(nameof(packetEncryption));
         }
 
-        public void AddWorld(int worldId, WorldPlayers worldPlayers)
+        public void Start()
         {
-            this._worldPlayersMap[worldId] = worldPlayers;
+            var thread = new Thread(ProcessReceiveBuffer);
+            thread.Start();
         }
 
-        public void RemoveWorld(int worldId)
+
+        public void Stop()
         {
-            this._worldPlayersMap.Remove(worldId);
+            this._isStopRequested = true;
+        }
+
+        private void ProcessReceiveBuffer()
+        {
+            byte[] data;
+
+            while (!this._isStopRequested)
+            {
+                var packetCount = this._transport.ReceiveBuffer.Count;
+
+                while (packetCount-- > 0)
+                {
+                    int offset, count;
+                    if (this._transport.ReceiveBuffer.GetReadData(out data, out offset, out count))
+                    {
+                        using (var stream = new MemoryStream(data, offset, count))
+                        {
+                            _clientPacket.Deserialize(stream, this._packetEncryption);
+
+                            _clientPacket.PlayerId
+                        }
+                    }
+                }
+            }
         }
 
         // TODO:
         // 1) Queue replication packets to transport
         // 2) Sort client input to worlds 
 
-        public void UpdateClients(ushort frame)
+        public void SendWorldUpdateToClients(ushort frame, WorldPlayers players)
         {
             // TODO: Do we need a packet pool?
-            ref var packet = ref this._packet;
+            ref var packet = ref this._serverPacket;
 
             packet.Type = ServerPacketType.Simulation;
 
-            foreach (var pair in this._worldPlayersMap)
+            foreach (ref var player in players)
             {
-                var worldPlayers = pair.Value;
+                ref readonly var playerConnection = ref player.ConnectionRef.Unref();
 
-                foreach (ref var player in worldPlayers)
+                packet.PlayerId = playerConnection.PlayerId;
+                packet.SimulationPacket.Frame = frame;
+                packet.SimulationPacket.EntityCount = 0;
+
+                if (packet.SimulationPacket.EntityData == null)
                 {
-                    ref readonly var playerConnection = ref player.ConnectionRef.Unref();
+                    packet.SimulationPacket.EntityData = new EntityPacketData[64];
+                }
 
-                    packet.PlayerId = playerConnection.PlayerId;
-                    packet.SimulationPacket.Frame = frame;
-                    packet.SimulationPacket.EntityCount = 0;
+                // HACK: This is SUPER fragile!!
+                const int ServerPacketHeaderSize = 16;
 
-                    if (packet.SimulationPacket.EntityData == null)
+                int size = 0;
+
+                foreach (var replicatedEntity in player.ReplicationData)
+                {
+                    if (replicatedEntity.NetPriority.RemainingQueueTime <= 0)
                     {
-                        packet.SimulationPacket.EntityData = new EntityPacketData[64];
-                    }
+                        var entitySize = replicatedEntity.MeasurePacketSize();
 
-                    // HACK: This is SUPER fragile!!
-                    const int ServerPacketHeaderSize = 16; 
-
-                    int size = 0;
-
-                    foreach (var replicatedEntity in player.ReplicationData)
-                    {
-                        if (replicatedEntity.NetPriority.RemainingQueueTime <= 0)
+                        if (size + entitySize > this._config.MaxPacketSize - ServerPacketHeaderSize)
                         {
-                            var entitySize = replicatedEntity.MeasurePacketSize();
+                            // Reached packet size 
+                            break;
+                        }
+                        else
+                        {
+                            packet.SimulationPacket.EntityCount++;
+                            size += entitySize;
 
-                            if (size + entitySize > this._config.MaxPacketSize - ServerPacketHeaderSize)
+                            if (packet.SimulationPacket.EntityData[packet.SimulationPacket.EntityCount].Components == null)
                             {
-                                // Reached packet size 
-                                break;
+                                packet.SimulationPacket.EntityData[packet.SimulationPacket.EntityCount].Components = new ComponentPacketData[128];
                             }
-                            else
-                            {
-                                packet.SimulationPacket.EntityCount++;
-                                size += entitySize;
 
-                                if (packet.SimulationPacket.EntityData[packet.SimulationPacket.EntityCount].Items == null)
-                                {
-                                    packet.SimulationPacket.EntityData[packet.SimulationPacket.EntityCount].Items = new PacketDataItem[128];
-                                }
+                            packet.SimulationPacket.EntityData[packet.SimulationPacket.EntityCount].ItemCount = 0;
 
-                                packet.SimulationPacket.EntityData[packet.SimulationPacket.EntityCount].ItemCount = 0;
-
-                                // TODO: Move this to  PacketDataItem
-                                replicatedEntity.ToPacketDataItems(
-                                    ref packet.SimulationPacket.EntityData[packet.SimulationPacket.EntityCount].Items, 
-                                    ref packet.SimulationPacket.EntityData[packet.SimulationPacket.EntityCount].ItemCount);
-                            }
+                            // TODO: Move this to  PacketDataItem
+                            replicatedEntity.ToPacketDataItems(
+                                ref packet.SimulationPacket.EntityData[packet.SimulationPacket.EntityCount].Components,
+                                ref packet.SimulationPacket.EntityData[packet.SimulationPacket.EntityCount].ItemCount);
                         }
                     }
-
-                    this._transport.SendPacket(playerConnection.EndPoint, in packet);
                 }
+
+                this._transport.SendPacket(playerConnection.EndPoint, in packet);
             }
         }
     }

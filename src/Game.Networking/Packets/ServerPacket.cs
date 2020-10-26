@@ -1,6 +1,5 @@
 ﻿using Game.Networking.Core;
 using System.IO;
-using System.Runtime.InteropServices;
 
 namespace Game.Networking
 {
@@ -11,17 +10,12 @@ namespace Game.Networking
         Control = 2,
     }
 
-    [StructLayout(LayoutKind.Explicit, Pack = 1)]
     public struct ServerPacket
     {
-        [FieldOffset(0)]
         public ServerPacketType Type;
-        [FieldOffset(4)]
         public PlayerId PlayerId;
 
-        [FieldOffset(8)]
         public SimulationPacket SimulationPacket;
-        [FieldOffset(8)]
         public ControlPacket ControlPacket;
 
         public int Serialize(Stream stream, bool measureOnly, IPacketEncryption packetEncryption)

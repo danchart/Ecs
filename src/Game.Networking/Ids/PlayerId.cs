@@ -2,7 +2,7 @@
 
 namespace Game.Networking
 {
-    public struct PlayerId : IEquatable<PlayerId>
+    public readonly struct PlayerId : IEquatable<PlayerId>
     {
         internal readonly int Id;
 

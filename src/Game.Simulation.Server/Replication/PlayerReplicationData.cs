@@ -266,7 +266,7 @@ namespace Game.Simulation.Server
 
         public static bool ToPacketDataItems(
             this PlayerReplicationData.EntityReplicationData replicationData, 
-            ref PacketDataItem[] items, 
+            ref ComponentPacketData[] items, 
             ref byte index)
         {
             for (int i = 0; i < (int)ComponentId.MaxValue; i++)
@@ -284,13 +284,13 @@ namespace Game.Simulation.Server
                     {
                         case ComponentId.Transform:
 
-                            items[index].Type = PacketDataItem.TypeEnum.Transform;
+                            items[index].Type = ComponentPacketData.TypeEnum.Transform;
                             items[index].Transform = component.Data.Transform;
                             break;
 
                         case ComponentId.Movement:
 
-                            items[index].Type = PacketDataItem.TypeEnum.Movement;
+                            items[index].Type = ComponentPacketData.TypeEnum.Movement;
                             items[index].Movement = component.Data.Movement;
                             break;
 

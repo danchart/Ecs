@@ -6,35 +6,37 @@ namespace Game.Networking.Core
     public class ReceiveBuffer
     {
         public readonly int MaxPacketSize;
-        public readonly int PacketQueueCapacity;
-        private readonly byte[] _data;
+        public readonly int PacketCapacity;
+
         private int[] _bytedReceived;
 
         private IPEndPoint[] _fromEndPoints;
 
         private int _writeQueueIndex;
-        private int _queuedCount;
+        private int _count;
+
+        private readonly byte[] _data;
 
         public ReceiveBuffer(int maxPacketSize, int packetQueueCapacity)
         {
             this.MaxPacketSize = maxPacketSize;
-            this.PacketQueueCapacity = packetQueueCapacity;
+            this.PacketCapacity = packetQueueCapacity;
             this._data = new byte[packetQueueCapacity * maxPacketSize];
             this._bytedReceived = new int[packetQueueCapacity];
 
             this._fromEndPoints = new IPEndPoint[packetQueueCapacity];
 
             this._writeQueueIndex = 0;
-            this._queuedCount = 0;
+            this._count = 0;
         }
 
-        public bool IsWriteQueueFull => this._queuedCount == this.PacketQueueCapacity;
+        public bool IsWriteQueueFull => this._count == this.PacketCapacity;
 
-        public int QueueCount => _queuedCount;
+        public int Count => _count;
 
-        public bool GetWriteBufferData(out byte[] data, out int offset, out int size)
+        public bool GetWriteData(out byte[] data, out int offset, out int size)
         {
-            if (this._queuedCount == this.PacketQueueCapacity)
+            if (this._count == this.PacketCapacity)
             {
                 data = null;
                 offset = -1;
@@ -57,14 +59,14 @@ namespace Game.Networking.Core
             this._bytedReceived[this._writeQueueIndex] = bytesReceived;
             this._fromEndPoints[this._writeQueueIndex] = ipEndPoint;
 
-            this._writeQueueIndex = (this._writeQueueIndex + 1) % this.PacketQueueCapacity;            
+            this._writeQueueIndex = (this._writeQueueIndex + 1) % this.PacketCapacity;            
 
-            Interlocked.Increment(ref this._queuedCount);
+            Interlocked.Increment(ref this._count);
         }
 
         public bool GetFromEndPoint(out IPEndPoint ipEndPoint)
         {
-            if (this._queuedCount == 0)
+            if (this._count == 0)
             {
                 ipEndPoint = default;
 
@@ -80,13 +82,13 @@ namespace Game.Networking.Core
             }
         }
 
-        public bool GetReadBufferData(out byte[] data, out int offset, out int size)
+        public bool GetReadData(out byte[] data, out int offset, out int count)
         {
-            if (this._queuedCount == 0)
+            if (this._count == 0)
             {
                 data = null;
                 offset = -1;
-                size = -1;
+                count = -1;
 
                 return false;
             }
@@ -96,7 +98,7 @@ namespace Game.Networking.Core
 
                 data = this._data;
                 offset = readIndex * this.MaxPacketSize;
-                size = this._bytedReceived[readIndex];
+                count = this._bytedReceived[readIndex];
 
                 return true;
             }
@@ -104,9 +106,9 @@ namespace Game.Networking.Core
 
         public void NextRead()
         {
-            Interlocked.Decrement(ref this._queuedCount);
+            Interlocked.Decrement(ref this._count);
         }
 
-        private int GetReadIndex() => ((this._writeQueueIndex - this._queuedCount + this.PacketQueueCapacity) % this.PacketQueueCapacity);
+        private int GetReadIndex() => ((this._writeQueueIndex - this._count + this.PacketCapacity) % this.PacketCapacity);
     }
 }

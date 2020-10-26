@@ -21,8 +21,8 @@ namespace Game.Server
 
     public class ServerUdpPacketTransport
     {
-        private UdpSocketServer UdpSocket;
-        private ReceiveBuffer ReceiveBuffer;
+        private readonly ServerUdpSocket _udpSocket;
+        private readonly ReceiveBuffer _receiveBuffer;
 
         private readonly UdpPacketTransportConfig _config;
 
@@ -32,15 +32,17 @@ namespace Game.Server
         {
             this._config = config;
 
-            this.ReceiveBuffer = new ReceiveBuffer(config.MaxPacketSize, config.PacketReceiveQueueCapacity);
-            this.UdpSocket = new UdpSocketServer(logger, this.ReceiveBuffer);
+            this._receiveBuffer = new ReceiveBuffer(config.MaxPacketSize, config.PacketReceiveQueueCapacity);
+            this._udpSocket = new ServerUdpSocket(logger, this._receiveBuffer);
 
             this._packetSerializationBytePool = new ByteArrayPool(config.MaxPacketSize, config.PacketSendQueueCapacity);
         }
 
+        public ReceiveBuffer ReceiveBuffer => this._receiveBuffer;
+
         public void Start()
         {
-            this.UdpSocket.Start(this._config.HostIpEndPoint);
+            this._udpSocket.Start(this._config.HostIpEndPoint);
         }
 
         public void SendPacket(IPEndPoint endPoint, in ServerPacket packet)
@@ -54,7 +56,7 @@ namespace Game.Server
                 size = packet.Serialize(stream, measureOnly: false, packetEncryption: this._config.PacketEncryption);
             }
 
-            this.UdpSocket.SendTo(data, endPoint);
+            this._udpSocket.SendTo(data, endPoint);
 
             this._packetSerializationBytePool.Free(bufferPoolIndex);
         }

@@ -50,7 +50,7 @@ namespace Game.Networking
     {
         public uint EntityId;
         public byte ItemCount;
-        public PacketDataItem[] Items;
+        public ComponentPacketData[] Components;
 
         public int Serialize(Stream stream, bool measureOnly)
         {
@@ -61,7 +61,7 @@ namespace Game.Networking
 
             for (int i = 0; i < ItemCount; i++)
             {
-                size += Items[i].Serialize(stream, measureOnly);
+                size += Components[i].Serialize(stream, measureOnly);
             }
 
             return size;
@@ -74,11 +74,11 @@ namespace Game.Networking
             // item count
             stream.PacketReadByte(out ItemCount);
 
-            Items = new PacketDataItem[ItemCount];
+            Components = new ComponentPacketData[ItemCount];
 
             for (int i = 0; i < ItemCount; i++)
             {
-                Items[i].Deserialize(stream);
+                Components[i].Deserialize(stream);
             }
 
             return true;
@@ -86,7 +86,7 @@ namespace Game.Networking
     }
 
     [StructLayout(LayoutKind.Explicit, Pack = 1)]
-    public struct PacketDataItem
+    public struct ComponentPacketData
     {
         public enum TypeEnum : ushort
         {

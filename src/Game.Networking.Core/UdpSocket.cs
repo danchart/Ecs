@@ -45,7 +45,7 @@ namespace Game.Networking.Core
         {
             byte[] data;
             int offset, size;
-            _state.ReceiveBuffer.GetWriteBufferData(out data, out offset, out size);
+            _state.ReceiveBuffer.GetWriteData(out data, out offset, out size);
 
             this._state.Socket.BeginReceiveFrom(
                 data,
@@ -68,7 +68,7 @@ namespace Game.Networking.Core
             byte[] data;
             int offset, size;
             bool isWriteBufferWait = false;
-            while (!state.ReceiveBuffer.GetWriteBufferData(out data, out offset, out size))
+            while (!state.ReceiveBuffer.GetWriteData(out data, out offset, out size))
             {
                 if (!isWriteBufferWait)
                 {
@@ -134,9 +134,9 @@ namespace Game.Networking.Core
         }
     }
 
-    public class UdpSocketServer : UdpSocketBase
+    public class ServerUdpSocket : UdpSocketBase
     {
-        public UdpSocketServer(ILogger logger, ReceiveBuffer receiveBuffer) 
+        public ServerUdpSocket(ILogger logger, ReceiveBuffer receiveBuffer) 
             : base(logger, receiveBuffer)
         {
         }

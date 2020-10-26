@@ -25,25 +25,33 @@ namespace Game.Server
 
         private readonly IWorldReplicationManager _replicationManager;
 
+        private readonly ServerChannelManager _channelManager;
+
         private readonly ILogger _logger;
 
-        private readonly WorldId _id; 
+        private readonly WorldId _id;
+        private FrameIndex _frameIndex;
 
         private bool _isStopped;
 
         public GameWorld(
             WorldId id, 
             ILogger logger,
-            IServerConfig config)
+            IServerConfig config,
+            ServerChannelManager channelManager)
         {
 
             //_simulationConfig.FixedTick = 0.5f;
+
+            this._frameIndex = FrameIndex.New();
 
 
             this._id = id;
             this._logger = logger ?? throw new ArgumentNullException(nameof(logger));
             this._isStopped = false;
             this._world = new World(this._ecsConfig);
+
+            this._channelManager = channelManager ?? throw new ArgumentNullException(nameof(channelManager));
 
             this._players = new WorldPlayers(
                 config.Replication,
@@ -93,7 +101,14 @@ namespace Game.Server
         {
             AutoResetEvent autoEvent = (AutoResetEvent)stateInfo;
 
+            // Run simulation tick
             this._simulation.FixedUpdate(_simulationConfig.FixedTick);
+
+            // Update clients
+            this._channelManager.SendWorldUpdateToClients(this._frameIndex, this._players);
+
+            // Increment frame index
+            this._frameIndex = this._frameIndex.GetNext();
 
             if (this._isStopped)
             {

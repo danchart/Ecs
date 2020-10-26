@@ -25,7 +25,7 @@ namespace Game.Server
             this._udpTransport = new ServerUdpPacketTransport(this._logger, serverConfig.Transport.UdpPacket);
             this._channelManager = new ServerChannelManager(serverConfig.Transport, this._udpTransport);
             this._playerConnectionManager = new PlayerConnectionManager(this._serverConfig.PlayerConnection);
-            this._gameWorlds = new GameWorlds(this._logger, this._serverConfig, serverConfig.World.WorldsCapacity);
+            this._gameWorlds = new GameWorlds(this._logger, this._serverConfig, this._channelManager, serverConfig.World.WorldsCapacity);
         }
 
         public bool IsRunning()

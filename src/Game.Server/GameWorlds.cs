@@ -12,14 +12,23 @@ namespace Game.Server
         private ushort[] _freeWorldIds;
         private ushort _freeWorldCount;
 
+        private readonly ServerChannelManager _channelManager;
+
         private readonly ILogger _logger;
         private readonly IServerConfig _serverConfig;
 
-        public GameWorlds(ILogger logger, IServerConfig serverConfig, int capacity)
+        public GameWorlds(
+            ILogger logger, 
+            IServerConfig serverConfig, 
+            ServerChannelManager channelManager,
+            int capacity)
         {
             this._logger = logger ?? throw new ArgumentNullException(nameof(logger));
             this._serverConfig = serverConfig ?? throw new ArgumentNullException(nameof(serverConfig));
             this.SpawnedWorlds = new SpawnedWorld[capacity];
+
+            this._channelManager = channelManager ?? throw new ArgumentNullException(nameof(channelManager));
+
             this._freeWorldIds = new ushort[capacity];
             this._worldCount = 0;
             this._freeWorldCount = 0;
@@ -46,7 +55,8 @@ namespace Game.Server
             var world = new GameWorld(
                 new WorldId(worldId),
                 this._logger,
-                this._serverConfig);
+                this._serverConfig,
+                this._channelManager);
             var thread = new Thread(world.Run);
             thread.Start();
 

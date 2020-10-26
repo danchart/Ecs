@@ -14,7 +14,7 @@ namespace Game.Networking.Core.Tests
             var logger = new TestLogger();
             var serverBuffer = new ReceiveBuffer(maxPacketSize: 64, packetQueueCapacity: 4);
 
-            var server = new UdpSocketServer(logger, serverBuffer);
+            var server = new ServerUdpSocket(logger, serverBuffer);
             server.Start(new IPEndPoint(IPAddress.Parse("127.0.0.1"), 27000));
 
             var clientBuffer = new ReceiveBuffer(maxPacketSize: 64, packetQueueCapacity: 4);
@@ -30,22 +30,22 @@ namespace Game.Networking.Core.Tests
 
             WaitForReceive(serverBuffer, 2);
 
-            Assert.Equal(2, serverBuffer.QueueCount);
+            Assert.Equal(2, serverBuffer.Count);
 
             byte[] data;
             int offset;
             int size;
             IPEndPoint clientIpEndPoint;
-            serverBuffer.GetReadBufferData(out data, out offset, out size);
+            serverBuffer.GetReadData(out data, out offset, out size);
             serverBuffer.GetFromEndPoint(out clientIpEndPoint);
             serverBuffer.NextRead();
             var text0 = Encoding.ASCII.GetString(data, offset, size);
 
-            serverBuffer.GetReadBufferData(out data, out offset, out size);
+            serverBuffer.GetReadData(out data, out offset, out size);
             serverBuffer.NextRead();
             var text1 = Encoding.ASCII.GetString(data, offset, size);
 
-            Assert.Equal(0, serverBuffer.QueueCount);
+            Assert.Equal(0, serverBuffer.Count);
 
             Assert.True((text0 == "SYN" && text1 == "SYN 2") ||
                 (text0 == "SYN 2" && text1 == "SYN"));
@@ -56,7 +56,7 @@ namespace Game.Networking.Core.Tests
 
             WaitForReceive(clientBuffer, 1);
 
-            clientBuffer.GetReadBufferData(out data, out offset, out size);
+            clientBuffer.GetReadData(out data, out offset, out size);
             clientBuffer.NextRead();
             var syncAckText = Encoding.ASCII.GetString(data, offset, size);
 
@@ -68,7 +68,7 @@ namespace Game.Networking.Core.Tests
 
             WaitForReceive(serverBuffer, 1);
 
-            serverBuffer.GetReadBufferData(out data, out offset, out size);
+            serverBuffer.GetReadData(out data, out offset, out size);
             serverBuffer.NextRead();
             var ackText = Encoding.ASCII.GetString(data, offset, size);
 
@@ -77,7 +77,7 @@ namespace Game.Networking.Core.Tests
 
         private static void WaitForReceive(ReceiveBuffer serverBuffer, int queueCount)
         {
-            for (int countdown = 10; countdown >= 0 && serverBuffer.QueueCount != queueCount; countdown--)
+            for (int countdown = 10; countdown >= 0 && serverBuffer.Count != queueCount; countdown--)
             {
                 Thread.Sleep(1);
             }
