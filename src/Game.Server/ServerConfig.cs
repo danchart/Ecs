@@ -31,11 +31,13 @@ namespace Game.Server
         public int MaxPacketSize;
 
         public UdpPacketTransportConfig UdpPacket;
+        public IPacketEncryption PacketEncryption;
 
         public static readonly TransportConfig Default = new TransportConfig
         {
             MaxPacketSize = 512,
             UdpPacket = UdpPacketTransportConfig.Default,
+            PacketEncryption = new XorPacketEncryption(),
         };
     }
 

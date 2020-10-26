@@ -60,18 +60,5 @@ namespace Game.Server
 
             this._packetSerializationBytePool.Free(bufferPoolIndex);
         }
-
-        //public async Task<Packet> ReceiveAsync()
-        //{ 
-        //    var receiveResult = await this.Client.ReceiveAsync();
-
-        //    var stream = new MemoryStream(receiveResult.Buffer, 0, receiveResult.Buffer.Length);
-
-        //    Packet packet = new Packet();
-
-        //    packet.Deserialize(stream);
-
-        //    return packet;
-        //}
     }
 }

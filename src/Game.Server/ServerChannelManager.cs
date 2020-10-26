@@ -62,7 +62,9 @@ namespace Game.Server
                         {
                             _clientPacket.Deserialize(stream, this._packetEncryption);
 
-                            _clientPacket.PlayerId
+                            // TODO: Process player packet / input
+
+                            //_clientPacket.PlayerId
                         }
                     }
                 }

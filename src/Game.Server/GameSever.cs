@@ -22,10 +22,19 @@ namespace Game.Server
             this._serverConfig = serverConfig  ?? throw new ArgumentNullException(nameof(serverConfig));
             this._logger = logger ?? throw new ArgumentNullException(nameof(logger));
 
-            this._udpTransport = new ServerUdpPacketTransport(this._logger, serverConfig.Transport.UdpPacket);
-            this._channelManager = new ServerChannelManager(serverConfig.Transport, this._udpTransport);
+            this._udpTransport = new ServerUdpPacketTransport(
+                this._logger, 
+                serverConfig.Transport.UdpPacket);
+            this._channelManager = new ServerChannelManager(
+                serverConfig.Transport, 
+                this._udpTransport, 
+                serverConfig.Transport.PacketEncryption);
             this._playerConnectionManager = new PlayerConnectionManager(this._serverConfig.PlayerConnection);
-            this._gameWorlds = new GameWorlds(this._logger, this._serverConfig, this._channelManager, serverConfig.World.WorldsCapacity);
+            this._gameWorlds = new GameWorlds(
+                this._logger, 
+                this._serverConfig, 
+                this._channelManager, 
+                serverConfig.World.WorldsCapacity);
         }
 
         public bool IsRunning()

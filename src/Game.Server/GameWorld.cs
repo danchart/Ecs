@@ -40,12 +40,7 @@ namespace Game.Server
             IServerConfig config,
             ServerChannelManager channelManager)
         {
-
-            //_simulationConfig.FixedTick = 0.5f;
-
             this._frameIndex = FrameIndex.New();
-
-
             this._id = id;
             this._logger = logger ?? throw new ArgumentNullException(nameof(logger));
             this._isStopped = false;
@@ -84,7 +79,7 @@ namespace Game.Server
             var autoEvent = new AutoResetEvent(initialState: false);
 
             using (var stateTimer = new Timer(
-                callback: Execute,
+                callback: Update,
                 state: autoEvent,
                 dueTime: 0,
                 period: tickMillieconds))
@@ -97,7 +92,7 @@ namespace Game.Server
             _logger.Info($"World stopped: Id={this._id:x8}");
         }
 
-        private void Execute(object stateInfo)
+        private void Update(object stateInfo)
         {
             AutoResetEvent autoEvent = (AutoResetEvent)stateInfo;
 
