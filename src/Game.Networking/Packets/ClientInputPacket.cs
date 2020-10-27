@@ -23,7 +23,7 @@ namespace Game.Networking
         public byte InputCount;
 
         /// <summary>
-        /// Inputs.
+        /// Inputs. Expected frame order is [0] is Frame - Inputs.Length, [Inputs.Length-1] is Frame.
         /// </summary>
         public InputPacketData[] Inputs;
 

@@ -10,6 +10,8 @@ namespace Game.Server
 {
     public sealed class GameWorld
     {
+        public readonly WorldId Id;
+
         //
         // Configurations
         //
@@ -28,8 +30,7 @@ namespace Game.Server
         private readonly ServerChannelOutgoing _channelManager;
 
         private readonly ILogger _logger;
-
-        private readonly WorldId _id;
+        
         private FrameIndex _frameIndex;
 
         private bool _isStopped;
@@ -41,7 +42,7 @@ namespace Game.Server
             ServerChannelOutgoing channelManager)
         {
             this._frameIndex = FrameIndex.New();
-            this._id = id;
+            this.Id = id;
             this._logger = logger ?? throw new ArgumentNullException(nameof(logger));
             this._isStopped = false;
             this._world = new World(this._ecsConfig);
@@ -70,8 +71,6 @@ namespace Game.Server
             this._simulation.Create();
         }
 
-        public WorldId Id => this._id;
-
         public void Run()
         {
             int tickMillieconds = (int) (1000 * _simulationConfig.FixedTick);
@@ -84,12 +83,12 @@ namespace Game.Server
                 dueTime: 0,
                 period: tickMillieconds))
             {
-                _logger.Info($"World started: Id={this._id:x8}, period={tickMillieconds}ms");
+                _logger.Info($"World started: Id={this.Id:x8}, period={tickMillieconds}ms");
 
                 autoEvent.WaitOne();
             }
 
-            _logger.Info($"World stopped: Id={this._id:x8}");
+            _logger.Info($"World stopped: Id={this.Id:x8}");
         }
 
         private void Update(object stateInfo)

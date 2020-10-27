@@ -41,8 +41,8 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="Controllers\ControlPlaneController.cs" />
-    <Compile Include="Controllers\SimulationController.cs" />
+    <Compile Include="Controllers\ControlPacketController.cs" />
+    <Compile Include="Controllers\SimulationPacketController.cs" />
     <Compile Include="GameSever.cs" />
     <Compile Include="GameWorld.cs" />
     <Compile Include="GameWorlds.cs" />

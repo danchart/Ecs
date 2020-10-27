@@ -10,7 +10,7 @@ namespace Game.Server
         private readonly ServerChannelOutgoing _channelOutgoing;
         private readonly ServerChannelIncoming _channelIncoming;
         private readonly PlayerConnectionManager _playerConnectionManager;
-        private readonly ControlPlaneController _clientControlPlaneController;
+        private readonly ControlPacketController _clientControlPlaneController;
 
         private readonly GameWorlds _gameWorlds;
 
@@ -34,7 +34,7 @@ namespace Game.Server
                 this._logger);
 
             this._playerConnectionManager = new PlayerConnectionManager(this._logger, this._serverConfig.PlayerConnection);
-            this._clientControlPlaneController = new ControlPlaneController(this._logger, this._playerConnectionManager, this._channelOutgoing);
+            this._clientControlPlaneController = new ControlPacketController(this._logger, this._playerConnectionManager, this._channelOutgoing);
 
             this._channelIncoming = new ServerChannelIncoming(
                 serverConfig.Transport,

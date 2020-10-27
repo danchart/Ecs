@@ -69,9 +69,6 @@ namespace Game.Simulation.Server
             this._items[index] = default;
         }
 
-        public ref PlayerReplicationData GetItem(int index)
-        {
-            return ref this._items[index];
-        }
+        public ref PlayerReplicationData GetItem(int index) => ref this._items[index];
     }
 }

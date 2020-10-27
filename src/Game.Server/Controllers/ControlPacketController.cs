@@ -5,7 +5,7 @@ using System.Net;
 
 namespace Game.Server
 {
-    public class ControlPlaneController
+    public class ControlPacketController
     {
         private ServerPacketEnvelope _serverPacket;
 
@@ -14,7 +14,7 @@ namespace Game.Server
 
         private readonly ILogger _logger;
 
-        public ControlPlaneController(
+        public ControlPacketController(
             ILogger logger, 
             PlayerConnectionManager playerConnections,
             ServerChannelOutgoing channelOutgoing)
@@ -55,7 +55,7 @@ namespace Game.Server
 
             ref var connection = ref this._playerConnections[playerId];
 
-            if (connection.ConnectionState == PlayerConnection.ConnectionStateEnum.Connected)
+            if (connection.State == PlayerConnection.ConnectionState.Connected)
             {
                 this._logger.VerboseError($"Client SYN request for connected player: Id={playerId}");
 
@@ -64,13 +64,13 @@ namespace Game.Server
 
             // Send SYN-ACK
             
-            connection.Handshake.AcknowledgementKey = NewAcknowledgementKey();
-            connection.ConnectionState = PlayerConnection.ConnectionStateEnum.Connecting;
+            connection.HandshakeKeys.AcknowledgementKey = NewAcknowledgementKey();
+            connection.State = PlayerConnection.ConnectionState.Connecting;
 
             this._serverPacket.Type = ServerPacketType.Control;
             this._serverPacket.PlayerId = connection.PlayerId;
             this._serverPacket.ControlPacket.ControlAckPacketData.SequenceKey = sequenceKey;
-            this._serverPacket.ControlPacket.ControlAckPacketData.AcknowledgementKey = connection.Handshake.AcknowledgementKey;
+            this._serverPacket.ControlPacket.ControlAckPacketData.AcknowledgementKey = connection.HandshakeKeys.AcknowledgementKey;
 
             this._channelOutgoing.SendClientPacket(connection.EndPoint, in this._serverPacket);
 
@@ -88,14 +88,14 @@ namespace Game.Server
 
             ref var connection = ref this._playerConnections[playerId];
 
-            if (connection.ConnectionState != PlayerConnection.ConnectionStateEnum.Connecting)
+            if (connection.State != PlayerConnection.ConnectionState.Connecting)
             {
-                this._logger.VerboseError($"Invalid client SYN request for player: Id={playerId}: State={connection.ConnectionState}");
+                this._logger.VerboseError($"Invalid client SYN request for player: Id={playerId}: State={connection.State}");
 
                 return false;
             }
 
-            if (connection.Handshake.AcknowledgementKey != this._serverPacket.ControlPacket.ControlAckPacketData.AcknowledgementKey)
+            if (connection.HandshakeKeys.AcknowledgementKey != this._serverPacket.ControlPacket.ControlAckPacketData.AcknowledgementKey)
             {
                 this._logger.VerboseError($"Client ACK request incorrect ACK key: Id={playerId}, Key={this._serverPacket.ControlPacket.ControlAckPacketData.AcknowledgementKey}");
 
@@ -104,7 +104,7 @@ namespace Game.Server
 
             // Connected
 
-            connection.ConnectionState = PlayerConnection.ConnectionStateEnum.Connected;
+            connection.State = PlayerConnection.ConnectionState.Connected;
             connection.EndPoint = endPoint;
 
             return true;

@@ -7,24 +7,24 @@ namespace Game.Networking
         public WorldId WorldId;
         public PlayerId PlayerId;
 
-        public ConnectionStateEnum ConnectionState;
+        public ConnectionState State;
 
-        public ConnectionHandshake Handshake;
+        public ConnectionHandshakeKeys HandshakeKeys;
 
         public int LastInputFrame;
-        public int LastAckSimulationFrame;
+        public int LastAcknowledgedSimulationFrame;
 
         public byte[] PacketEncryptionKey;
         public IPEndPoint EndPoint;
 
-        public enum ConnectionStateEnum
+        public enum ConnectionState
         {
             None,           // awaiting SYN packet
             Connecting,     // awaiting ACK packet
             Connected       // ACK'd
         }
 
-        public struct ConnectionHandshake
+        public struct ConnectionHandshakeKeys
         {
             public uint SequenceKey;
             public uint AcknowledgementKey;

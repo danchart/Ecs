@@ -16,14 +16,14 @@ namespace Game.Server
         private readonly IPacketEncryption _packetEncryption;
         private readonly ServerUdpPacketTransport _transport;
         private readonly TransportConfig _config;
-        private readonly ControlPlaneController _controlPacketController;
+        private readonly ControlPacketController _controlPacketController;
         private readonly ILogger _logger;
 
         public ServerChannelIncoming(
             TransportConfig config,
             ServerUdpPacketTransport transport,
             IPacketEncryption packetEncryption,
-            ControlPlaneController controlPacketController,
+            ControlPacketController controlPacketController,
             ILogger logger)
         {
             this._isRunning = false;

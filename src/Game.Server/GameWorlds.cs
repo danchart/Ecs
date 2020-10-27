@@ -7,7 +7,7 @@ namespace Game.Server
 {
     public sealed class GameWorlds
     {
-        private SpawnedWorld[] SpawnedWorlds;
+        private GameWorldThread[] _spawnedWorlds;
         private ushort _worldCount;
         private ushort[] _freeWorldIds;
         private ushort _freeWorldCount;
@@ -25,7 +25,7 @@ namespace Game.Server
         {
             this._logger = logger ?? throw new ArgumentNullException(nameof(logger));
             this._serverConfig = serverConfig ?? throw new ArgumentNullException(nameof(serverConfig));
-            this.SpawnedWorlds = new SpawnedWorld[capacity];
+            this._spawnedWorlds = new GameWorldThread[capacity];
 
             this._channelManager = channelManager ?? throw new ArgumentNullException(nameof(channelManager));
 
@@ -36,7 +36,7 @@ namespace Game.Server
 
         public GameWorld Get(WorldId id)
         {
-            return this.SpawnedWorlds[id].World;
+            return this._spawnedWorlds[id].World;
         }
 
         public WorldId Spawn()
@@ -49,9 +49,9 @@ namespace Game.Server
             }
             else
             {
-                if (this._worldCount == this.SpawnedWorlds.Length)
+                if (this._worldCount == this._spawnedWorlds.Length)
                 {
-                    Array.Resize(ref this.SpawnedWorlds, 2 * this._worldCount);
+                    Array.Resize(ref this._spawnedWorlds, 2 * this._worldCount);
                 }
 
                 worldId = this._worldCount++;
@@ -65,8 +65,8 @@ namespace Game.Server
             var thread = new Thread(world.Run);
             thread.Start();
 
-            this.SpawnedWorlds[worldId].World = world;
-            this.SpawnedWorlds[worldId].Thread = thread;
+            this._spawnedWorlds[worldId].World = world;
+            this._spawnedWorlds[worldId].Thread = thread;
 
             this._logger.Info($"Spawning world: id={world.Id:x8}, threadId={thread.ManagedThreadId}");
 
@@ -113,9 +113,9 @@ namespace Game.Server
                 this._freeIndex = 0;
             }
 
-            public ref SpawnedWorld Current
+            public ref GameWorldThread Current
             {
-                get => ref this._gameWorlds.SpawnedWorlds[this._current];
+                get => ref this._gameWorlds._spawnedWorlds[this._current];
             }
 
             public bool MoveNext()
@@ -135,7 +135,7 @@ namespace Game.Server
             }
         }
 
-        public struct SpawnedWorld
+        public struct GameWorldThread
         {
             public GameWorld World;
             public Thread Thread;
