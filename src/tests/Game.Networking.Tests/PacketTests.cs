@@ -11,10 +11,10 @@ namespace Game.Networking.Tests
         [Fact]
         public void PacketReadWrite()
         {
-            var packet = new SimulationPacket
+            var packet = new ReplicationPacket
             {
                 EntityCount = 1,
-                EntityData = new EntityPacketData[]
+                Entities = new EntityPacketData[]
                 {
                     new EntityPacketData
                     {
@@ -42,7 +42,7 @@ namespace Game.Networking.Tests
                 }
             };
 
-            var resultPacket = new SimulationPacket();
+            var resultPacket = new ReplicationPacket();
 
             using (var writeStream = new MemoryStream())
             {
@@ -55,11 +55,11 @@ namespace Game.Networking.Tests
             }
 
             Assert.Equal(packet.EntityCount, resultPacket.EntityCount);
-            Assert.Equal(packet.EntityData[0].EntityId, resultPacket.EntityData[0].EntityId);
-            Assert.Equal(packet.EntityData[0].ItemCount, resultPacket.EntityData[0].ItemCount);
-            Assert.Equal(packet.EntityData[0].Components[0].Transform.x, resultPacket.EntityData[0].Components[0].Transform.x);
-            Assert.Equal(packet.EntityData[0].Components[0].Transform.y, resultPacket.EntityData[0].Components[0].Transform.y);
-            Assert.Equal(packet.EntityData[0].Components[0].Transform.rotation, resultPacket.EntityData[0].Components[0].Transform.rotation);
+            Assert.Equal(packet.Entities[0].EntityId, resultPacket.Entities[0].EntityId);
+            Assert.Equal(packet.Entities[0].ItemCount, resultPacket.Entities[0].ItemCount);
+            Assert.Equal(packet.Entities[0].Components[0].Transform.x, resultPacket.Entities[0].Components[0].Transform.x);
+            Assert.Equal(packet.Entities[0].Components[0].Transform.y, resultPacket.Entities[0].Components[0].Transform.y);
+            Assert.Equal(packet.Entities[0].Components[0].Transform.rotation, resultPacket.Entities[0].Components[0].Transform.rotation);
         }
     }
 }

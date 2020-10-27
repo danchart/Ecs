@@ -7,11 +7,11 @@ using System.Runtime.InteropServices;
 
 namespace Game.Networking
 {
-    public struct SimulationPacket
+    public struct ReplicationPacket
     {
         public uint Frame;
         public byte EntityCount;
-        public EntityPacketData[] EntityData;
+        public EntityPacketData[] Entities;
 
         public int Serialize(Stream stream, bool measureOnly)
         {
@@ -22,7 +22,7 @@ namespace Game.Networking
 
             for (int i = 0; i < EntityCount; i++)
             {
-                size += EntityData[i].Serialize(stream, measureOnly);
+                size += Entities[i].Serialize(stream, measureOnly);
             }
 
             return size;
@@ -35,11 +35,11 @@ namespace Game.Networking
             // packet count
             stream.PacketReadByte(out EntityCount);
 
-            EntityData = new EntityPacketData[EntityCount];
+            Entities = new EntityPacketData[EntityCount];
 
             for (int i = 0; i < EntityCount; i++)
             {
-                EntityData[i].Deserialize(stream);
+                Entities[i].Deserialize(stream);
             }
 
             return true;

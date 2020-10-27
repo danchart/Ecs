@@ -7,9 +7,10 @@ namespace Game.Server
     public sealed class GameServer
     {
         private readonly ServerUdpPacketTransport _udpTransport;
-        private readonly ServerChannelManager _channelManager;
+        private readonly ServerChannelOutgoing _channelOutgoing;
+        private readonly ServerChannelIncoming _channelIncoming;
         private readonly PlayerConnectionManager _playerConnectionManager;
-        private readonly ClientControlPlaneController _clientControlPlaneController;
+        private readonly ControlPlaneController _clientControlPlaneController;
 
         private readonly GameWorlds _gameWorlds;
 
@@ -23,21 +24,34 @@ namespace Game.Server
             this._serverConfig = serverConfig  ?? throw new ArgumentNullException(nameof(serverConfig));
             this._logger = logger ?? throw new ArgumentNullException(nameof(logger));
 
-            this._playerConnectionManager = new PlayerConnectionManager(this._logger, this._serverConfig.PlayerConnection);
-            this._clientControlPlaneController = new ClientControlPlaneController(this._logger, this._playerConnectionManager, )
-
             this._udpTransport = new ServerUdpPacketTransport(
-                this._logger, 
+                this._logger,
                 serverConfig.Transport.UdpPacket);
-            this._channelManager = new ServerChannelManager(
-                serverConfig.Transport, 
-                this._udpTransport, 
-                serverConfig.Transport.PacketEncryption);
+            this._channelOutgoing = new ServerChannelOutgoing(
+                serverConfig.Transport,
+                this._udpTransport,
+                serverConfig.Transport.PacketEncryption,
+                this._logger);
+
+            this._playerConnectionManager = new PlayerConnectionManager(this._logger, this._serverConfig.PlayerConnection);
+            this._clientControlPlaneController = new ControlPlaneController(this._logger, this._playerConnectionManager, this._channelOutgoing);
+
+            this._channelIncoming = new ServerChannelIncoming(
+                serverConfig.Transport,
+                this._udpTransport,
+                serverConfig.Transport.PacketEncryption,
+                this._clientControlPlaneController,
+                this._logger);
             this._gameWorlds = new GameWorlds(
                 this._logger, 
                 this._serverConfig, 
-                this._channelManager, 
+                this._channelOutgoing, 
                 serverConfig.World.WorldsCapacity);
+        }
+
+        public void Start()
+        {
+            this._channelIncoming.Start();
         }
 
         public bool IsRunning()
@@ -47,6 +61,8 @@ namespace Game.Server
 
         public void StopAll()
         {
+            this._channelIncoming.Stop();
+
             this._gameWorlds.StopAll();
         }
 

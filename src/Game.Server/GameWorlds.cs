@@ -12,7 +12,7 @@ namespace Game.Server
         private ushort[] _freeWorldIds;
         private ushort _freeWorldCount;
 
-        private readonly ServerChannelManager _channelManager;
+        private readonly ServerChannelOutgoing _channelManager;
 
         private readonly ILogger _logger;
         private readonly IServerConfig _serverConfig;
@@ -20,7 +20,7 @@ namespace Game.Server
         public GameWorlds(
             ILogger logger, 
             IServerConfig serverConfig, 
-            ServerChannelManager channelManager,
+            ServerChannelOutgoing channelManager,
             int capacity)
         {
             this._logger = logger ?? throw new ArgumentNullException(nameof(logger));

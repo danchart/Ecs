@@ -25,7 +25,7 @@ namespace Game.Server
 
         private readonly IWorldReplicationManager _replicationManager;
 
-        private readonly ServerChannelManager _channelManager;
+        private readonly ServerChannelOutgoing _channelManager;
 
         private readonly ILogger _logger;
 
@@ -38,7 +38,7 @@ namespace Game.Server
             WorldId id, 
             ILogger logger,
             IServerConfig config,
-            ServerChannelManager channelManager)
+            ServerChannelOutgoing channelManager)
         {
             this._frameIndex = FrameIndex.New();
             this._id = id;

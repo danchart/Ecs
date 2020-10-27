@@ -1,7 +1,7 @@
 ﻿using Game.Networking.Core;
 using System.IO;
 
-namespace Game.Networking.Packets
+namespace Game.Networking
 {
     public enum ClientPacketType : byte
     {

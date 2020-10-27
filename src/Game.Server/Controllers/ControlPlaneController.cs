@@ -5,31 +5,26 @@ using System.Net;
 
 namespace Game.Server
 {
-    public interface IClientControlPacketController
-    {
-        bool Route(PlayerId playerId, IPEndPoint endPoint, in ControlPacket controlPacket);
-    }
-
-    public class ClientControlPlaneController : IClientControlPacketController
+    public class ControlPlaneController
     {
         private ServerPacketEnvelope _serverPacket;
 
-        private readonly ServerChannelManager _channelManager;
+        private readonly ServerChannelOutgoing _channelOutgoing;
         private readonly PlayerConnectionManager _playerConnections;
 
         private readonly ILogger _logger;
 
-        public ClientControlPlaneController(
+        public ControlPlaneController(
             ILogger logger, 
             PlayerConnectionManager playerConnections,
-            ServerChannelManager channelManager)
+            ServerChannelOutgoing channelOutgoing)
         {
             this._logger = logger ?? throw new ArgumentNullException(nameof(logger));
             this._playerConnections = playerConnections ?? throw new ArgumentNullException(nameof(playerConnections));
-            this._channelManager = channelManager ?? throw new ArgumentNullException(nameof(channelManager));
+            this._channelOutgoing = channelOutgoing ?? throw new ArgumentNullException(nameof(channelOutgoing));
         }
 
-        public bool Route(PlayerId playerId, IPEndPoint endPoint, in ControlPacket controlPacket)
+        public bool Process(PlayerId playerId, IPEndPoint endPoint, in ControlPacket controlPacket)
         {
             switch (controlPacket.ControlMessage)
             {
@@ -77,7 +72,7 @@ namespace Game.Server
             this._serverPacket.ControlPacket.ControlAckPacketData.SequenceKey = sequenceKey;
             this._serverPacket.ControlPacket.ControlAckPacketData.AcknowledgementKey = connection.Handshake.AcknowledgementKey;
 
-            this._channelManager.SendClientPacket(connection.EndPoint, in this._serverPacket);
+            this._channelOutgoing.SendClientPacket(connection.EndPoint, in this._serverPacket);
 
             return true;
         }

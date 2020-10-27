@@ -1,4 +1,5 @@
 ﻿using System.Net;
+using Test.Common;
 using Xunit;
 
 namespace Game.Networking.Tests
@@ -8,7 +9,10 @@ namespace Game.Networking.Tests
         [Fact]
         public void Test()
         {
-            var connections = new PlayerConnectionManager(new PlayerConnectionConfig
+            var logger = new TestLogger();
+            var connections = new PlayerConnectionManager(
+                logger,
+                new PlayerConnectionConfig
             {
                 Capacity = new PlayerConnectionConfig.CapacityConfig
                 {
