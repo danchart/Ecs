@@ -1,4 +1,5 @@
 ﻿using Common.Core;
+using System;
 using System.Net;
 
 namespace Game.Networking
@@ -58,27 +59,5 @@ namespace Game.Networking
         {
             return this._connections.GetEnumerator();
         }
-
-        public bool Syn(PlayerId playerId, uint sequenceKey)
-        {
-            if (!HasPlayer(playerId))
-            {
-                this._logger.VerboseError($"Client SYN request for non-existent player: Id={playerId}");
-
-                return false;
-            }
-
-            ref var connection = ref this._connections[playerId];
-
-            if (connection.ConnectionState != PlayerConnection.ConnectionStateEnum.None)
-            {
-                this._logger.VerboseError($"Invalid client SYN request for player: Id={playerId}: State={connection.ConnectionState}");
-
-                return false;
-            }
-
-
-        }
-
     }
 }

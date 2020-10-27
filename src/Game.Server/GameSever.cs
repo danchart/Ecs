@@ -9,6 +9,7 @@ namespace Game.Server
         private readonly ServerUdpPacketTransport _udpTransport;
         private readonly ServerChannelManager _channelManager;
         private readonly PlayerConnectionManager _playerConnectionManager;
+        private readonly ClientControlPlaneController _clientControlPlaneController;
 
         private readonly GameWorlds _gameWorlds;
 
@@ -22,6 +23,9 @@ namespace Game.Server
             this._serverConfig = serverConfig  ?? throw new ArgumentNullException(nameof(serverConfig));
             this._logger = logger ?? throw new ArgumentNullException(nameof(logger));
 
+            this._playerConnectionManager = new PlayerConnectionManager(this._logger, this._serverConfig.PlayerConnection);
+            this._clientControlPlaneController = new ClientControlPlaneController(this._logger, this._playerConnectionManager, )
+
             this._udpTransport = new ServerUdpPacketTransport(
                 this._logger, 
                 serverConfig.Transport.UdpPacket);
@@ -29,7 +33,6 @@ namespace Game.Server
                 serverConfig.Transport, 
                 this._udpTransport, 
                 serverConfig.Transport.PacketEncryption);
-            this._playerConnectionManager = new PlayerConnectionManager(this._serverConfig.PlayerConnection);
             this._gameWorlds = new GameWorlds(
                 this._logger, 
                 this._serverConfig, 

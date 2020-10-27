@@ -56,6 +56,16 @@ namespace Game.Server.Console
             {
                 return $"{DateTime.Now:yyyy.mm.dd HH:mm:ss.fff}: {message}";
             }
+
+            public void Verbose(string message)
+            {
+                System.Console.WriteLine(GetMessage(message));
+            }
+
+            public void VerboseError(string message)
+            {
+                System.Console.WriteLine(GetMessage(message));
+            }
         }
     }
 }

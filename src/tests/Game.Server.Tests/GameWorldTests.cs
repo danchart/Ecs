@@ -12,13 +12,14 @@ namespace Game.Server.Tests
             var logger = new TestLogger();
             var config = new DefaultServerConfig();
 
-            var playerConnections = new PlayerConnectionManager(config.PlayerConnection);
+            var playerConnections = new PlayerConnectionManager(logger, config.PlayerConnection);
             var udpTransport = new ServerUdpPacketTransport(logger, config.Transport.UdpPacket);
             IPacketEncryption packetEncryption = new XorPacketEncryption();
             var channelManager = new ServerChannelManager(
                 config.Transport,
                 udpTransport,
-                packetEncryption);
+                packetEncryption,
+                logger);
 
             var gameWorld = new GameWorld(
                 id: new WorldId(0),

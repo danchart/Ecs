@@ -100,7 +100,7 @@ namespace Game.Server
             this._simulation.FixedUpdate(_simulationConfig.FixedTick);
 
             // Update clients
-            this._channelManager.SendWorldUpdateToClients(this._frameIndex, this._players);
+            this._channelManager.ReplicateToClients(this._frameIndex, this._players);
 
             // Increment frame index
             this._frameIndex = this._frameIndex.GetNext();

@@ -4,6 +4,7 @@ using Game.Networking.Packets;
 using Game.Simulation.Server;
 using System;
 using System.IO;
+using System.Net;
 using System.Threading;
 
 namespace Game.Server
@@ -21,12 +22,14 @@ namespace Game.Server
         private readonly IPacketEncryption _packetEncryption;
         private readonly ServerUdpPacketTransport _transport;
         private readonly TransportConfig _config;
+        private readonly IClientControlPacketController _clientControlPacketController;
         private readonly ILogger _logger;
 
         public ServerChannelManager(
-            TransportConfig config, 
+            TransportConfig config,
             ServerUdpPacketTransport transport,
             IPacketEncryption packetEncryption,
+            IClientControlPacketController clientControlPacketController,
             ILogger logger)
         {
             this._isStopRequested = false;
@@ -34,6 +37,7 @@ namespace Game.Server
             this._config = config ?? throw new ArgumentNullException(nameof(config));
             this._transport = transport ?? throw new ArgumentNullException(nameof(transport));
             this._packetEncryption = packetEncryption ?? throw new ArgumentNullException(nameof(packetEncryption));
+            this._clientControlPacketController = clientControlPacketController ?? throw new ArgumentNullException(nameof(clientControlPacketController));
             this._logger = logger ?? throw new ArgumentNullException(nameof(logger));
         }
 
@@ -74,8 +78,15 @@ namespace Game.Server
                             switch (_clientPacketEnvelope.Type)
                             {
                                 case ClientPacketType.Control:
+                                    {
+                                        IPEndPoint endPoint;
+                                        this._transport.ReceiveBuffer.GetFromEndPoint(out endPoint);
 
-                                    ProcessClientControlPacket(_clientPacketEnvelope.PlayerId, _clientPacketEnvelope.ControlPacket);
+                                        this._clientControlPacketController.Route(
+                                            _clientPacketEnvelope.PlayerId,
+                                            endPoint,
+                                            in _clientPacketEnvelope.ControlPacket);
+                                    }
                                     break;
                                 case ClientPacketType.PlayerInput:
 
@@ -87,24 +98,10 @@ namespace Game.Server
                                     break;
                             }
                         }
+
+                        this._transport.ReceiveBuffer.NextRead();
                     }
                 }
-            }
-        }
-
-        private void ProcessClientControlPacket(PlayerId playerId, ControlPacket controlPacket)
-        {
-            switch (controlPacket.ControlMessage)
-            {
-                case ControlMessageEnum.ConnectSyn:
-
-
-
-                    break;
-
-                case ControlMessageEnum.ConnectAck:
-
-                    break;
             }
         }
 
@@ -113,11 +110,17 @@ namespace Game.Server
 
         }
 
+        public void SendClientPacket(IPEndPoint endPoint, in ServerPacketEnvelope serverPacket)
+        {
+            // TODO: Add flow control?
+            this._transport.SendPacket(endPoint, in serverPacket);
+        }
+
         // TODO:
         // 1) Queue replication packets to transport
         // 2) Sort client input to worlds 
 
-        public void SendWorldUpdateToClients(ushort frame, WorldPlayers players)
+        public void ReplicateToClients(ushort frame, WorldPlayers players)
         {
             // TODO: Do we need a packet pool? A singleton works single threaded only.
             ref var packet = ref this._serverPacketEnvelope;

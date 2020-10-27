@@ -23,7 +23,24 @@ namespace Test.Common
                 Level = LevelEnum.Info,
                 Text = message
             });
+        }
 
+        public void Verbose(string message)
+        {
+            Messages.Add(new Message
+            {
+                Level = LevelEnum.Verbose,
+                Text = message
+            });
+        }
+
+        public void VerboseError(string message)
+        {
+            Messages.Add(new Message
+            {
+                Level = LevelEnum.VerboseError,
+                Text = message
+            });
         }
 
         public struct Message
@@ -35,7 +52,9 @@ namespace Test.Common
         public enum LevelEnum
         {
             Info,
-            Error
+            Error,
+            Verbose,
+            VerboseError
         }
     }
 }
