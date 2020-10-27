@@ -1,6 +1,6 @@
 ﻿namespace Game.Simulation.Core
 {
-    public struct PlayerInputComponent
+    public struct InputComponent
     {
         public bool IsFire1Down;
         public bool IsFire2Down;

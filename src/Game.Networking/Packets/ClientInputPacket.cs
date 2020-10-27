@@ -47,7 +47,7 @@ namespace Game.Networking
             // frame index
             ushort frameIndexAsUshort;
             stream.PacketReadUShort(out frameIndexAsUshort);
-            this.Frame = new FrameIndex(frameIndexAsUshort);
+            this.Frame = FrameIndex.New(frameIndexAsUshort);
             // input count
             stream.PacketReadByte(out InputCount);
 
@@ -66,7 +66,7 @@ namespace Game.Networking
     {
         public BitField HasFields;
 
-        public PlayerInputData Input;
+        public InputData Input;
 
         public int Serialize(Stream stream, bool measureOnly)
         {

@@ -21,18 +21,18 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="DataTypes\FrameIndex.cs" />
+    <Compile Include="PacketData\PlayerData.cs" />
     <Compile Include="ServerConnections\PlayerConnection.cs" />
     <Compile Include="ServerConnections\PlayerConnectionConfig.cs" />
     <Compile Include="ServerConnections\PlayerConnectionManager.cs" />
     <Compile Include="ServerConnections\PlayerConnectionRef.cs" />
     <Compile Include="ServerConnections\PlayerConnectionRefs.cs" />
     <Compile Include="Ids\WorldId.cs" />
-    <Compile Include="Ids\PlayerId.cs" />
     <Compile Include="PacketEncryption.cs" />
     <Compile Include="Packets\ClientPacketEnvelope.cs" />
     <Compile Include="Packets\ServerPacketEnvelope.cs" />
     <Compile Include="PacketData\MovementData.cs" />
-    <Compile Include="PacketData\PlayerInputData.cs" />
+    <Compile Include="PacketData\InputData.cs" />
     <Compile Include="PacketData\TransformData.cs" />
     <Compile Include="Packets\ControlPacket.cs" />
     <Compile Include="Packets\ClientInputPacket.cs" />

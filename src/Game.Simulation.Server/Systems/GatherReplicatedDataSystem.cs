@@ -4,10 +4,15 @@ using Game.Simulation.Core;
 
 namespace Game.Simulation.Server
 {
+    /// <summary>
+    /// Gathers all the replicated components for this tick. This is later converted into delta, prioritized, 
+    /// per-entity changes per-player updates.
+    /// </summary>
     public class GatherReplicatedDataSystem : SystemBase
     {
         public EntityQueryWithChangeFilter<ReplicatedComponent, TransformComponent> _transformQuery = null;
         public EntityQueryWithChangeFilter<ReplicatedComponent, MovementComponent> _movementQuery = null;
+        public EntityQueryWithChangeFilter<ReplicatedComponent, PlayerComponent> _playerQuery = null;
 
         public IReplicationDataBroker ReplicationDataBroker = null;
 
@@ -39,6 +44,17 @@ namespace Game.Simulation.Server
                 _movementQuery
                     .GetReadonly2(index)
                     .ToPacket(ref component.Movement);
+            }
+
+            // PlayerComponent
+            foreach (int index in _playerQuery.GetIndices())
+            {
+                var entity = _playerQuery.GetEntity(index);
+
+                ref var component = ref modifiedEntityComponents[entity].New();
+                _playerQuery
+                    .GetReadonly2(index)
+                    .ToPacket(ref component.Player);
             }
 
             ReplicationDataBroker.EndDataCollection();

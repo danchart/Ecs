@@ -5,7 +5,7 @@ using System.IO;
 
 namespace Game.Networking.PacketData
 {
-    public struct PlayerInputData
+    public struct InputData
     {
         public const int FieldCount = 2;
 
@@ -77,8 +77,8 @@ namespace Game.Networking.PacketData
     public static class PlayerInputDataExtensions
     {
         public static void ToPacket(
-            this in PlayerInputComponent component,
-            ref PlayerInputData packet)
+            this in InputComponent component,
+            ref InputData packet)
         {
             packet.x_axis = component.Horizontal;
             packet.y_axis = component.Vertical;
@@ -86,9 +86,9 @@ namespace Game.Networking.PacketData
         }
 
         public static void FromPacket(
-            this in PlayerInputData packet,
+            this in InputData packet,
             in BitField hasFields,
-            ref PlayerInputComponent component)
+            ref InputComponent component)
         {
             component.Horizontal = hasFields.Bit0 ? packet.x_axis : component.Horizontal;
             component.Vertical = hasFields.Bit1 ? packet.y_axis : component.Vertical;

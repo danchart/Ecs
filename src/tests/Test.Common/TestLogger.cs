@@ -16,6 +16,15 @@ namespace Test.Common
             });
         }
 
+        public void Warning(string message)
+        {
+            Messages.Add(new Message
+            {
+                Level = LevelEnum.Warning,
+                Text = message
+            });
+        }
+
         public void Info(string message)
         {
             Messages.Add(new Message
@@ -53,6 +62,7 @@ namespace Test.Common
         {
             Info,
             Error,
+            Warning,
             Verbose,
             VerboseError
         }

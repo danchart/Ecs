@@ -1,5 +1,6 @@
 ﻿using Ecs.Core;
 using Game.Networking;
+using Game.Simulation.Core;
 using System;
 using System.Collections.Generic;
 
@@ -12,18 +13,25 @@ namespace Game.Simulation.Server
 
         private readonly Dictionary<PlayerId, int> _playerIdToIndex;
         private readonly PlayerReplicationDataPool _replicationDataPool;
+        private readonly PlayerInputsPool _playerInputsPool;
 
         public WorldPlayers(
             ReplicationConfig replicationConfig,
+            WorldConfig worldConfig,
             int capacity)
         {
             this._replicationDataPool = new PlayerReplicationDataPool(replicationConfig, capacity);
+            this._playerInputsPool = new PlayerInputsPool(
+                inputFrameCount: worldConfig.PlayerInputMaxFrameCount,
+                capacity: capacity);
             this._playerIdToIndex = new Dictionary<PlayerId, int>(capacity);
             this._players = new WorldPlayer[capacity];
             this._count = 0;
         }
 
-        public ref WorldPlayer GetItem(PlayerId id) => ref this._players[this._playerIdToIndex[id]];
+        public bool Contains(PlayerId id) => this._playerIdToIndex.ContainsKey(id);
+
+        public ref WorldPlayer this[PlayerId id] => ref this._players[this._playerIdToIndex[id]];
 
         public void Add(
             in PlayerConnectionRef playerConnectionRef,
@@ -40,7 +48,8 @@ namespace Game.Simulation.Server
 
             player.ConnectionRef = playerConnectionRef;
             player.Entity = entity;
-            player.PlayerReplicationDataIndex = this._replicationDataPool.New();
+            player.PlayerReplicationDataPoolIndex = this._replicationDataPool.New();
+            player.PlayerInputsPoolIndex = this._playerInputsPool.New();
 
             var playerId = playerConnectionRef.Unref().PlayerId;
 
@@ -51,7 +60,8 @@ namespace Game.Simulation.Server
         {
             var indexToRemove = this._playerIdToIndex[playerId];
 
-            this._replicationDataPool.Free(this._players[indexToRemove].PlayerReplicationDataIndex);
+            this._replicationDataPool.Free(this._players[indexToRemove].PlayerReplicationDataPoolIndex);
+            this._playerInputsPool.Free(this._players[indexToRemove].PlayerInputsPoolIndex);
             this._playerIdToIndex.Remove(playerId);
 
             // Swap index with last if at least one element remains.

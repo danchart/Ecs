@@ -44,7 +44,12 @@ namespace Game.Server.Console
         {
             public void Error(string message)
             {
-                System.Console.WriteLine(GetMessage(message));
+                System.Console.WriteLine($"[ERROR] {GetMessage(message)}");
+            }
+
+            public void Warning(string message)
+            {
+                System.Console.WriteLine($"[WARNING] {GetMessage(message)}");
             }
 
             public void Info(string message)

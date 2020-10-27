@@ -21,7 +21,7 @@ namespace Game.Server
 
         private readonly World _world;
         private readonly Systems _systems;
-        private readonly ServerSimulation<PlayerInputComponent> _simulation;
+        private readonly ServerSimulation<InputComponent> _simulation;
 
         private readonly WorldPlayers _players;
 
@@ -51,6 +51,7 @@ namespace Game.Server
 
             this._players = new WorldPlayers(
                 config.Replication,
+                config.World,
                 config.PlayerConnection.Capacity.InitialConnectionsCapacity);
 
             this._replicationManager = new WorldReplicationManager(config.Replication, this._players);
@@ -63,7 +64,7 @@ namespace Game.Server
                         config.Replication.Capacity, 
                         this._replicationManager));
 
-            this._simulation = new ServerSimulation<PlayerInputComponent>(
+            this._simulation = new ServerSimulation<InputComponent>(
                 this._simulationConfig,
                 this._world,
                 this._systems);
@@ -113,6 +114,50 @@ namespace Game.Server
         public void Stop()
         {
             this._isStopped = true;
+        }
+
+        public void Connect(PlayerConnectionRef connectionRef)
+        {
+            ref var connection = ref connectionRef.Unref();
+
+            if (this._players.Contains(connection.PlayerId))
+            {
+                this._logger.Warning($"Tried to connect player already in world: worldId={this.Id}, playerId={connection.PlayerId}");
+
+                return;
+            }
+
+            connection.WorldId = this.Id;
+            connection.LastAcknowledgedSimulationFrame = FrameIndex.Nil;
+            connection.LastInputFrame = FrameIndex.Nil;
+
+            // TODO: Player will need more sophisticated construction, e.g. components, game objects
+            var playerEntity = this._simulation.World.NewEntity();
+            playerEntity.GetComponent<TransformComponent>();
+            playerEntity.GetComponent<MovementComponent>();
+
+            ref var playerComponent = ref playerEntity.GetComponent<PlayerComponent>();
+            playerComponent.Id = connection.PlayerId;
+
+            this._players.Add(
+                in connectionRef,
+                playerEntity);
+        }
+
+        public void Disconnect(PlayerConnectionRef connectionRef)
+        {
+            ref var connection = ref connectionRef.Unref();
+
+            if (!this._players.Contains(connection.PlayerId))
+            {
+                this._logger.Warning($"Tried to disconnect player not in world: worldId={this.Id}, playerId={connection.PlayerId}");
+
+                return;
+            }
+
+            var entity = this._players[connection.PlayerId].Entity;
+            this._players.Remove(connection.PlayerId);
+            entity.Free();
         }
     }
 }

@@ -92,6 +92,7 @@ namespace Game.Networking
         {
             Transform = 0,
             Movement,
+            Player,
         };
 
         [FieldOffset(0)]
@@ -103,6 +104,8 @@ namespace Game.Networking
         public TransformData Transform;
         [FieldOffset(6)]
         public MovementData Movement;
+        [FieldOffset(6)]
+        public PlayerData Player;
 
         public int Serialize(Stream stream, bool measureOnly)
         {
@@ -116,10 +119,17 @@ namespace Game.Networking
 
                     size += Transform.Serialize(HasFields, stream, measureOnly);
                     break;
+
                 case TypeEnum.Movement:
 
                     size += Movement.Serialize(HasFields, stream, measureOnly);
                     break;
+
+                case TypeEnum.Player:
+
+                    size += Player.Serialize(HasFields, stream, measureOnly);
+                    break;
+
                 default:
                     return -1;
             }
@@ -151,10 +161,17 @@ namespace Game.Networking
 
                     Transform.Deserialize(fieldCount, ref HasFields, stream);
                     break;
+
                 case TypeEnum.Movement:
 
                     Movement.Deserialize(fieldCount, ref HasFields, stream);
                     break;
+
+                case TypeEnum.Player:
+
+                    Player.Deserialize(fieldCount, ref HasFields, stream);
+                    break;
+
                 default:
 
                     return false;

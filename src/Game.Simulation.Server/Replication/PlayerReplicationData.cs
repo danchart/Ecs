@@ -294,6 +294,12 @@ namespace Game.Simulation.Server
                             items[index].Movement = component.Data.Movement;
                             break;
 
+                        case ComponentId.Player:
+
+                            items[index].Type = ComponentPacketData.TypeEnum.Player;
+                            items[index].Player = component.Data.Player;
+                            break;
+
                         default:
 
                             throw new InvalidOperationException($"Unknown {nameof(ComponentId)}, value={component.Data.ComponentId}");

@@ -9,7 +9,7 @@ namespace Ecs.Core.Collections
     {
         private EntityItem[] _entityItems;
 
-        private Dictionary<int, int> _entityIndexToDataIndex;
+        private Dictionary<Entity, int> _entityIndexToDataIndex;
 
         private int _count;
 
@@ -21,13 +21,15 @@ namespace Ecs.Core.Collections
         public EntityMapList(int entityCapacity, int listCapacity)
         {
             this._entityItems = new EntityItem[entityCapacity];
-            this._entityIndexToDataIndex = new Dictionary<int, int>(entityCapacity);
+            this._entityIndexToDataIndex = new Dictionary<Entity, int>(entityCapacity);
 
             this._count = 0;
             this._version = 0;
 
             this.ListCapacity = listCapacity;
         }
+
+        public bool Contains(Entity entity) => this._entityIndexToDataIndex.ContainsKey(entity);
 
         public int Count
         {
@@ -47,7 +49,7 @@ namespace Ecs.Core.Collections
         {
             get
             {
-                if (!this._entityIndexToDataIndex.ContainsKey(entity.Id))
+                if (!this._entityIndexToDataIndex.ContainsKey(entity))
                 {
                     // Allocate this index
 
@@ -56,7 +58,7 @@ namespace Ecs.Core.Collections
                         Array.Resize(ref this._entityItems, 2 * this._count);
                     }
 
-                    this._entityIndexToDataIndex[entity.Id] = this._count;
+                    this._entityIndexToDataIndex[entity] = this._count;
                     this._entityItems[_count] = new EntityItem(this, ListCapacity)
                     {
                         Entity = entity,
@@ -66,7 +68,7 @@ namespace Ecs.Core.Collections
                 }
                 else
                 {
-                    var entityIndex = this._entityIndexToDataIndex[entity.Id];
+                    var entityIndex = this._entityIndexToDataIndex[entity];
 
                     if (this._entityItems[entityIndex].Entity != entity)
                     {

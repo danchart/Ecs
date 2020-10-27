@@ -6,7 +6,7 @@ namespace Game.Simulation.Server
     public class ServerSimulation<TInput>
         where TInput : unmanaged
     {
-        internal readonly World World;
+        public readonly World World;
 
         // Server simulation uses only fixed updates (for now?)
         internal readonly Systems _fixedUpdate;

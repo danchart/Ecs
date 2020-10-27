@@ -1,4 +1,5 @@
-﻿using System.Net;
+﻿using Game.Simulation.Core;
+using System.Net;
 
 namespace Game.Networking
 {
@@ -9,10 +10,10 @@ namespace Game.Networking
 
         public ConnectionState State;
 
-        public ConnectionHandshakeKeys HandshakeKeys;
+        public ConnectionHandshakeKeys Handshake;
 
-        public int LastInputFrame;
-        public int LastAcknowledgedSimulationFrame;
+        public FrameIndex LastInputFrame;
+        public FrameIndex LastAcknowledgedSimulationFrame;
 
         public byte[] PacketEncryptionKey;
         public IPEndPoint EndPoint;

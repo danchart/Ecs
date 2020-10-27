@@ -13,7 +13,7 @@ namespace Game.Simulation.Server
 
     public sealed class WorldReplicationManager : IWorldReplicationManager
     {
-        private readonly ReplicationPacketPriorityComponents _packetPriorityComponents;
+        private readonly ReplicationPriorityEntityComponents _packetPriorityComponents;
         private readonly WorldPlayers _players;
 
         private readonly PacketPriorityCalculator _packetPriorityCalculator;
@@ -23,7 +23,7 @@ namespace Game.Simulation.Server
             WorldPlayers players)
         {
             this._players = players ?? throw new ArgumentNullException(nameof(players));
-            this._packetPriorityComponents = new ReplicationPacketPriorityComponents(config.Capacity.InitialReplicatedEntityCapacity);
+            this._packetPriorityComponents = new ReplicationPriorityEntityComponents(config.Capacity.InitialReplicatedEntityCapacity);
             this._packetPriorityCalculator = new PacketPriorityCalculator(config.PacketPriority);
         }
 
@@ -45,7 +45,7 @@ namespace Game.Simulation.Server
         private void AddPacketPrioritizedEntityChangesToPlayer(
             in Entity playerEntity,
             EntityMapList<ReplicatedComponentData> replicatedEntities,
-            ReplicationPacketPriorityComponents packetPriorityComponents,
+            ReplicationPriorityEntityComponents packetPriorityComponents,
             PlayerReplicationData playerReplicationData)
         {
             ref readonly var playerTransform = ref playerEntity.GetReadOnlyComponent<TransformComponent>();

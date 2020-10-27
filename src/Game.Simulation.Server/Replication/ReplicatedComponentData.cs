@@ -16,6 +16,8 @@ namespace Game.Simulation.Server
         public TransformData Transform;
         [FieldOffset(2)]
         public MovementData Movement;
+        [FieldOffset(2)]
+        public PlayerData Player;
 
         public int ComponentIdAsIndex => (int)ComponentId;
     }

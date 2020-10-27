@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace Game.Networking
+namespace Game.Simulation.Core
 {
     public readonly struct PlayerId : IEquatable<PlayerId>
     {

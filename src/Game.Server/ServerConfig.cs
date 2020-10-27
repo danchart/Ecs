@@ -9,7 +9,8 @@ namespace Game.Server
         ReplicationConfig Replication { get; }
         PlayerConnectionConfig PlayerConnection { get; }
         EcsConfig Ecs { get; }
-        TransportConfig Transport { get;}
+        TransportConfig Transport { get; }
+        ServerConfig Server { get; }
         WorldConfig World { get;  }
     }
 
@@ -22,6 +23,8 @@ namespace Game.Server
         public EcsConfig Ecs => EcsConfig.Default;
 
         public TransportConfig Transport => TransportConfig.Default;
+
+        public ServerConfig Server => ServerConfig.Default;
 
         public WorldConfig World => WorldConfig.Default;
     }
@@ -41,13 +44,13 @@ namespace Game.Server
         };
     }
 
-    public sealed class WorldConfig
+    public sealed class ServerConfig
     {
         public int WorldsCapacity;
 
-        public static readonly WorldConfig Default = new WorldConfig
+        public static readonly ServerConfig Default = new ServerConfig
         {
-            WorldsCapacity = 8
+            WorldsCapacity = 8,
         };
     }
 }

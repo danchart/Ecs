@@ -46,7 +46,7 @@ namespace Game.Server
                 this._logger, 
                 this._serverConfig, 
                 this._channelOutgoing, 
-                serverConfig.World.WorldsCapacity);
+                serverConfig.Server.WorldsCapacity);
         }
 
         public void Start()

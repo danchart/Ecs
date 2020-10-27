@@ -6,11 +6,13 @@ namespace Game.Networking
     {
         private readonly ushort _index;
 
-        public FrameIndex(ushort id) => this._index = id;
+        private FrameIndex(ushort id) => this._index = id;
 
-        public FrameIndex GetNext() => new FrameIndex((ushort)(this._index + 1));
+        public static readonly FrameIndex Nil = new FrameIndex(0);
 
-        public static FrameIndex New() => new FrameIndex(0);
+        public FrameIndex GetNext() => new FrameIndex((this._index == ushort.MaxValue) ? (ushort)1 : (ushort)(this._index + 1));
+
+        public static FrameIndex New(ushort index = 1) => new FrameIndex(index);
 
         public static implicit operator ushort(FrameIndex id) => id._index;
 

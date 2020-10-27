@@ -4,6 +4,7 @@
     {
         Transform,
         Movement,
+        Player,
 
         // Use as ID count
         MaxValue

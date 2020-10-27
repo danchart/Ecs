@@ -10,18 +10,30 @@ namespace Game.Simulation.Server
 
         public Entity Entity;
 
-        public int PlayerReplicationDataIndex;
+        public int PlayerReplicationDataPoolIndex;
+
+        public int PlayerInputsPoolIndex;
 
         private readonly PlayerReplicationDataPool _replicationDataPool;
+        private readonly PlayerInputsPool _playerInputsPool;
 
-        internal WorldPlayer(PlayerReplicationDataPool replicationDataPool) : this()
+        internal WorldPlayer(
+            PlayerReplicationDataPool replicationDataPool, 
+            PlayerInputsPool playerInputsPool) 
+            : this()
         {
             this._replicationDataPool = replicationDataPool ?? throw new ArgumentNullException(nameof(replicationDataPool));
+            this._playerInputsPool = playerInputsPool ?? throw new ArgumentNullException(nameof(playerInputsPool));
+        }
+
+        public PlayerInputs PlayerInputs
+        {
+            get => this._playerInputsPool.Get(PlayerInputsPoolIndex);
         }
 
         public PlayerReplicationData ReplicationData
         {
-            get => this._replicationDataPool.GetItem(PlayerReplicationDataIndex);
+            get => this._replicationDataPool.GetItem(PlayerReplicationDataPoolIndex);
         }
     }
 }

@@ -4,8 +4,7 @@ using System;
 
 namespace Game.Simulation.Server
 {
-
-    internal sealed class PlayerInputs
+    public sealed class PlayerInputs
     {
         private Item[] _items;
 
@@ -21,20 +20,22 @@ namespace Game.Simulation.Server
 
         public int Count => this._count;
 
-        public ref Item this[int index] => ref this._items[index];
+        public ref Item GetFirst() => ref this._items[this._index];
+        public ref Item GetLast() => ref this._items[this._index];
 
-        public int MoveNext()
+        public ref Item GetNext()
         {
-            if (this._count  == this._items.Length)
+            if (this._count == this._items.Length)
             {
-                return -1;
+                // Not auto-expanding the array, should we?
+                throw new IndexOutOfRangeException($"Out of player input capacity: capacity={this._items.Length}");
             }
 
             var index = (this._index + this._count) % this._items.Length;
 
             this._count++;
 
-            return index;
+            return ref this._items[index];
         }
 
         public void RemoveFirst()
@@ -43,10 +44,16 @@ namespace Game.Simulation.Server
             this._count--;
         }
 
+        public void Clear()
+        {
+            this._index = 0;
+            this._count = 0;
+        }
+
         public struct Item
         {
             public FrameIndex FrameIndex;
-            public PlayerInputData Input;
+            public InputData Input;
         }
     }
 }

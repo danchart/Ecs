@@ -1,5 +1,6 @@
 ﻿using Common.Core;
 using Game.Networking;
+using Game.Simulation.Core;
 using System;
 using System.Net;
 
@@ -12,16 +13,20 @@ namespace Game.Server
         private readonly ServerChannelOutgoing _channelOutgoing;
         private readonly PlayerConnectionManager _playerConnections;
 
+        private readonly GameWorlds _worlds;
+
         private readonly ILogger _logger;
 
         public ControlPacketController(
             ILogger logger, 
             PlayerConnectionManager playerConnections,
-            ServerChannelOutgoing channelOutgoing)
+            ServerChannelOutgoing channelOutgoing,
+            GameWorlds worlds)
         {
             this._logger = logger ?? throw new ArgumentNullException(nameof(logger));
             this._playerConnections = playerConnections ?? throw new ArgumentNullException(nameof(playerConnections));
             this._channelOutgoing = channelOutgoing ?? throw new ArgumentNullException(nameof(channelOutgoing));
+            this._worlds = worlds ?? throw new ArgumentNullException(nameof(worlds));
         }
 
         public bool Process(PlayerId playerId, IPEndPoint endPoint, in ControlPacket controlPacket)
@@ -64,13 +69,13 @@ namespace Game.Server
 
             // Send SYN-ACK
             
-            connection.HandshakeKeys.AcknowledgementKey = NewAcknowledgementKey();
+            connection.Handshake.AcknowledgementKey = NewAcknowledgementKey();
             connection.State = PlayerConnection.ConnectionState.Connecting;
 
             this._serverPacket.Type = ServerPacketType.Control;
             this._serverPacket.PlayerId = connection.PlayerId;
             this._serverPacket.ControlPacket.ControlAckPacketData.SequenceKey = sequenceKey;
-            this._serverPacket.ControlPacket.ControlAckPacketData.AcknowledgementKey = connection.HandshakeKeys.AcknowledgementKey;
+            this._serverPacket.ControlPacket.ControlAckPacketData.AcknowledgementKey = connection.Handshake.AcknowledgementKey;
 
             this._channelOutgoing.SendClientPacket(connection.EndPoint, in this._serverPacket);
 
@@ -95,7 +100,7 @@ namespace Game.Server
                 return false;
             }
 
-            if (connection.HandshakeKeys.AcknowledgementKey != this._serverPacket.ControlPacket.ControlAckPacketData.AcknowledgementKey)
+            if (connection.Handshake.AcknowledgementKey != this._serverPacket.ControlPacket.ControlAckPacketData.AcknowledgementKey)
             {
                 this._logger.VerboseError($"Client ACK request incorrect ACK key: Id={playerId}, Key={this._serverPacket.ControlPacket.ControlAckPacketData.AcknowledgementKey}");
 

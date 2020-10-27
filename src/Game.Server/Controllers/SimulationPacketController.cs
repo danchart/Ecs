@@ -1,5 +1,6 @@
 ﻿using Common.Core;
 using Game.Networking;
+using Game.Simulation.Core;
 using System;
 
 namespace Game.Server
@@ -23,7 +24,6 @@ namespace Game.Server
 
         public bool Process(PlayerId playerId, in ClientInputPacket inputPacket)
         {
-
             if (!this._playerConnections.HasPlayer(playerId))
             {
                 this._logger.VerboseError($"Received input packet for non-existent player: id={playerId}");
