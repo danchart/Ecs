@@ -5,10 +5,26 @@ using System.IO;
 
 namespace Game.Networking
 {
-    public struct ClientPlayerInputPacket
+    public struct ClientInputPacket
     {
+        /// <summary>
+        /// Clients frame index for this input.
+        /// </summary>
         public FrameIndex Frame;
+
+        /// <summary>
+        /// Last fully received server frame index.
+        /// </summary>
+        public FrameIndex LastServerFrame;
+
+        /// <summary>
+        /// Count of inputs.
+        /// </summary>
         public byte InputCount;
+
+        /// <summary>
+        /// Inputs.
+        /// </summary>
         public InputPacketData[] Inputs;
 
         public int Serialize(Stream stream, bool measureOnly)

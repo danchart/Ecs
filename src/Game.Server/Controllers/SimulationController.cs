@@ -21,12 +21,23 @@ namespace Game.Server
             this._worlds = worlds ?? throw new ArgumentNullException(nameof(worlds));
         }
 
-        public bool Process(PlayerId playerId, in ReplicationPacket simulationPacket)
+        public bool Process(PlayerId playerId, in ClientInputPacket inputPacket)
         {
-            for (int i = 0; i < simulationPacket.EntityCount; i++)
+
+            if (!this._playerConnections.HasPlayer(playerId))
             {
-                simulationPacket.Entities[i].
+                this._logger.VerboseError($"Received input packet for non-existent player: id={playerId}");
+
+                return false;
             }
+
+            ref var connection = ref this._playerConnections[playerId];
+
+            var world = this._worlds.Get(connection.WorldId);
+
+            // TODO: Execute/queue inputs against connection.Entity in simulation
+
+            world.
 
             return true;
         }

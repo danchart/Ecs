@@ -35,7 +35,7 @@
     <Compile Include="PacketData\PlayerInputData.cs" />
     <Compile Include="PacketData\TransformData.cs" />
     <Compile Include="Packets\ControlPacket.cs" />
-    <Compile Include="Packets\ClientPlayerInputPacket.cs" />
+    <Compile Include="Packets\ClientInputPacket.cs" />
     <Compile Include="Packets\ReplicationPacket.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>

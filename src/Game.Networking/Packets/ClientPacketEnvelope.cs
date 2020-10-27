@@ -15,7 +15,7 @@ namespace Game.Networking
         public ClientPacketType Type;
         public PlayerId PlayerId;
 
-        public ClientPlayerInputPacket PlayerInputPacket;
+        public ClientInputPacket PlayerInputPacket;
         public ControlPacket ControlPacket;
 
         public int Serialize(Stream stream, bool measureOnly, IPacketEncryption packetEncryption)

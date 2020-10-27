@@ -34,6 +34,11 @@ namespace Game.Server
             this._freeWorldCount = 0;
         }
 
+        public GameWorld Get(WorldId id)
+        {
+            return this.SpawnedWorlds[id].World;
+        }
+
         public WorldId Spawn()
         {
             int worldId;
