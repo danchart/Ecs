@@ -49,7 +49,6 @@
     <Compile Include="Components\MovementComponent.cs" />
     <Compile Include="Components\ReplicatedComponent.cs" />
     <Compile Include="Components\TransformComponent.cs" />
-    <Compile Include="Ids\PlayerId.cs" />
     <Compile Include="SimulationConfig.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>

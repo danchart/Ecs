@@ -3,11 +3,11 @@
   <Import Project="$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props" Condition="Exists('$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props')" />
   <Import Project="..\common.props" />
   <PropertyGroup>
-    <ProjectGuid>{83DE9636-9348-4678-B986-02987685B57D}</ProjectGuid>
+    <ProjectGuid>{D40D9621-02EB-4A03-95B9-B70EB27867F0}</ProjectGuid>
     <OutputType>Library</OutputType>
     <AppDesignerFolder>Properties</AppDesignerFolder>
-    <RootNamespace>Common.Core</RootNamespace>
-    <AssemblyName>Common.Core</AssemblyName>
+    <RootNamespace>Game.Database.Core</RootNamespace>
+    <AssemblyName>Game.Database.Core</AssemblyName>
   </PropertyGroup>
   <ItemGroup>
     <Reference Include="System" />
@@ -20,18 +20,16 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="BitField.cs" />
-    <Compile Include="ByteArrayPool.cs" />
-    <Compile Include="FixedIndexDictionary.cs" />
-    <Compile Include="Hashing\HashCodeHelper.cs" />
-    <Compile Include="IClock.cs" />
-    <Compile Include="Ids\PlayerId.cs" />
-    <Compile Include="Logging\ILogger.cs" />
-    <Compile Include="RandomHelper.cs" />
-    <Compile Include="RefDictionary.cs" />
-    <Compile Include="Numerics\Vector2.cs" />
-    <Compile Include="Numerics\Vector2_Intrinsics.cs" />
+    <Compile Include="IPlayerDatabase.cs" />
+    <Compile Include="PlayerRecord.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="RecordEnvelope.cs" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\Common.Core\Common.Core.csproj">
+      <Project>{83de9636-9348-4678-b986-02987685b57d}</Project>
+      <Name>Common.Core</Name>
+    </ProjectReference>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>
