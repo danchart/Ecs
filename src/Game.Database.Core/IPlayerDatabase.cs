@@ -1,10 +1,11 @@
 ﻿using Common.Core;
+using System.Threading.Tasks;
 
 namespace Game.Database.Core
 {
     public interface IPlayerDatabase
     {
-        bool GetRecord(PlayerId id, ref RecordEnvelope<PlayerRecord> record);
-        bool SaveRecord(in RecordEnvelope<PlayerRecord> record);
+        ValueTask<RecordEnvelopeRef<PlayerRecord>> GetRecordAsync(PlayerId id);
+        ValueTask<bool> SaveRecordAsync(RecordEnvelopeRef<PlayerRecord> recordRef);
     }
 }

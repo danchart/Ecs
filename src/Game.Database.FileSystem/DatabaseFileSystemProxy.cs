@@ -11,68 +11,87 @@ namespace Game.Database.FileSystem
     {
         private readonly IFileSystem _fileSystem;
         private readonly IClock _clock;
-        private readonly JsonSerializerOptions _jsonSerializerOptions;
+        private readonly ILogger _logger;
+        private readonly RecordEnvelopePool<TRecord> _recordEnvelopePool;
+        private readonly DatabaseFileSystemConfig _config;
 
         public DatabaseFileSystemProxy(
             IFileSystem fileSystem, 
             IClock clock,
-            JsonSerializerOptions jsonSerializerOptions)
+            ILogger logger,
+            RecordEnvelopePool<TRecord> recordEnvelopePool,
+            DatabaseFileSystemConfig config)
         {
             this._fileSystem = fileSystem ?? throw new ArgumentNullException(nameof(fileSystem));
             this._clock = clock ?? throw new ArgumentNullException(nameof(clock));
-            this._jsonSerializerOptions = jsonSerializerOptions ?? throw new ArgumentNullException(nameof(jsonSerializerOptions));
+            this._logger = logger ?? throw new ArgumentNullException(nameof(logger));
+            this._recordEnvelopePool = recordEnvelopePool ?? throw new ArgumentNullException(nameof(recordEnvelopePool));
+            this._config = config ?? throw new ArgumentNullException(nameof(config));
         }
 
         public bool Exists(string path)
         {
-            throw new NotImplementedException();
+            return this._fileSystem.Exists(path);
         }
 
-        public async Task<bool> ReadAsync(string path, ref RecordEnvelope<TRecord> record)
+#pragma warning disable CS1998 // Async method lacks 'await' operators and will run synchronously
+        public async ValueTask<RecordEnvelopeRef<TRecord>> ReadAsync(string path)
+#pragma warning restore CS1998 // Async method lacks 'await' operators and will run synchronously
         {
             if (!this._fileSystem.Exists(path))
             {
-                return false;
+                throw new InvalidOperationException($"File not found: path={path}");
             }
 
             var contents = this._fileSystem.Read(path);
 
-            record = JsonSerializer.Deserialize<RecordEnvelope<TRecord>>(
-                contents, 
-                this._jsonSerializerOptions);
+            var index = this._recordEnvelopePool.New();
+            var recordRef = this._recordEnvelopePool.Ref(index);
 
-            return true;
+            recordRef.Unref() = JsonSerializer.Deserialize<RecordEnvelope<TRecord>>(
+                contents, 
+                this._config.JsonSerializerOptions);
+
+            return recordRef;
         }
 
-        public async Task<bool> WriteAsync(string path, RecordEnvelope<TRecord> record)
+        public async ValueTask<bool> WriteAsync(string path, RecordEnvelopeRef<TRecord> recordRef)
         {
             var sentinelPath = FileSystemPaths.GetSentinelPath(path);
 
-
-            var hasLock = await FileHelper.WaitForFileAsync(
+            var isSuccess = await FileHelper.AcquireFileLockAsync(
                 sentinelPath,
-                TimeSpan.FromSeconds(1),
-                this._clock);
+                this._clock,
+                this._config.LockTimeout);
 
-            if (!hasLock)
+            if (!isSuccess)
             {
+                this._logger.Warning($"Failed to acquire lock for record write: path={path}");
+
                 return false;
             }
 
-            File
+            try
+            {
+                var currentRecordRef = await ReadAsync(path);
 
-            RecordEnvelope<PlayerRecord> record
+                if (currentRecordRef.Unref().ETag != recordRef.Unref().ETag)
+                {
+                    return false;
+                }
 
-            GetRecord(PlayerId id, ref RecordEnvelope < PlayerRecord > record)
+                this._fileSystem.Write(
+                    path,
+                    JsonSerializer.Serialize(
+                        recordRef.Unref(),
+                        this._config.JsonSerializerOptions));
 
-
-            this._fileSystem.Write(
-                path,
-                JsonSerializer.Serialize(
-                    record,
-                    this._jsonSerializerOptions));
-
-            return true;
+                return true;
+            }
+            finally
+            {
+                FileHelper.ReleaseFileLock(sentinelPath);
+            }
         }
     }
 }

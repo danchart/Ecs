@@ -11,7 +11,7 @@
         // fixed update delta time, in seconds.
         public float FixedTick;
 
-        public static SimulationConfig Default = new SimulationConfig
+        public static readonly SimulationConfig Default = new SimulationConfig
         {
             FixedTick = 1 / 60.0f,
             SnapShotCount = 10,

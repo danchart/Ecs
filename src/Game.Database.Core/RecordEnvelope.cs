@@ -8,6 +8,6 @@
     {
         public TRecord Record;
 
-        internal uint ETag;
+        public uint ETag;
     }
 }

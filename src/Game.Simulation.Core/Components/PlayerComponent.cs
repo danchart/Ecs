@@ -1,4 +1,6 @@
-﻿namespace Game.Simulation.Core
+﻿using Common.Core;
+
+namespace Game.Simulation.Core
 {
     [ComponentId(ComponentId.Player)]
     public struct PlayerComponent

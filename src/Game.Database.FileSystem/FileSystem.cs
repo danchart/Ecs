@@ -21,8 +21,6 @@ namespace Game.Database.FileSystem
             return File.Exists(GetFullPath(path));
         }
 
-        Task<bool> CreateAsync(string path);
-
         public string Read(string path)
         {
             return File.ReadAllText(GetFullPath(path));

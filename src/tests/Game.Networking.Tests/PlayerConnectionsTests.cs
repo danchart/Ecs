@@ -1,4 +1,5 @@
-﻿using Game.Simulation.Core;
+﻿using Common.Core;
+using Game.Simulation.Core;
 using System.Net;
 using Test.Common;
 using Xunit;

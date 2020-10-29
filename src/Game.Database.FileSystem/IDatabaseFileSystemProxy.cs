@@ -8,7 +8,7 @@ namespace Game.Database.FileSystem
     {
         bool Exists(string path);
 
-        Task<bool> ReadAsync(string path, ref RecordEnvelope<TRecord> record);
-        Task<bool> WriteAsync(string path, RecordEnvelope<TRecord> record);
+        ValueTask<RecordEnvelopeRef<TRecord>> ReadAsync(string path);
+        ValueTask<bool> WriteAsync(string path, RecordEnvelopeRef<TRecord> recordRef);
     }
 }

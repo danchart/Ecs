@@ -47,6 +47,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Game.Database.FileSystem", 
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Game.Database.FileSystem.Tests", "tests\Game.Database.FileSystem.Tests\Game.Database.FileSystem.Tests.csproj", "{1F45F699-DF25-4AD4-A3CD-C8EF72932A60}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Game.Database.Server", "Game.Database.Server\Game.Database.Server.csproj", "{69EFA696-2952-49F4-AD1D-5500972D2EFC}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -137,6 +139,10 @@ Global
 		{1F45F699-DF25-4AD4-A3CD-C8EF72932A60}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{1F45F699-DF25-4AD4-A3CD-C8EF72932A60}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{1F45F699-DF25-4AD4-A3CD-C8EF72932A60}.Release|Any CPU.Build.0 = Release|Any CPU
+		{69EFA696-2952-49F4-AD1D-5500972D2EFC}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{69EFA696-2952-49F4-AD1D-5500972D2EFC}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{69EFA696-2952-49F4-AD1D-5500972D2EFC}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{69EFA696-2952-49F4-AD1D-5500972D2EFC}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

@@ -37,7 +37,7 @@ namespace Game.Server
 
             // TODO: Execute/queue inputs against connection.Entity in simulation
 
-            world.
+            //world.
 
             return true;
         }

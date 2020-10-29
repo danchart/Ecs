@@ -1,5 +1,5 @@
-﻿using Game.Networking;
-using Game.Simulation.Core;
+﻿using Common.Core;
+using Game.Networking;
 using System.Net;
 using Test.Common;
 using Xunit;

@@ -1,50 +1,31 @@
 ﻿using Common.Core;
 using Game.Database.Core;
 using System;
-using System.Text.Json;
+using System.Threading.Tasks;
 
 namespace Game.Database.FileSystem
 {
     public class FileSystemPlayerDatabase : IPlayerDatabase
     {
         private readonly IDatabaseFileSystemProxy<PlayerRecord> _dbFileSystemProxy;
-        private readonly JsonSerializerOptions _jsonSerializerOptions;
 
         public FileSystemPlayerDatabase(IDatabaseFileSystemProxy<PlayerRecord> dbFileSystemProxy)
         {
             this._dbFileSystemProxy = dbFileSystemProxy ?? throw new ArgumentNullException(nameof(dbFileSystemProxy));
         }
 
-        public bool GetRecord(PlayerId id, ref RecordEnvelope<PlayerRecord> record)
+        public async ValueTask<RecordEnvelopeRef<PlayerRecord>> GetRecordAsync(PlayerId id)
         {
             var path = FileSystemPaths.GetPlayerPath(id);
 
-            if (!this._dbFileSystemProxy.Exists(path))
-            {
-                return false;
-            }
-
-            var contents = this._dbFileSystemProxy.Read(path);
-
-            return true;
+            return await this._dbFileSystemProxy.ReadAsync(path);
         }
 
-        public bool SaveRecord(in RecordEnvelope<PlayerRecord> record)
+        public async ValueTask<bool> SaveRecordAsync(RecordEnvelopeRef<PlayerRecord> recordRef)
         {
-            var path = FileSystemPaths.GetPlayerPath(record.Record.Id);
+            var path = FileSystemPaths.GetPlayerPath(recordRef.Unref().Record.Id);
 
-            RecordEnvelope<PlayerRecord> record
-
-            GetRecord(PlayerId id, ref RecordEnvelope < PlayerRecord > record)
-
-
-            this._fileSystem.Write(
-                path, 
-                JsonSerializer.Serialize(
-                    record, 
-                    this._jsonSerializerOptions));
-
-            return true;
+            return await this._dbFileSystemProxy.WriteAsync(path, recordRef);
         }
     }
 }

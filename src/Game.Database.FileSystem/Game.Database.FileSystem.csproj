@@ -48,6 +48,7 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="DatabaseFileSystemConfig.cs" />
     <Compile Include="DatabaseFileSystemProxy.cs" />
     <Compile Include="Helpers\FileHelper.cs" />
     <Compile Include="FileSystem.cs" />

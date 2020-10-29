@@ -1,5 +1,5 @@
-﻿using Game.Networking.Core;
-using Game.Simulation.Core;
+﻿using Common.Core;
+using Game.Networking.Core;
 using System.IO;
 
 namespace Game.Networking

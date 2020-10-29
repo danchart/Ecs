@@ -51,6 +51,7 @@
     <Compile Include="ServerChannelOutgoing.cs" />
     <Compile Include="ServerConfig.cs" />
     <Compile Include="ServerUdpPacketTransport.cs" />
+    <Compile Include="UdpPacketTransportConfig.cs" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\Common.Core\Common.Core.csproj">

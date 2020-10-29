@@ -2,13 +2,63 @@
 using System;
 using System.IO;
 using System.Threading.Tasks;
-using Test.Common;
 using Xunit;
 
 namespace Game.Database.FileSystem.Tests
 {
     public class FileHelperTests
     {
+        [Fact]
+        public async Task AcquireReleaseLockAsync()
+        {
+            string sentinelPath = $"{Path.GetTempPath()}\\{Guid.NewGuid():N}";
+
+            IClock clock = new RealClock();
+            var holdLockTimeout = TimeSpan.FromMilliseconds(250);
+            var lockTimeout = TimeSpan.FromMilliseconds(2000);
+
+            // Lock the sentinel file.
+            var lockFileTask = Task.Run(async () =>
+            {
+                using (var stream = File.Open(
+                    sentinelPath,
+                    FileMode.CreateNew,
+                    FileAccess.ReadWrite,
+                    FileShare.Write))
+                {
+                    await Task.Delay(holdLockTimeout);
+
+                    stream.Close();
+
+                    File.Delete(sentinelPath);
+                }
+            });
+
+            bool acquiredLock = false;
+
+            // Wait for a lock on the sentinel file.
+             var acquiredLockTask = FileHelper.AcquireFileLockAsync(
+                sentinelPath,
+                clock,
+                lockTimeout);
+
+            try
+            {
+                await lockFileTask;
+                acquiredLock = await acquiredLockTask;
+            }
+            finally
+            {
+                FileHelper.ReleaseFileLock(sentinelPath);
+            }
+
+            Assert.True(acquiredLock);
+            // Cleaned up?
+            Assert.True(!File.Exists(sentinelPath));
+        }
+    }
+
+#if MOTHBALL
         [Fact]
         public async Task LockAsync()
         {
@@ -52,4 +102,5 @@ namespace Game.Database.FileSystem.Tests
             Assert.True(acquiredLock);
         }
     }
+#endif
 }

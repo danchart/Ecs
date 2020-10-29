@@ -1,6 +1,6 @@
-﻿using Ecs.Core;
+﻿using Common.Core;
+using Ecs.Core;
 using Game.Networking;
-using Game.Simulation.Core;
 using System;
 using System.Collections.Generic;
 

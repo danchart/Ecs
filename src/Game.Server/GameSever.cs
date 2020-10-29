@@ -10,7 +10,6 @@ namespace Game.Server
         private readonly ServerChannelOutgoing _channelOutgoing;
         private readonly ServerChannelIncoming _channelIncoming;
         private readonly PlayerConnectionManager _playerConnectionManager;
-        private readonly ControlPacketController _clientControlPlaneController;
 
         private readonly GameWorlds _gameWorlds;
 
@@ -33,20 +32,29 @@ namespace Game.Server
                 serverConfig.Transport.PacketEncryption,
                 this._logger);
 
-            this._playerConnectionManager = new PlayerConnectionManager(this._logger, this._serverConfig.PlayerConnection);
-            this._clientControlPlaneController = new ControlPacketController(this._logger, this._playerConnectionManager, this._channelOutgoing);
+            this._playerConnectionManager = new PlayerConnectionManager(
+                this._logger, 
+                this._serverConfig.PlayerConnection);
+
+            this._gameWorlds = new GameWorlds(
+                this._logger,
+                this._serverConfig,
+                this._channelOutgoing,
+                serverConfig.Server.WorldsCapacity);
 
             this._channelIncoming = new ServerChannelIncoming(
-                serverConfig.Transport,
                 this._udpTransport,
                 serverConfig.Transport.PacketEncryption,
-                this._clientControlPlaneController,
+                new ControlPacketController(
+                    this._logger,
+                    this._playerConnectionManager,
+                    this._channelOutgoing,
+                    this._gameWorlds),
+                new SimulationPacketController(
+                    this._logger,
+                    this._playerConnectionManager,
+                    this._gameWorlds),
                 this._logger);
-            this._gameWorlds = new GameWorlds(
-                this._logger, 
-                this._serverConfig, 
-                this._channelOutgoing, 
-                serverConfig.Server.WorldsCapacity);
         }
 
         public void Start()

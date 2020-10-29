@@ -15,23 +15,23 @@ namespace Game.Server
 
         private readonly IPacketEncryption _packetEncryption;
         private readonly ServerUdpPacketTransport _transport;
-        private readonly TransportConfig _config;
         private readonly ControlPacketController _controlPacketController;
+        private readonly SimulationPacketController _simulationPacketController;
         private readonly ILogger _logger;
 
         public ServerChannelIncoming(
-            TransportConfig config,
             ServerUdpPacketTransport transport,
             IPacketEncryption packetEncryption,
             ControlPacketController controlPacketController,
+            SimulationPacketController simulationPacketController,
             ILogger logger)
         {
             this._isRunning = false;
 
-            this._config = config ?? throw new ArgumentNullException(nameof(config));
             this._transport = transport ?? throw new ArgumentNullException(nameof(transport));
             this._packetEncryption = packetEncryption ?? throw new ArgumentNullException(nameof(packetEncryption));
             this._controlPacketController = controlPacketController ?? throw new ArgumentNullException(nameof(controlPacketController));
+            this._simulationPacketController = simulationPacketController ?? throw new ArgumentNullException(nameof(simulationPacketController));
             this._logger = logger ?? throw new ArgumentNullException(nameof(logger));
         }
 
@@ -73,8 +73,7 @@ namespace Game.Server
                             {
                                 case ClientPacketType.Control:
                                     {
-                                        IPEndPoint endPoint;
-                                        this._transport.ReceiveBuffer.GetFromEndPoint(out endPoint);
+                                        this._transport.ReceiveBuffer.GetFromEndPoint(out IPEndPoint endPoint);
 
                                         this._controlPacketController.Process(
                                             _clientPacketEnvelope.PlayerId,
@@ -84,11 +83,14 @@ namespace Game.Server
                                     break;
                                 case ClientPacketType.PlayerInput:
 
-                                    ProcessPlayerInputPacket(_clientPacketEnvelope.PlayerId, _clientPacketEnvelope.PlayerInputPacket);
+                                    this._simulationPacketController.Process(_clientPacketEnvelope.PlayerId, _clientPacketEnvelope.PlayerInputPacket);
+
                                     break;
                                 default:
 
+#pragma warning disable HAA0601 // Value type to reference type conversion causing boxing allocation
                                     this._logger.Error($"Unknown packet type {_clientPacketEnvelope.Type}");
+#pragma warning restore HAA0601 // Value type to reference type conversion causing boxing allocation
                                     break;
                             }
                         }
