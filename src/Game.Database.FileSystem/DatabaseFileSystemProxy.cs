@@ -48,10 +48,18 @@ namespace Game.Database.FileSystem
         {
             var sentinelPath = FileSystemPaths.GetSentinelPath(path);
 
-            await FileHelper.WaitForFileAsync(
+
+            var hasLock = await FileHelper.WaitForFileAsync(
                 sentinelPath,
                 TimeSpan.FromSeconds(1),
                 this._clock);
+
+            if (!hasLock)
+            {
+                return false;
+            }
+
+            File
 
             RecordEnvelope<PlayerRecord> record
 
