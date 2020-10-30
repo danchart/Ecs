@@ -64,7 +64,6 @@ namespace Networking.Core
 
             state.ReceiveBuffer.NextWrite(bytesReceived, (IPEndPoint)state.EndPointFrom);
 
-            // Chain next receive.
             byte[] data;
             int offset, size;
             bool isWriteBufferWait = false;
@@ -74,12 +73,13 @@ namespace Networking.Core
                 {
                     isWriteBufferWait = true;
 
-                    state.Logger.Error("UDP socket is out of writable buffer space.");
+                    state.Logger.Error("UDP server socket is out of writable buffer space.");
                 }
                 // Wait for write queue to become available.
                 Thread.Sleep(1);
             }
 
+            // Chain next receive.
             state.Socket.BeginReceiveFrom(
                 data,
                 offset,

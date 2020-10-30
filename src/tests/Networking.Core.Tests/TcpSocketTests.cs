@@ -1,5 +1,6 @@
 ﻿using Database.Server;
 using System.Net;
+using System.Net.Sockets;
 using System.Text;
 using System.Threading;
 using Test.Common;
@@ -20,71 +21,51 @@ namespace Networking.Core.Tests
             var server = new TcpSocketListener(logger, serverBuffer);
             server.Start(serverEp);
 
+            var serverThread = new Thread(server.Receive);
+            serverThread.Start();
+
             var client = new TcpSocketClient(logger);
 
             client.Connect(serverEp.Address.ToString(), serverEp.Port);
 
-            var clientRcvData = new byte[256];
-            int clientRcvCount;
+            var bytesSend = Encoding.ASCII.GetBytes("Hello, world");
+            client.Send(bytesSend, 0, bytesSend.Length);
 
-            var bytes = Encoding.ASCII.GetBytes("Hello, world");
-            client.Send(bytes, 0, bytes.Length, clientRcvData, 0, clientRcvData.Length, out clientRcvCount);
+            WaitForReceive(serverBuffer, 1, server);
 
-            // Simulate TCP style SYN > SYN-ACK > ACK handshake...
+            Assert.Equal(1, serverBuffer.Count);
 
-            // Client->Server SYN
+            byte[] data = new byte[256];
+            int offset, count;
+            Assert.True(serverBuffer.GetReadData(out data, out offset, out count));
 
-            client.Send(Encoding.ASCII.GetBytes("SYN"));
-            client.Send(Encoding.ASCII.GetBytes("SYN 2")); // Just to test multiple packets
+            var receivedStr = Encoding.ASCII.GetString(data, offset, count);
+            Assert.Equal("Hello, world", receivedStr);
 
-            WaitForReceive(serverBuffer, 2);
+            serverBuffer.GetClient(out TcpClient tcpClient);
 
-            Assert.Equal(2, serverBuffer.Count);
+            var stream = tcpClient.GetStream();
 
-            byte[] data;
-            int offset;
-            int size;
-            IPEndPoint clientIpEndPoint;
-            serverBuffer.GetReadData(out data, out offset, out size);
-            serverBuffer.GetFromEndPoint(out clientIpEndPoint);
-            serverBuffer.NextRead();
-            var text0 = Encoding.ASCII.GetString(data, offset, size);
+            var bytesSend2 = Encoding.ASCII.GetBytes("I'm server");
+            stream.Write(bytesSend2, 0, bytesSend2.Length);
 
-            serverBuffer.GetReadData(out data, out offset, out size);
-            serverBuffer.NextRead();
-            var text1 = Encoding.ASCII.GetString(data, offset, size);
+            {
+                var bs = Encoding.ASCII.GetBytes("This is packet # 2");
+                stream.Write(bs, 0, bs.Length);
+            }
 
-            Assert.Equal(0, serverBuffer.Count);
+            Thread.Sleep(100);
 
-            Assert.True((text0 == "SYN" && text1 == "SYN 2") ||
-                (text0 == "SYN 2" && text1 == "SYN"));
+            client.Read(data, 0, data.Length, out count);
 
-            // Server->Client SYN-ACK
+            var receivedStr2 = Encoding.ASCII.GetString(data, offset, count);
 
-            server.SendTo(Encoding.ASCII.GetBytes("SYN-ACK"), clientIpEndPoint);
+            Assert.Equal("I'm server", receivedStr2);
 
-            WaitForReceive(clientBuffer, 1);
-
-            clientBuffer.GetReadData(out data, out offset, out size);
-            clientBuffer.NextRead();
-            var syncAckText = Encoding.ASCII.GetString(data, offset, size);
-
-            Assert.Equal("SYN-ACK", syncAckText);
-
-            // Client->Server ACK
-
-            client.Send(Encoding.ASCII.GetBytes("ACK"));
-
-            WaitForReceive(serverBuffer, 1);
-
-            serverBuffer.GetReadData(out data, out offset, out size);
-            serverBuffer.NextRead();
-            var ackText = Encoding.ASCII.GetString(data, offset, size);
-
-            Assert.Equal("ACK", ackText);
+            server.Stop();
         }
 
-        private static void WaitForReceive(ReceiveBuffer serverBuffer, int queueCount)
+        private static void WaitForReceive(TcpReceiveBuffer serverBuffer, int queueCount, TcpSocketListener server)
         {
             for (int countdown = 10; countdown >= 0 && serverBuffer.Count != queueCount; countdown--)
             {

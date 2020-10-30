@@ -7,13 +7,13 @@ namespace Database.Server
     {
         private readonly TcpSocketListener _tcpListener;
 
-        private readonly ReceiveBuffer _receiveBuffer;
+        private readonly TcpReceiveBuffer _receiveBuffer;
 
         private readonly ServerConfig _config;
 
         public DatabaseServer(ILogger logger, ServerConfig config)
         {
-            this._receiveBuffer = new ReceiveBuffer(config.MaxTcpPacketSize, config.TcpPacketReceiveQueueCapacity);
+            this._receiveBuffer = new TcpReceiveBuffer(config.MaxTcpPacketSize, config.TcpPacketReceiveQueueCapacity);
             this._tcpListener = new TcpSocketListener(logger, this._receiveBuffer);
             this._config = config;
         }

@@ -1,5 +1,4 @@
-﻿using System.Net;
-using System.Net.Sockets;
+﻿using System.Net.Sockets;
 using System.Threading;
 
 namespace Networking.Core
@@ -105,9 +104,14 @@ namespace Networking.Core
             }
         }
 
-        public void NextRead()
+        public void NextRead(bool closeConnection)
         {
             var readIndex = GetReadIndex();
+
+            if (closeConnection)
+            {
+                this._clients[readIndex].Close();
+            }
 
             this._clients[readIndex] = null; // For GC
 
