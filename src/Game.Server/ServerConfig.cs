@@ -16,6 +16,8 @@ namespace Game.Server
 
     public sealed class DefaultServerConfig : IServerConfig
     {
+        public static readonly DefaultServerConfig Instance = new DefaultServerConfig();
+
         public ReplicationConfig Replication => ReplicationConfig.Default;
 
         public PlayerConnectionConfig PlayerConnection => PlayerConnectionConfig.Default;

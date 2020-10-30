@@ -1,4 +1,4 @@
-﻿using Game.Networking.Core;
+﻿using Networking.Core;
 using System.IO;
 using System.Runtime.InteropServices;
 

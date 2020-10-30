@@ -1,6 +1,6 @@
 ﻿using Common.Core;
 using Game.Networking;
-using Game.Networking.Core;
+using Networking.Core;
 using System.IO;
 using System.Net;
 

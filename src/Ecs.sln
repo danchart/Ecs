@@ -11,9 +11,9 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Game.Simulation.Core", "Gam
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Game.Simulation.Core.Tests", "tests\Game.Simulation.Core.Tests\Game.Simulation.Core.Tests.csproj", "{3EACC74D-4AFD-428C-9A48-D204B8066D44}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Game.Networking.Core", "Game.Networking.Core\Game.Networking.Core.csproj", "{B19A0428-3713-43B2-81A5-1F228CE19489}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Networking.Core", "Networking.Core\Networking.Core.csproj", "{B19A0428-3713-43B2-81A5-1F228CE19489}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Game.Networking.Core.Tests", "tests\Game.Networking.Core.Tests\Game.Networking.Core.Tests.csproj", "{FE03A7B7-6303-46C2-A14B-D8D4F032130F}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Networking.Core.Tests", "tests\Networking.Core.Tests\Networking.Core.Tests.csproj", "{FE03A7B7-6303-46C2-A14B-D8D4F032130F}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "tests", "tests", "{CF347B84-B468-4AF1-9B18-709CEC95EE65}"
 EndProject
@@ -41,13 +41,20 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Game.Server.Tests", "tests\
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Test.Common", "tests\Test.Common\Test.Common.csproj", "{C3F2CC20-4D19-4D07-BDE2-63D92DF2746B}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Game.Database.Core", "Game.Database.Core\Game.Database.Core.csproj", "{D40D9621-02EB-4A03-95B9-B70EB27867F0}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Database.Core", "Database.Core\Database.Core.csproj", "{D40D9621-02EB-4A03-95B9-B70EB27867F0}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Game.Database.FileSystem", "Game.Database.FileSystem\Game.Database.FileSystem.csproj", "{E28CDD29-AFEF-484D-B24F-116730646FE3}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Database.FileSystem", "Database.FileSystem\Database.FileSystem.csproj", "{E28CDD29-AFEF-484D-B24F-116730646FE3}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Game.Database.FileSystem.Tests", "tests\Game.Database.FileSystem.Tests\Game.Database.FileSystem.Tests.csproj", "{1F45F699-DF25-4AD4-A3CD-C8EF72932A60}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Database.FileSystem.Tests", "tests\Database.FileSystem.Tests\Database.FileSystem.Tests.csproj", "{1F45F699-DF25-4AD4-A3CD-C8EF72932A60}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Game.Database.Server", "Game.Database.Server\Game.Database.Server.csproj", "{69EFA696-2952-49F4-AD1D-5500972D2EFC}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Database.Server", "Database.Server\Database.Server.csproj", "{69EFA696-2952-49F4-AD1D-5500972D2EFC}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Database.Server.Console", "Database.Server.Console\Database.Server.Console.csproj", "{83F98318-B0C1-45E2-A11C-C88980092B8E}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{5C8420F4-85D2-4F12-8F27-A1D5C8A555A3}"
+	ProjectSection(SolutionItems) = preProject
+		.editorconfig = .editorconfig
+	EndProjectSection
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -143,6 +150,10 @@ Global
 		{69EFA696-2952-49F4-AD1D-5500972D2EFC}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{69EFA696-2952-49F4-AD1D-5500972D2EFC}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{69EFA696-2952-49F4-AD1D-5500972D2EFC}.Release|Any CPU.Build.0 = Release|Any CPU
+		{83F98318-B0C1-45E2-A11C-C88980092B8E}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{83F98318-B0C1-45E2-A11C-C88980092B8E}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{83F98318-B0C1-45E2-A11C-C88980092B8E}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{83F98318-B0C1-45E2-A11C-C88980092B8E}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
