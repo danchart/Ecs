@@ -1,5 +1,6 @@
 ﻿using Common.Core;
 using Networking.Core;
+using System.Collections.Generic;
 
 namespace Database.Server
 {
@@ -7,14 +8,13 @@ namespace Database.Server
     {
         private readonly TcpSocketListener _tcpListener;
 
-        private readonly TcpReceiveBuffer _receiveBuffer;
-
         private readonly ServerConfig _config;
+
+        
 
         public DatabaseServer(ILogger logger, ServerConfig config)
         {
-            this._receiveBuffer = new TcpReceiveBuffer(config.MaxTcpPacketSize, config.TcpPacketReceiveQueueCapacity);
-            this._tcpListener = new TcpSocketListener(logger, this._receiveBuffer);
+            this._tcpListener = new TcpSocketListener(logger, config.TcpClientCapacity, config.MaxTcpPacketSize, config.TcpPacketReceiveQueueCapacity);
             this._config = config;
         }
 
@@ -23,6 +23,8 @@ namespace Database.Server
         public void Start()
         {
             this._tcpListener.Start(_config.HostIpEndPoint);
+
+
         }
 
         public void Stop()

@@ -21,6 +21,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="DatabaseServer.cs" />
+    <Compile Include="DatabaseServerChannelIncoming.cs" />
     <Compile Include="ServerConfig.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>

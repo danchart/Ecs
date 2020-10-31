@@ -22,9 +22,10 @@
   <ItemGroup>
     <Compile Include="PacketStreamExtensions.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="TcpReceiveBuffer.cs" />
+    <Compile Include="Tcp\TcpReceiveBuffer.cs" />
     <Compile Include="ReceiveBuffer.cs" />
-    <Compile Include="TcpSocket.cs" />
+    <Compile Include="Tcp\TcpSocketClient.cs" />
+    <Compile Include="Tcp\TcpSocketListener.cs" />
     <Compile Include="UdpSocket.cs" />
   </ItemGroup>
   <ItemGroup>

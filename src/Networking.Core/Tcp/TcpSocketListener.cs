@@ -1,31 +1,34 @@
-﻿using Common.Core;
-using Networking.Core;
-using System;
-using System.Net;
-using System.Net.Sockets;
-using System.Threading;
-
-namespace Database.Server
+﻿namespace Database.Server
 {
-    public class TcpSocketListener
+    using Common.Core;
+    using Networking.Core;
+    using System;
+    using System.Net;
+    using System.Net.Sockets;
+    using System.Threading;
+
+    public sealed class TcpSocketListener
     {
+        public readonly TcpClients Clients;
+
         private bool _isRunning;
 
         private TcpListener _listener;
 
-        private readonly TcpReceiveBuffer _receiveBuffer;
-        private readonly TcpClients _tcpClients;
-
         private readonly ILogger _logger;
 
-        public TcpSocketListener(ILogger logger, TcpReceiveBuffer receiveBuffer)
+        private readonly int MaxPacketSize, PacketQueueCapacity;
+
+        public TcpSocketListener(ILogger logger, int clientCapacity, int maxPacketSize, int packetQueueCapacity)
         {
             this._isRunning = false;
 
             this._logger = logger ?? throw new ArgumentNullException(nameof(logger));
 
-            this._receiveBuffer = receiveBuffer;
-            this._tcpClients = new TcpClients(16);
+            this.Clients = new TcpClients(clientCapacity);
+
+            this.MaxPacketSize = maxPacketSize;
+            this.PacketQueueCapacity = packetQueueCapacity;
         }
 
         public bool IsRunning => this._isRunning;
@@ -45,80 +48,21 @@ namespace Database.Server
             _listener.BeginAcceptTcpClient(AcceptClient, _listener);
         }
 
-        public void Receive()
+        public void Stop()
         {
-            while (this._isRunning)
-            {
-                this._tcpClients.Lock();
+            this._isRunning = false;
 
-                try
-                {
-                    for (int i = 0; i < this._tcpClients.Count; i++)
-                    {
-                        TcpClientData clientData = this._tcpClients.Get(i);
-                        TcpClient client = clientData.Client;
+            // Wait a short period to ensure the cancellation flag has propagated. 
+            Thread.Sleep(100);
 
-                        if (!client.Connected)
-                        {
-                            _logger.Warning($"TCP client disconnected: clientEp={client.Client.RemoteEndPoint}");
-
-                            this._tcpClients.RemoveAndClose(i);
-
-                            continue;
-                        }
-
-                        NetworkStream stream = clientData.Stream;
-
-                        // Loop to receive all the data sent by the client.
-                        if (stream.DataAvailable)
-                        {
-                            byte[] data;
-                            int offset;
-                            int size;
-                            bool isWriteBufferWait = false;
-                            while (!this._receiveBuffer.GetWriteData(out data, out offset, out size))
-                            {
-                                if (!isWriteBufferWait)
-                                {
-                                    isWriteBufferWait = true;
-
-                                    _logger.Error("TCP server socket is out of writable buffer space.");
-                                }
-                                // Wait for write queue to become available.
-                                Thread.Sleep(1);
-                            }
-
-                            int readCount = stream.Read(data, offset, size);
-
-                            bool isReadSuccess = true;
-
-                            if (readCount > size)
-                            {
-                                isReadSuccess = false;
-
-                                this._logger.Error($"Received TCP packet exceeded buffer size: bufferSize={size}");
-
-                                break;
-                            }
-
-                            if (isReadSuccess)
-                            {
-                                this._receiveBuffer.NextWrite(readCount, client);
-                            }
-                        }
-                    }
-                }
-                finally
-                {
-                    this._tcpClients.Unlock();
-                }
-            }
+            _listener.Stop();
         }
 
         private void AcceptClient(IAsyncResult ar)
         {
             if (!_isRunning)
             {
+                // Server stopped.
                 return;
             }
 
@@ -130,7 +74,19 @@ namespace Database.Server
             }
 
             TcpClient client = listener.EndAcceptTcpClient(ar);
-            this._tcpClients.Add(client, client.GetStream());
+            NetworkStream stream = client.GetStream();
+            TcpReceiveBuffer buffer = new TcpReceiveBuffer(maxPacketSize: MaxPacketSize, packetQueueCapacity: PacketQueueCapacity);
+
+            var clientData = new TcpClientData
+            {
+                Client = client,
+                Stream = stream,
+                ReceiveBuffer = buffer,
+            };
+            this.Clients.Add(clientData);
+
+            buffer.GetWriteData(out byte[] data, out int offset, out int size);
+            stream.BeginRead(data, offset, size, AcceptRead, clientData);
 
             this._logger.Info($"Connected. RemoteEp={client.Client.RemoteEndPoint}");
 
@@ -138,17 +94,37 @@ namespace Database.Server
             listener.BeginAcceptTcpClient(AcceptClient, listener);
         }
 
-        public void Stop()
+        private void AcceptRead(IAsyncResult ar)
         {
-            this._isRunning = false;
+            if (!_isRunning)
+            {
+                // Server stopped.
+                return;
+            }
 
-            // Wait a short period to ensure the cancellation flag has propogated. 
-            Thread.Sleep(100);
+            TcpClientData clientData = (TcpClientData)ar.AsyncState;
+            NetworkStream stream = clientData.Stream; ;
 
-            _listener.Stop();
+            int bytesRead = stream.EndRead(ar);
+
+            clientData.ReceiveBuffer.NextWrite(bytesRead, clientData.Client);
+
+            // Begin waiting for more stream data.
+            clientData.ReceiveBuffer.GetWriteData(out byte[] data, out int offset, out int size);
+            stream.BeginRead(data, offset, size, AcceptRead, clientData);
         }
 
-        private sealed class TcpClients
+        public class TcpClientsEventArgs : EventArgs
+        {
+            public TcpClientsEventArgs(TcpReceiveBuffer receiveBuffer)
+            {
+                this.ReceiveBuffer = receiveBuffer;
+            }
+
+            public TcpReceiveBuffer ReceiveBuffer { get; private set; }
+        }
+
+        public sealed class TcpClients
         {
             private TcpClientData[] _clients;
             private int _count;
@@ -178,7 +154,10 @@ namespace Database.Server
 
             public int Count => this._count;
 
-            public ref TcpClientData Get(int index) => ref this._clients[index];
+            public event EventHandler<TcpClientsEventArgs> OnClientAdded;
+            public event EventHandler<TcpClientsEventArgs> OnClientRemoved;
+
+            public TcpClientData Get(int index) => this._clients[index];
 
             public void Lock()
             {
@@ -217,7 +196,7 @@ namespace Database.Server
                 }
             }
 
-            public void Add(TcpClient client, NetworkStream stream)
+            public void Add(TcpClientData clientData)
             {
                 if (_lockCount > 0)
                 {
@@ -228,23 +207,13 @@ namespace Database.Server
                             Array.Resize(ref this._pendingAddClients, 2 * this._pendingAddCount);
                         }
 
-                        this._pendingAddClients[this._pendingAddCount++] = 
-                            new TcpClientData
-                            {
-                                Client = client,
-                                Stream = stream,
-                            };
+                        this._pendingAddClients[this._pendingAddCount++] = clientData;
 
                         return;
                     }
                 }
 
-                AddInternal(
-                    new TcpClientData
-                    {
-                        Client = client,
-                        Stream = stream,
-                    });
+                AddInternal(clientData);
             }
 
             public void RemoveAndClose(int index)
@@ -267,18 +236,24 @@ namespace Database.Server
                 RemoveAndCloseInternal(index);
             }
 
-            private void AddInternal(TcpClientData client)
+            private void AddInternal(TcpClientData clientData)
             {
                 if (this._count == this._clients.Length)
                 {
                     Array.Resize(ref this._clients, 2 * _count);
                 }
 
-                this._clients[this._count++] = client;
+                this._clients[this._count++] = clientData;
+
+                // Raise add event
+                this.OnClientAdded?.Invoke(this, new TcpClientsEventArgs(clientData.ReceiveBuffer));
             }
 
             private void RemoveAndCloseInternal(int index)
             {
+                // Raise remove event
+                this.OnClientRemoved?.Invoke(this, new TcpClientsEventArgs(this._clients[index].ReceiveBuffer));
+
                 this._clients[index].ClearAndClose();
 
                 if (this._count > 1)
@@ -292,10 +267,11 @@ namespace Database.Server
             }
         }
 
-        internal struct TcpClientData
+        public class TcpClientData
         {
             public TcpClient Client;
             public NetworkStream Stream;
+            public TcpReceiveBuffer ReceiveBuffer;
 
             public void ClearAndClose()
             {
@@ -303,47 +279,8 @@ namespace Database.Server
                 Stream = null;
                 Client.Close();
                 Client = null;
+                ReceiveBuffer = null;
             }
-        }
-    }
-
-    public class TcpSocketClient
-    {
-        private TcpClient _client;
-        private NetworkStream _stream;
-
-        public TcpSocketClient(ILogger logger)
-        {
-            _client = new TcpClient();
-        }
-
-        public void Connect(string server, int port)
-        {
-            _client.Connect(server, port);
-            _stream = _client.GetStream();
-        }
-
-        public void Disconnect()
-        {
-            _stream.Close();
-            _client.Close();
-        }
-
-        public void Send(
-            byte[] data, 
-            int offset, 
-            int size)
-        {
-            _stream.Write(data, offset, size);
-        }
-
-        public void Read(
-            byte[] receiveData,
-            int receiveOffset,
-            int receiveSize,
-            out int receivedBytes)
-        {
-            receivedBytes = _stream.Read(receiveData, receiveOffset, receiveSize);
         }
     }
 }

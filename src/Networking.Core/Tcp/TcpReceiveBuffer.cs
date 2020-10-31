@@ -1,8 +1,8 @@
-﻿using System.Net.Sockets;
-using System.Threading;
-
-namespace Networking.Core
+﻿namespace Networking.Core
 {
+    using System.Net.Sockets;
+    using System.Threading;
+
     public class TcpReceiveBuffer
     {
         public readonly int MaxPacketSize;
@@ -59,7 +59,7 @@ namespace Networking.Core
             this._bytedReceived[this._writeQueueIndex] = bytesReceived;
             this._clients[this._writeQueueIndex] = tcpClient;
 
-            this._writeQueueIndex = (this._writeQueueIndex + 1) % this.PacketCapacity;            
+            this._writeQueueIndex = (this._writeQueueIndex + 1) % this.PacketCapacity;
 
             Interlocked.Increment(ref this._count);
         }
