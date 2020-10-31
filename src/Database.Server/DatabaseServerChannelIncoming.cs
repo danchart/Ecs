@@ -51,7 +51,7 @@ namespace Database.Server
                         if (buffer.GetReadData(out byte[] data, out int offset, out int count))
                         {
                             serializer.Deserialize(data, 0, count, out string recvText);
-#if PRINT_DATA
+#if PRINT_DATA 
                         _logger.Info($"Server received: {recvText}");
 #endif //PRINT_DATA
 
