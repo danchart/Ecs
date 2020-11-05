@@ -1,19 +1,20 @@
-﻿namespace Database.Server
+﻿namespace Networking.Core
 {
     using Common.Core;
-    using Networking.Core;
     using System;
     using System.Net;
     using System.Net.Sockets;
-    using System.Threading;
 
-    public sealed class TcpSocketListener
+    internal sealed class TcpSocketListener
     {
         public readonly TcpClients Clients;
 
-        private bool _isRunning;
-
         private TcpListener _listener;
+
+        // Instantiate static delegate to avoid allocations on every BeginAcceptTcpClient.
+        private readonly static AsyncCallback AcceptCallback = AcceptClient;
+
+        private readonly TcpStreamMessageReader _tcpReceiver;
 
         private readonly ILogger _logger;
 
@@ -21,97 +22,90 @@
 
         public TcpSocketListener(ILogger logger, int clientCapacity, int maxPacketSize, int packetQueueCapacity)
         {
-            this._isRunning = false;
-
             this._logger = logger ?? throw new ArgumentNullException(nameof(logger));
 
-            this.Clients = new TcpClients(clientCapacity);
+            this.Clients = new TcpClients(logger, clientCapacity);
+            this._tcpReceiver = new TcpStreamMessageReader(logger, maxPacketSize, packetQueueCapacity);
 
             this.MaxPacketSize = maxPacketSize;
             this.PacketQueueCapacity = packetQueueCapacity;
         }
 
-        public bool IsRunning => this._isRunning;
-
         public void Start(IPEndPoint ipEndPoint)
         {
-            // From: https://docs.microsoft.com/en-us/dotnet/api/system.net.sockets.tcplistener?view=netcore-3.1
-
             this._listener = new TcpListener(ipEndPoint);
-            this._isRunning = true;
 
             // Start listening for client requests.
-            _listener.Start();
+            this._listener.Start();
 
+            this._logger.Info($"Started TCP listener. localEp={this._listener.LocalEndpoint}");
             this._logger.Info("Waiting for a connection...");
 
-            _listener.BeginAcceptTcpClient(AcceptClient, _listener);
+            this._listener.BeginAcceptTcpClient(
+                AcceptCallback,
+                new AcceptClientState
+                {
+                    Listener = this._listener,
+                    StreamMessageReader = this._tcpReceiver,
+                    Clients = this.Clients,
+
+                    MaxPacketSize = this.MaxPacketSize,
+                    PacketQueueCapacity = this.PacketQueueCapacity,
+
+                    Logger = this._logger,
+                });
         }
 
         public void Stop()
         {
-            this._isRunning = false;
-
-            // Wait a short period to ensure the cancellation flag has propagated. 
-            Thread.Sleep(100);
-
-            _listener.Stop();
+            this.Clients.Stop();
+            this._listener.Stop();
         }
 
-        private void AcceptClient(IAsyncResult ar)
+        private static void AcceptClient(IAsyncResult ar)
         {
-            if (!_isRunning)
+            var state = (AcceptClientState)ar.AsyncState;
+
+            TcpClient client;
+            try
             {
-                // Server stopped.
+                client = state.Listener.EndAcceptTcpClient(ar);
+            }
+            catch
+            {
+                // Assume the socket has been closed.
                 return;
             }
 
-            var listener = ar.AsyncState as TcpListener;
-
-            if (listener == null)
-            {
-                return;
-            }
-
-            TcpClient client = listener.EndAcceptTcpClient(ar);
             NetworkStream stream = client.GetStream();
-            TcpReceiveBuffer buffer = new TcpReceiveBuffer(maxPacketSize: MaxPacketSize, packetQueueCapacity: PacketQueueCapacity);
+            TcpReceiveBuffer buffer = 
+                new TcpReceiveBuffer(
+                    maxPacketSize: state.MaxPacketSize, 
+                    packetQueueCapacity: state.PacketQueueCapacity);
 
-            var clientData = new TcpClientData
+            state.Clients.Add(new TcpClientData
             {
                 Client = client,
                 Stream = stream,
                 ReceiveBuffer = buffer,
-            };
-            this.Clients.Add(clientData);
+            });
 
-            buffer.GetWriteData(out byte[] data, out int offset, out int size);
-            stream.BeginRead(data, offset, size, AcceptRead, clientData);
+            state.StreamMessageReader.Start(stream, buffer);
 
-            this._logger.Info($"Connected. RemoteEp={client.Client.RemoteEndPoint}");
+            state.Logger.Info($"Connected. remoteEp={client.Client.RemoteEndPoint}");
 
-            // Begin waiting for the next request.
-            listener.BeginAcceptTcpClient(AcceptClient, listener);
-        }
+            // Since we're adding a new client this is a great time to clean up any disconnected clients.
+            state.Clients.CleanupAnyDisconnectedClients();
 
-        private void AcceptRead(IAsyncResult ar)
-        {
-            if (!_isRunning)
+            try
             {
-                // Server stopped.
-                return;
+                // Begin waiting for the next request.
+                state.Listener.BeginAcceptTcpClient(AcceptCallback, state);
             }
-
-            TcpClientData clientData = (TcpClientData)ar.AsyncState;
-            NetworkStream stream = clientData.Stream; ;
-
-            int bytesRead = stream.EndRead(ar);
-
-            clientData.ReceiveBuffer.NextWrite(bytesRead, clientData.Client);
-
-            // Begin waiting for more stream data.
-            clientData.ReceiveBuffer.GetWriteData(out byte[] data, out int offset, out int size);
-            stream.BeginRead(data, offset, size, AcceptRead, clientData);
+            catch
+            {
+                // Assume the socket has closed.
+            }
         }
 
         public class TcpClientsEventArgs : EventArgs
@@ -135,11 +129,16 @@
             private int[] _pendingRemoveIndices;
             private int _pendingRemoveCount;
 
-            private object _lockObj = new object();
             private int _lockCount;
 
-            public TcpClients(int capacity)
+            private readonly ILogger _logger;
+
+            private readonly object _lockObj = new object();
+
+            public TcpClients(ILogger logger, int capacity)
             {
+                this._logger = logger ?? throw new ArgumentNullException(nameof(logger));
+
                 this._clients = new TcpClientData[capacity];
                 this._count = 0;
 
@@ -159,6 +158,56 @@
 
             public TcpClientData Get(int index) => this._clients[index];
 
+            public void CleanupAnyDisconnectedClients()
+            {
+                Lock();
+
+                try
+                {
+                    for (int i = this._count - 1; i >= 0; i--)
+                    {
+                        if (!this._clients[i].Client.Client.Connected)
+                        {
+                            this._logger.Verbose($"Cleaning up disconnected client: index={i}");
+
+                            this._clients[i].ClearAndClose();
+
+                            if (i != this._count - 1)
+                            {
+                                // Move last element to removed index.
+
+                                this._clients[i] = this._clients[this._count - 1];
+                            }
+
+                            this._clients[this._count - 1] = default;
+
+                            this._count--;
+                        }
+                    }
+                }
+                finally
+                {
+                    Unlock();
+                }
+            }
+
+            public void Stop()
+            {
+                Lock();
+
+                try
+                {
+                    for (int i = this._count - 1; i >= 0; i--)
+                    {
+                        RemoveAndCloseLockFree(i);
+                    }
+                }
+                finally
+                {
+                    Unlock();
+                }
+            }
+
             public void Lock()
             {
                 lock (_lockObj)
@@ -177,7 +226,7 @@
 
                         for (int i = 0; i < this._pendingRemoveCount; i++)
                         {
-                            RemoveAndCloseInternal(this._pendingRemoveIndices[i]);
+                            RemoveAndCloseLockFree(this._pendingRemoveIndices[i]);
                         }
 
                         this._pendingRemoveCount = 0;
@@ -186,7 +235,7 @@
 
                         for (int i = 0; i < this._pendingAddCount; i++)
                         {
-                            AddInternal(this._pendingAddClients[i]);
+                            AddLockFree(this._pendingAddClients[i]);
 
                             this._pendingAddClients[i] = default; // for GC
                         }
@@ -213,7 +262,7 @@
                     }
                 }
 
-                AddInternal(clientData);
+                AddLockFree(clientData);
             }
 
             public void RemoveAndClose(int index)
@@ -233,10 +282,10 @@
                     }
                 }
 
-                RemoveAndCloseInternal(index);
+                RemoveAndCloseLockFree(index);
             }
 
-            private void AddInternal(TcpClientData clientData)
+            private void AddLockFree(TcpClientData clientData)
             {
                 if (this._count == this._clients.Length)
                 {
@@ -249,7 +298,7 @@
                 this.OnClientAdded?.Invoke(this, new TcpClientsEventArgs(clientData.ReceiveBuffer));
             }
 
-            private void RemoveAndCloseInternal(int index)
+            private void RemoveAndCloseLockFree(int index)
             {
                 // Raise remove event
                 this.OnClientRemoved?.Invoke(this, new TcpClientsEventArgs(this._clients[index].ReceiveBuffer));
@@ -267,20 +316,17 @@
             }
         }
 
-        public class TcpClientData
+        private sealed class AcceptClientState
         {
-            public TcpClient Client;
-            public NetworkStream Stream;
-            public TcpReceiveBuffer ReceiveBuffer;
+            public TcpListener Listener;
+            public TcpStreamMessageReader StreamMessageReader;
+            public TcpClients Clients;
 
-            public void ClearAndClose()
-            {
-                Stream.Close();
-                Stream = null;
-                Client.Close();
-                Client = null;
-                ReceiveBuffer = null;
-            }
+            public IClock Clock;
+            public ILogger Logger;
+
+            public int MaxPacketSize;
+            public int PacketQueueCapacity;
         }
     }
 }

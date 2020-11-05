@@ -28,6 +28,7 @@
     <Compile Include="Ids\PlayerId.cs" />
     <Compile Include="Logging\ConsoleLogger.cs" />
     <Compile Include="Logging\ILogger.cs" />
+    <Compile Include="Logging\LoggerStopWatch.cs" />
     <Compile Include="RandomHelper.cs" />
     <Compile Include="RealClock.cs" />
     <Compile Include="RefDictionary.cs" />
