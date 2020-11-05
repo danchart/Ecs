@@ -1,5 +1,4 @@
 ﻿using Common.Core;
-using Database.Server;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -17,17 +16,13 @@ namespace Networking.Core.Tests
     {
         private static async Task<byte[]> ProcessAsync(byte[] data, CancellationToken token)
         {
-            //var requestMessage = MessagePackSerializer.Deserialize<SampleDataMsgPack>(
-            //    new ReadOnlyMemory<byte>(data, 0, data.Length));
+            Serializer.Deserialize(data, 0, data.Length, out string text);
 
-            //var responseMessage = new SampleDataMsgPack
-            //{
-            //    ClientId = requestMessage.ClientId,
-            //    MyInt = requestMessage.MyInt,
-            //    MyString = "The quick brown fox jumped over the lazy dogs.",
-            //};
+            var responseData = new byte[1024];
 
-            //return MessagePackSerializer.Serialize(responseMessage);
+            Serializer.Serialize($"Received string: {text}", responseData, out int count);
+
+            return responseData;
         }
 
         [Fact]
@@ -90,21 +85,14 @@ namespace Networking.Core.Tests
 
                     var client = clients[clientIndex];
 
-                    var sendMessage = new SampleDataMsgPack
-                    {
-                        ClientId = clientIndex,
-                        MyInt = i,
-                        TransactionId = 1337,
-                        MyString = "abcdefghijklmnopqrstuvwxyz.",
-                    };
-
-                    var sendData = MessagePackSerializer.Serialize(sendMessage);
+                    var requestData = new byte[1024];
+                    Serializer.Serialize($"Client data {i}", requestData, out int count);
 
 #if PRINT_DATA
                     Logger.Info($"Client {clientIndex} Sending: {sendMessage}");
 #endif //PRINT_DATA
 
-                    tasks.Add(client.SendAsync(sendData, 0, (ushort)sendData.Length));
+                    tasks.Add(client.SendAsync(requestData, 0, (ushort)count));
                     clientIndices.Add(clientIndex);
 
                     if (tasks.Count == ConcurrentRequestCount)
@@ -127,11 +115,10 @@ namespace Networking.Core.Tests
 
                         foreach (var task in tasks)
                         {
-                            var receivedMessage = MessagePackSerializer.Deserialize<SampleDataMsgPack>(
-                                new ReadOnlyMemory<byte>(
-                                    task.Result.Data,
-                                    task.Result.Offset,
-                                    task.Result.Size));
+                            var responseData = new byte[1024];
+
+                            Serializer.Deserialize(task.Result.Data, task.Result.Offset, task.Result.Size, out string text);
+
 #if PRINT_DATA
                             Logger.Info($"Client {receivedMessage.ClientId} Receive: {receivedMessage}");
 #endif //PRINT_DATA
@@ -165,90 +152,41 @@ namespace Networking.Core.Tests
 
         }
 
-        [MessagePackObject]
-        public class SampleDataMsgPack
+        private class Serializer
         {
-            [Key(0)]
-            public int ClientId;
-
-            [Key(1)]
-            public ushort TransactionId;
-
-            [Key(2)]
-            public int MyInt;
-
-            [Key(3)]
-            public string MyString;
-
-            public override string ToString()
+            public static void Serialize(string text, byte[] data, out int count)
             {
-                return $"ClientId={ClientId}, TransactionId={TransactionId}, MyInt={MyInt}, MyString={MyString}";
+                count = Encoding.ASCII.GetBytes(text, 0, text.Length, data, 0);
+            }
+
+            public static int Deserialize(byte[] data, int offset, int count, out string text)
+            {
+                text = Encoding.ASCII.GetString(data);
+                offset = 0;
+
+                return text.Length;
             }
         }
 
-#if MOTHBALL
-        [Fact]
-        public void ClientServerSendReceive()
-        {
-            var logger = new TestLogger();
-            var serverBuffer = new TcpReceiveBuffer(maxPacketSize: 64, packetQueueCapacity: 4);
+        //[MessagePackObject]
+        //public class SampleDataMsgPack
+        //{
+        //    [Key(0)]
+        //    public int ClientId;
 
-            var serverEp = new IPEndPoint(IPAddress.Parse("127.0.0.1"), 27005);
+        //    [Key(1)]
+        //    public ushort TransactionId;
 
-            var server = new TcpSocketListener(logger, serverBuffer);
-            server.Start(serverEp);
+        //    [Key(2)]
+        //    public int MyInt;
 
-            var serverThread = new Thread(server.Receive);
-            serverThread.Start();
+        //    [Key(3)]
+        //    public string MyString;
 
-            var client = new TcpSocketClient(logger);
-
-            client.Connect(serverEp.Address.ToString(), serverEp.Port);
-
-            var bytesSend = Encoding.ASCII.GetBytes("Hello, world");
-            client.Send(bytesSend, 0, bytesSend.Length);
-
-            WaitForReceive(serverBuffer, 1, server);
-
-            Assert.Equal(1, serverBuffer.Count);
-
-            byte[] data = new byte[256];
-            int offset, count;
-            Assert.True(serverBuffer.GetReadData(out data, out offset, out count));
-
-            var receivedStr = Encoding.ASCII.GetString(data, offset, count);
-            Assert.Equal("Hello, world", receivedStr);
-
-            serverBuffer.GetClient(out TcpClient tcpClient);
-
-            var stream = tcpClient.GetStream();
-
-            var bytesSend2 = Encoding.ASCII.GetBytes("I'm server");
-            stream.Write(bytesSend2, 0, bytesSend2.Length);
-
-            {
-                var bs = Encoding.ASCII.GetBytes("This is packet # 2");
-                stream.Write(bs, 0, bs.Length);
-            }
-
-            Thread.Sleep(100);
-
-            client.Read(data, 0, data.Length, out count);
-
-            var receivedStr2 = Encoding.ASCII.GetString(data, offset, count);
-
-            Assert.Equal("I'm server", receivedStr2);
-
-            server.Stop();
-        }
-
-        private static void WaitForReceive(TcpReceiveBuffer serverBuffer, int queueCount, TcpSocketListener server)
-        {
-            for (int countdown = 10; countdown >= 0 && serverBuffer.Count != queueCount; countdown--)
-            {
-                Thread.Sleep(1);
-            }
-        }
-#endif
+        //    public override string ToString()
+        //    {
+        //        return $"ClientId={ClientId}, TransactionId={TransactionId}, MyInt={MyInt}, MyString={MyString}";
+        //    }
+    //}
     }
 }
