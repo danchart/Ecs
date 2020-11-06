@@ -5,6 +5,7 @@ using System.Collections.Generic;
 
 namespace Database.Server
 {
+#if MOTHBALL
     public class DatabaseServerChannelIncoming
     {
         private readonly TcpSocketListener _tcpListener;
@@ -88,6 +89,6 @@ namespace Database.Server
                 _buffers.Remove(e.ReceiveBuffer);
             }
         }
-
     }
+#endif
 }

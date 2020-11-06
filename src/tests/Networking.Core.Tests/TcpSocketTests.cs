@@ -3,7 +3,6 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Net;
-using System.Net.Sockets;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
@@ -22,7 +21,11 @@ namespace Networking.Core.Tests
 
             Serializer.Serialize($"Received string: {text}", responseData, out int count);
 
-            return responseData;
+            var responseDataSlice = new byte[count];
+
+            Array.Copy(responseData, responseDataSlice, count);
+
+            return responseDataSlice;
         }
 
         [Fact]
@@ -33,7 +36,7 @@ namespace Networking.Core.Tests
             const int MaxPacketSize = 256;
             const int PacketQueueCapacity = 256;
 
-            const int TestRequestCount = 100000;
+            const int TestRequestCount = 1000;
             const int ClientCount = 5;
             const int ConcurrentRequestCount = 100;
 

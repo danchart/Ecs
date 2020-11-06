@@ -6,7 +6,7 @@ namespace Database.Server
 {
     public sealed class DatabaseServer
     {
-        private readonly TcpSocketListener _tcpListener;
+        //private readonly TcpSocketListener _tcpListener;
 
         private readonly ServerConfig _config;
 
@@ -14,22 +14,22 @@ namespace Database.Server
 
         public DatabaseServer(ILogger logger, ServerConfig config)
         {
-            this._tcpListener = new TcpSocketListener(logger, config.TcpClientCapacity, config.MaxTcpPacketSize, config.TcpPacketReceiveQueueCapacity);
+            //this._tcpListener = new TcpSocketListener(logger, config.TcpClientCapacity, config.MaxTcpPacketSize, config.TcpPacketReceiveQueueCapacity);
             this._config = config;
         }
 
-        public bool IsRunning => this._tcpListener.IsRunning;
+        public bool IsRunning => true;//this._tcpListener.IsRunning;
 
         public void Start()
         {
-            this._tcpListener.Start(_config.HostIpEndPoint);
+            //this._tcpListener.Start(_config.HostIpEndPoint);
 
 
         }
 
         public void Stop()
         {
-            this._tcpListener.Stop();
+            //this._tcpListener.Stop();
         }
     }
 }
