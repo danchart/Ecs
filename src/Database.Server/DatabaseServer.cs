@@ -1,35 +1,54 @@
 ﻿using Common.Core;
 using Networking.Core;
-using System.Collections.Generic;
+using System.Threading;
+using System.Threading.Tasks;
 
 namespace Database.Server
 {
     public sealed class DatabaseServer
     {
-        //private readonly TcpSocketListener _tcpListener;
+        private readonly TcpServer _tcpServer;
 
         private readonly ServerConfig _config;
 
-        
-
         public DatabaseServer(ILogger logger, ServerConfig config)
         {
-            //this._tcpListener = new TcpSocketListener(logger, config.TcpClientCapacity, config.MaxTcpPacketSize, config.TcpPacketReceiveQueueCapacity);
+            this._tcpServer = new TcpServer(
+                logger, 
+                config.TcpClientCapacity, 
+                config.MaxTcpMessageSize, 
+                config.TcpMessageQueueCapacity);
+
             this._config = config;
         }
 
-        public bool IsRunning => true;//this._tcpListener.IsRunning;
+        public bool IsRunning => this._tcpServer.IsRunning;
 
         public void Start()
         {
-            //this._tcpListener.Start(_config.HostIpEndPoint);
-
-
+            this._tcpServer.Start(
+                _config.HostIpEndPoint,
+                ProcessAsync);
         }
 
         public void Stop()
         {
-            //this._tcpListener.Stop();
+            this._tcpServer.Stop();
+        }
+
+        private static async Task<byte[]> ProcessAsync(byte[] data, CancellationToken token)
+        {
+            Serializer.Deserialize(data, 0, data.Length, out string text);
+
+            var responseData = new byte[1024];
+
+            Serializer.Serialize($"Received string: {text}", responseData, out int count);
+
+            var responseDataSlice = new byte[count];
+
+            Array.Copy(responseData, responseDataSlice, count);
+
+            return responseDataSlice;
         }
     }
 }

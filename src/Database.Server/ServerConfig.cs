@@ -20,8 +20,8 @@ namespace Database.Server
 
         public int TcpClientCapacity;
 
-        public int MaxTcpPacketSize;
-        public int TcpPacketReceiveQueueCapacity;
+        public int MaxTcpMessageSize;
+        public int TcpMessageQueueCapacity;
 
         public static readonly ServerConfig Default = new ServerConfig
         {
@@ -29,8 +29,8 @@ namespace Database.Server
 
             TcpClientCapacity = 16,
 
-            MaxTcpPacketSize = 2048,
-            TcpPacketReceiveQueueCapacity = 128,
+            MaxTcpMessageSize = 2048,
+            TcpMessageQueueCapacity = 128,
         };
     }
 }

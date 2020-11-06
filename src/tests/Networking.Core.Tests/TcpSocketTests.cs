@@ -36,7 +36,7 @@ namespace Networking.Core.Tests
             const int MaxPacketSize = 256;
             const int PacketQueueCapacity = 256;
 
-            const int TestRequestCount = 1000;
+            const int TestRequestCount = 10000;
             const int ClientCount = 5;
             const int ConcurrentRequestCount = 100;
 
@@ -150,9 +150,14 @@ namespace Networking.Core.Tests
                 clients[i].Disconnect();
             }
 
-
             server.Stop();
 
+            foreach (var trace in logger.Messages)
+            {
+                Assert.False(
+                    trace.Level == TestLogger.LevelEnum.Error,
+                    $"TCP error: {trace.Text}");
+            }
         }
 
         private class Serializer

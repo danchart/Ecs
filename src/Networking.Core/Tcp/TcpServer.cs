@@ -10,9 +10,9 @@ namespace Networking.Core
 {
     public sealed class TcpServer
     {
-        public delegate Task<byte[]> ProcessAsync(byte[] data, CancellationToken token);        
+        public delegate Task<byte[]> ProcessAsync(byte[] data, CancellationToken token);
 
-        private bool _stop;
+        private bool _stopped;
         private CancellationTokenSource _cts;
 
         private readonly TcpSocketListener _listener;
@@ -53,25 +53,27 @@ namespace Networking.Core
             this._listener.Clients.OnClientAdded += Clients_OnClientAdded;
             this._listener.Clients.OnClientRemoved += Clients_OnClientRemoved;
 
-            this._stop = true;
+            this._stopped = true;
 
             // Default to the minimum available worker threads (min threads seems to == core count).
             ThreadPool.GetMinThreads(out int workerThreads, out int completionPortThreads);
             _maxConcurrentRequests = workerThreads;
         }
 
+        public bool IsRunning => !this._stopped;
+
         public void Start(
             IPEndPoint endPoint, 
             ProcessAsync processRequestAsync)
         {
-            if (!this._stop)
+            if (!this._stopped)
             {
                 throw new InvalidOperationException($"{nameof(TcpServer)} already started.");
             }
 
             this.ProcessRequestAsyncCallback = processRequestAsync ?? throw new ArgumentNullException(nameof(processRequestAsync));
 
-            this._stop = false;
+            this._stopped = false;
 
             this._cts = new CancellationTokenSource();
 
@@ -86,7 +88,7 @@ namespace Networking.Core
             // Signal run loop if blocked.
             this._waitHandle.Set();
 
-            this._stop = true;
+            this._stopped = true;
             this._cts.Cancel();
         }
 
@@ -129,7 +131,7 @@ namespace Networking.Core
             ProcessState[] states = new ProcessState[_maxConcurrentRequests];
             int taskCount = 0;
 
-            while (!this._stop)
+            while (!this._stopped)
             {
                 if (this._messageCount == 0)
                 {
@@ -146,7 +148,7 @@ namespace Networking.Core
                         int readCount = 0;
                         do
                         {
-                            if (this._stop || token.IsCancellationRequested)
+                            if (this._stopped || token.IsCancellationRequested)
                             {
                                 return;
                             }
