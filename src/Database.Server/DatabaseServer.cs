@@ -1,5 +1,6 @@
 ﻿using Common.Core;
 using Networking.Core;
+using System;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -38,17 +39,23 @@ namespace Database.Server
 
         private static async Task<byte[]> ProcessAsync(byte[] data, CancellationToken token)
         {
-            Serializer.Deserialize(data, 0, data.Length, out string text);
+            var messageTypeId = (Contracts.DatabaseMessageIds) BitConverter.ToUInt16(data, 0);
 
-            var responseData = new byte[1024];
+            switch (messageTypeId)
+            {
+                case Contracts.DatabaseMessageIds.GetPlayer:
+                    {
+                        var request = Contracts.Serializer.Deserialize<Contracts.GetPlayerRequest>(data, 0, data.Length - 2);
 
-            Serializer.Serialize($"Received string: {text}", responseData, out int count);
+                        return Contracts.Serializer.Serialize(new Contracts.GetPlayerResponse
+                        {
+                            Name = "John Wayne",
+                        });
+                    }
+            }
 
-            var responseDataSlice = new byte[count];
-
-            Array.Copy(responseData, responseDataSlice, count);
-
-            return responseDataSlice;
+            // Unknown message id.
+            return null;
         }
     }
 }

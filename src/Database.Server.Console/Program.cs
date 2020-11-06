@@ -8,7 +8,7 @@ namespace Database.Server.Console
 
         static void Main(string[] args)
         {
-            _logger.Info("Hello, starting the game server.");
+            _logger.Info("Hello, I am the database server.");
 
             IDatabaseServerConfig dbServerConfig = DefaultDatabaseServerConfig.Instance;
 

@@ -38,6 +38,10 @@
       <Project>{e28cdd29-afef-484d-b24f-116730646fe3}</Project>
       <Name>Database.FileSystem</Name>
     </ProjectReference>
+    <ProjectReference Include="..\Database.Server.Contracts\Database.Server.Contracts.csproj">
+      <Project>{d6e2ca53-1066-4d78-b536-7f7fe064804a}</Project>
+      <Name>Database.Server.Contracts</Name>
+    </ProjectReference>
     <ProjectReference Include="..\Networking.Core\Networking.Core.csproj">
       <Project>{b19a0428-3713-43b2-81a5-1f228ce19489}</Project>
       <Name>Networking.Core</Name>
