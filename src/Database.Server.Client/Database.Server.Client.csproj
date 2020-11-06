@@ -41,6 +41,13 @@
       <Project>{b19a0428-3713-43b2-81a5-1f228ce19489}</Project>
       <Name>Networking.Core</Name>
     </ProjectReference>
+    <ProjectReference Include="..\Networking.Tcp\Networking.Tcp.csproj">
+      <Project>{7fa93b6e-639b-476e-9cdf-8b085dfcbd0a}</Project>
+      <Name>Networking.Tcp</Name>
+    </ProjectReference>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="app.config" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>

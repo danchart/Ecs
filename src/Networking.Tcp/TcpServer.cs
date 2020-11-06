@@ -6,7 +6,7 @@ using System.Net.Sockets;
 using System.Threading;
 using System.Threading.Tasks;
 
-namespace Networking.Core
+namespace Networking.Tcp
 {
     public sealed class TcpServer
     {

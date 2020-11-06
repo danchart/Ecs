@@ -12,7 +12,7 @@ namespace Database.Server.Client
         {
             HostIPAddress = IPAddress.Parse("127.0.0.1"),
 
-            TcpMessageQueueCapacity = 128,
+            TcpMessageQueueCapacity = 128, // there shouldn't be a lot of messages queued in the client
         };
     }
 }

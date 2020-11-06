@@ -1,6 +1,6 @@
 ﻿using Common.Core;
 using Database.Server.Protocol;
-using Networking.Core;
+using Networking.Tcp;
 using System;
 using System.Threading;
 using System.Threading.Tasks;

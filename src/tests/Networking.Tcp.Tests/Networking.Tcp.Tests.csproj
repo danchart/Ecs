@@ -5,23 +5,16 @@
   <Import Project="$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props" Condition="Exists('$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props')" />
   <Import Project="..\tests.props" />
   <PropertyGroup>
-    <ProjectGuid>{1F45F699-DF25-4AD4-A3CD-C8EF72932A60}</ProjectGuid>
+    <ProjectGuid>{D003F47B-5D23-47F5-809F-ED03F2621036}</ProjectGuid>
     <OutputType>Library</OutputType>
     <AppDesignerFolder>Properties</AppDesignerFolder>
-    <RootNamespace>Game.Database.FileSystem.Tests</RootNamespace>
-    <AssemblyName>Game.Database.FileSystem.Tests</AssemblyName>
-    <NuGetPackageImportStamp>
-    </NuGetPackageImportStamp>
+    <RootNamespace>Networking.Tcp.Tests</RootNamespace>
+    <AssemblyName>Networking.Tcp.Tests</AssemblyName>
+    <TargetFrameworkVersion>v4.7.2</TargetFrameworkVersion>
   </PropertyGroup>
   <ItemGroup>
     <Reference Include="System" />
     <Reference Include="System.Core" />
-    <Reference Include="System.Runtime.CompilerServices.Unsafe, Version=4.0.4.1, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL">
-      <HintPath>..\..\packages\System.Runtime.CompilerServices.Unsafe.4.5.3\lib\net461\System.Runtime.CompilerServices.Unsafe.dll</HintPath>
-    </Reference>
-    <Reference Include="System.Threading.Tasks.Extensions, Version=4.2.0.1, Culture=neutral, PublicKeyToken=cc7b13ffcd2ddd51, processorArchitecture=MSIL">
-      <HintPath>..\..\packages\System.Threading.Tasks.Extensions.4.5.4\lib\net461\System.Threading.Tasks.Extensions.dll</HintPath>
-    </Reference>
     <Reference Include="System.Xml.Linq" />
     <Reference Include="System.Data.DataSetExtensions" />
     <Reference Include="Microsoft.CSharp" />
@@ -42,25 +35,24 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="FileHelperTests.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="TcpSocketTests.cs" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\..\Common.Core\Common.Core.csproj">
-      <Project>{83DE9636-9348-4678-B986-02987685B57D}</Project>
+      <Project>{83de9636-9348-4678-b986-02987685b57d}</Project>
       <Name>Common.Core</Name>
     </ProjectReference>
-    <ProjectReference Include="..\..\Game.Database.FileSystem\Database.FileSystem.csproj">
-      <Project>{e28cdd29-afef-484d-b24f-116730646fe3}</Project>
-      <Name>Database.FileSystem</Name>
+    <ProjectReference Include="..\..\Networking.Tcp\Networking.Tcp.csproj">
+      <Project>{7fa93b6e-639b-476e-9cdf-8b085dfcbd0a}</Project>
+      <Name>Networking.Tcp</Name>
     </ProjectReference>
     <ProjectReference Include="..\Test.Common\Test.Common.csproj">
-      <Project>{C3F2CC20-4D19-4D07-BDE2-63D92DF2746B}</Project>
+      <Project>{c3f2cc20-4d19-4d07-bde2-63d92df2746b}</Project>
       <Name>Test.Common</Name>
     </ProjectReference>
   </ItemGroup>
   <ItemGroup>
-    <None Include="app.config" />
     <None Include="packages.config" />
   </ItemGroup>
   <ItemGroup>

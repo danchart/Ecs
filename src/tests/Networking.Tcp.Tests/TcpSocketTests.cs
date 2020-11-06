@@ -9,7 +9,7 @@ using System.Threading.Tasks;
 using Test.Common;
 using Xunit;
 
-namespace Networking.Core.Tests
+namespace Networking.Tcp.Tests
 {
     public class TcpSocketTests
     {

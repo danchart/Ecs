@@ -28,7 +28,7 @@ namespace Database.Server
 
             TcpClientCapacity = 16,
 
-            TcpMessageQueueCapacity = 128,
+            TcpMessageQueueCapacity = 1024,
         };
     }
 }

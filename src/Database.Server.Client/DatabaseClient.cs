@@ -1,6 +1,6 @@
 ﻿using Common.Core;
 using Database.Server.Protocol;
-using Networking.Core;
+using Networking.Tcp;
 using System.Net;
 
 namespace Database.Server.Client
