@@ -8,7 +8,7 @@ namespace Game.Networking
     {
         Reserved = 0,
         PlayerInput = 1,
-        Control = 2,
+        ControlPlane = 2,
     }
 
     public struct ClientPacketEnvelope
@@ -28,7 +28,7 @@ namespace Game.Networking
             {
                 case ClientPacketType.PlayerInput:
                     return size + this.PlayerInputPacket.Serialize(stream, measureOnly);
-                case ClientPacketType.Control:
+                case ClientPacketType.ControlPlane:
                     return size + this.ControlPacket.Serialize(stream, measureOnly);
             }
 
@@ -48,7 +48,7 @@ namespace Game.Networking
             {
                 case ClientPacketType.PlayerInput:
                     return this.PlayerInputPacket.Deserialize(stream);
-                case ClientPacketType.Control:
+                case ClientPacketType.ControlPlane:
                     return this.ControlPacket.Deserialize(stream);
             }
 

@@ -61,7 +61,7 @@ namespace Networking.Core.Tests
             for (int i = 0; i < clients.Length; i++)
             {
                 clients[i] = new TcpSocketClient(logger, maxPacketSize: MaxPacketSize, packetQueueCapacity: PacketQueueCapacity);
-                clients[i].Connect(new IPAddress[] { serverEndpoint.Address }, serverEndpoint.Port);
+                clients[i].Connect(serverEndpoint);
             }
 
             // Send requests from clients to server.
@@ -83,7 +83,7 @@ namespace Networking.Core.Tests
                         clients[clientIndex].Disconnect();
 
                         clients[clientIndex] = new TcpSocketClient(logger, maxPacketSize: MaxPacketSize, packetQueueCapacity: PacketQueueCapacity);
-                        clients[clientIndex].Connect(new IPAddress[] { serverEndpoint.Address }, serverEndpoint.Port);
+                        clients[clientIndex].Connect(serverEndpoint);
                     }
 
                     var client = clients[clientIndex];

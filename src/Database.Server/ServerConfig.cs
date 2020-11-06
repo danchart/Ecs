@@ -16,20 +16,18 @@ namespace Database.Server
 
     public class ServerConfig
     {
-        public IPEndPoint HostIpEndPoint;
+        public IPAddress HostIpAddress;
 
         public int TcpClientCapacity;
 
-        public int MaxTcpMessageSize;
         public int TcpMessageQueueCapacity;
 
         public static readonly ServerConfig Default = new ServerConfig
         {
-            HostIpEndPoint = new IPEndPoint(IPAddress.Parse("127.0.0.1"), 27001),
+            HostIpAddress = IPAddress.Parse("127.0.0.1"),
 
             TcpClientCapacity = 16,
 
-            MaxTcpMessageSize = 2048,
             TcpMessageQueueCapacity = 128,
         };
     }

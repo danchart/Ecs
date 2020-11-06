@@ -59,9 +59,9 @@
             this._streamWriteLock = new object();
         }
 
-        public void Connect(IPAddress[] ipAddresses, int port)
+        public void Connect(IPEndPoint ipEndPoint)
         {
-            _client.Connect(ipAddresses, port);
+            _client.Connect(ipEndPoint);
             _stream = _client.GetStream();
 
             this._tcpReceiver.Start(this._stream, this._receiveBuffer);

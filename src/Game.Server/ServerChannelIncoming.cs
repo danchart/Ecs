@@ -71,7 +71,7 @@ namespace Game.Server
 
                             switch (_clientPacketEnvelope.Type)
                             {
-                                case ClientPacketType.Control:
+                                case ClientPacketType.ControlPlane:
                                     {
                                         this._transport.ReceiveBuffer.GetFromEndPoint(out IPEndPoint endPoint);
 

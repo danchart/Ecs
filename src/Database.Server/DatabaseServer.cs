@@ -1,4 +1,5 @@
 ﻿using Common.Core;
+using Database.Server.Protocol;
 using Networking.Core;
 using System;
 using System.Threading;
@@ -17,7 +18,7 @@ namespace Database.Server
             this._tcpServer = new TcpServer(
                 logger, 
                 config.TcpClientCapacity, 
-                config.MaxTcpMessageSize, 
+                ProtocolConstants.MaxTcpMessageSize, 
                 config.TcpMessageQueueCapacity);
 
             this._config = config;
@@ -28,7 +29,7 @@ namespace Database.Server
         public void Start()
         {
             this._tcpServer.Start(
-                _config.HostIpEndPoint,
+                ProtocolHelper.GetServerEndPointFromIpAddress(_config.HostIpAddress),
                 ProcessAsync);
         }
 

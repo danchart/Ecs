@@ -1,13 +1,13 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <Project ToolsVersion="15.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <Import Project="$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props" Condition="Exists('$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props')" />
-  <Import Project="..\Common.props" />
+  <Import Project="..\common.props" />
   <PropertyGroup>
-    <ProjectGuid>{69EFA696-2952-49F4-AD1D-5500972D2EFC}</ProjectGuid>
+    <ProjectGuid>{D61CAEDD-342D-4440-9874-EDEF1AF2F275}</ProjectGuid>
     <OutputType>Library</OutputType>
     <AppDesignerFolder>Properties</AppDesignerFolder>
-    <RootNamespace>Database.Server</RootNamespace>
-    <AssemblyName>Database.Server</AssemblyName>
+    <RootNamespace>Database.Server.Client</RootNamespace>
+    <AssemblyName>Database.Server.Client</AssemblyName>
   </PropertyGroup>
   <ItemGroup>
     <Reference Include="System" />
@@ -20,9 +20,8 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="DatabaseServer.cs" />
-    <Compile Include="DatabaseServerChannelIncoming.cs" />
-    <Compile Include="ServerConfig.cs" />
+    <Compile Include="ClientConfig.cs" />
+    <Compile Include="DatabaseClient.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <ItemGroup>
@@ -30,29 +29,18 @@
       <Project>{83de9636-9348-4678-b986-02987685b57d}</Project>
       <Name>Common.Core</Name>
     </ProjectReference>
-    <ProjectReference Include="..\Database.Core\Database.Core.csproj">
-      <Project>{d40d9621-02eb-4a03-95b9-b70eb27867f0}</Project>
-      <Name>Database.Core</Name>
-    </ProjectReference>
-    <ProjectReference Include="..\Database.FileSystem\Database.FileSystem.csproj">
-      <Project>{e28cdd29-afef-484d-b24f-116730646fe3}</Project>
-      <Name>Database.FileSystem</Name>
-    </ProjectReference>
     <ProjectReference Include="..\Database.Server.Contracts\Database.Server.Contracts.csproj">
       <Project>{d6e2ca53-1066-4d78-b536-7f7fe064804a}</Project>
       <Name>Database.Server.Contracts</Name>
     </ProjectReference>
     <ProjectReference Include="..\Database.Server.Protocol\Database.Server.Protocol.csproj">
-      <Project>{794B5EBC-85E1-4906-AAD5-CC29FB84D18B}</Project>
+      <Project>{794b5ebc-85e1-4906-aad5-cc29fb84d18b}</Project>
       <Name>Database.Server.Protocol</Name>
     </ProjectReference>
     <ProjectReference Include="..\Networking.Core\Networking.Core.csproj">
       <Project>{b19a0428-3713-43b2-81a5-1f228ce19489}</Project>
       <Name>Networking.Core</Name>
     </ProjectReference>
-  </ItemGroup>
-  <ItemGroup>
-    <None Include="app.config" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>
