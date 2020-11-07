@@ -4,30 +4,30 @@ namespace Common.Core
 {
     public readonly struct WorldType : IEquatable<WorldType>
     {
-        internal readonly int Id;
+        internal readonly string  Name;
 
-        public WorldType(int id)
+        public WorldType(string name)
         {
-            Id = id;
+            Name = name;
         }
 
-        public static implicit operator int(WorldType id) => id.Id;
+        public static implicit operator string(WorldType name) => name.Name;
 
         public static bool operator ==(in WorldType lhs, in WorldType rhs)
         {
             return
-                lhs.Id == rhs.Id;
+                lhs.Name == rhs.Name;
         }
 
         public static bool operator !=(in WorldType lhs, in WorldType rhs)
         {
             return
-                lhs.Id != rhs.Id;
+                lhs.Name != rhs.Name;
         }
 
         public override int GetHashCode()
         {
-            return Id;
+            return Name.GetHashCode();
         }
 
         public override bool Equals(object other)
@@ -40,7 +40,7 @@ namespace Common.Core
         public bool Equals(WorldType entity)
         {
             return
-                Id == entity.Id;
+                Name == entity.Name;
         }
     }
 }
