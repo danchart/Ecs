@@ -27,7 +27,7 @@
     <Compile Include="ServerConnections\PlayerConnectionManager.cs" />
     <Compile Include="ServerConnections\PlayerConnectionRef.cs" />
     <Compile Include="ServerConnections\PlayerConnectionRefs.cs" />
-    <Compile Include="Ids\WorldId.cs" />
+    <Compile Include="Ids\WorldInstanceId.cs" />
     <Compile Include="PacketEncryption.cs" />
     <Compile Include="Packets\ClientPacketEnvelope.cs" />
     <Compile Include="Packets\ServerPacketEnvelope.cs" />

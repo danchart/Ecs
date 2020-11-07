@@ -24,7 +24,7 @@ namespace Game.Networking.Tests
 
             Assert.Equal(0, connections.Count);
 
-            var worldId = new WorldId(0);
+            var worldId = new WorldInstanceId(0);
             var encryptionKey = new byte[] { 0x1 };
             var endPoint = new IPEndPoint(0, 0);
 

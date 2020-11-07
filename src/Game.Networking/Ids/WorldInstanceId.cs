@@ -1,25 +1,25 @@
 ﻿using System;
 
-namespace Common.Core
+namespace Game.Networking
 {
-    public readonly struct WorldName : IEquatable<WorldName>
+    public readonly struct WorldInstanceId : IEquatable<WorldInstanceId>
     {
         internal readonly int Id;
 
-        public WorldName(int id)
+        public WorldInstanceId(int id)
         {
             Id = id;
         }
 
-        public static implicit operator int(WorldName id) => id.Id;
+        public static implicit operator int(WorldInstanceId id) => id.Id;
 
-        public static bool operator ==(in WorldName lhs, in WorldName rhs)
+        public static bool operator ==(in WorldInstanceId lhs, in WorldInstanceId rhs)
         {
             return
                 lhs.Id == rhs.Id;
         }
 
-        public static bool operator !=(in WorldName lhs, in WorldName rhs)
+        public static bool operator !=(in WorldInstanceId lhs, in WorldInstanceId rhs)
         {
             return
                 lhs.Id != rhs.Id;
@@ -33,11 +33,11 @@ namespace Common.Core
         public override bool Equals(object other)
         {
             return
-                other is WorldName otherEntity &&
+                other is WorldInstanceId otherEntity &&
                 Equals(otherEntity);
         }
 
-        public bool Equals(WorldName entity)
+        public bool Equals(WorldInstanceId entity)
         {
             return
                 Id == entity.Id;

@@ -22,7 +22,7 @@ namespace Game.Server.Tests
                 logger);
 
             var gameWorld = new GameWorld(
-                id: new WorldId(0),
+                id: new WorldInstanceId(0),
                 logger: logger,
                 config: config,
                 channelManager: channelManager);

@@ -74,9 +74,11 @@ namespace Game.Server
             this._gameWorlds.StopAll();
         }
 
-        public WorldId SpawnWorld()
+        public WorldInstanceId SpawnWorld(WorldType worldType)
         {
-            return this._gameWorlds.Spawn();
+            var factory = new GameWorldFactory(worldType, _logger, _serverConfig, _channelOutgoing);
+
+            return this._gameWorlds.Spawn(factory);
         }
     }
 }

@@ -1,18 +1,16 @@
 ﻿using Common.Core;
 using Game.Networking;
 using System;
+using System.Collections.Generic;
 using System.Threading;
 
 namespace Game.Server
 {
     public sealed class GameWorlds
     {
-        private GameWorldThread[] _spawnedWorlds;
-        private ushort _worldCount;
-        private ushort[] _freeWorldIds;
-        private ushort _freeWorldCount;
+        private Dictionary<WorldInstanceId, GameWorldThread> _worldInstances;
 
-        private readonly ServerChannelOutgoing _channelManager;
+        private int _nexInstanceId;
 
         private readonly ILogger _logger;
         private readonly IServerConfig _serverConfig;
@@ -25,56 +23,51 @@ namespace Game.Server
         {
             this._logger = logger ?? throw new ArgumentNullException(nameof(logger));
             this._serverConfig = serverConfig ?? throw new ArgumentNullException(nameof(serverConfig));
-            this._spawnedWorlds = new GameWorldThread[capacity];
 
-            this._channelManager = channelManager ?? throw new ArgumentNullException(nameof(channelManager));
-
-            this._freeWorldIds = new ushort[capacity];
-            this._worldCount = 0;
-            this._freeWorldCount = 0;
+            this._worldInstances = new Dictionary<WorldInstanceId, GameWorldThread>(capacity);
+            this._nexInstanceId = 1;
         }
 
-        public GameWorld Get(WorldId id)
+        public GameWorld Get(WorldInstanceId id) => this._worldInstances[id].World;
+
+        public WorldInstanceId Spawn(IGameWorldFactory factory)
         {
-            return this._spawnedWorlds[id].World;
-        }
-
-        public WorldId Spawn(IGameWorldFactory factory)
-        {
-            int worldId;
-
-            if (this._freeWorldCount > 0)
-            {
-                worldId = this._freeWorldIds[this._freeWorldCount--];
-            }
-            else
-            {
-                if (this._worldCount == this._spawnedWorlds.Length)
-                {
-                    Array.Resize(ref this._spawnedWorlds, 2 * this._worldCount);
-                }
-
-                worldId = this._worldCount++;
-            }
-
-            var world = factory.CreateInstance();
-
+            var worldInstanceId = new WorldInstanceId(this._nexInstanceId++);
+            var world = factory.CreateInstance(worldInstanceId);
             var thread = new Thread(world.Run);
+
+            this._worldInstances[worldInstanceId] =
+                new GameWorldThread
+                {
+                    World = world,
+                    Thread = thread,
+                };
+
             thread.Start();
 
-            this._spawnedWorlds[worldId].World = world;
-            this._spawnedWorlds[worldId].Thread = thread;
-
-            this._logger.Info($"Spawning world: id={world.Id:x8}, threadId={thread.ManagedThreadId}");
+            this._logger.Info($"Spawned world instance: id={world.Id:x8}, threadId={thread.ManagedThreadId}");
 
             return world.Id;
         }
 
+        public bool Kill(WorldInstanceId id)
+        {
+            foreach (var pair in this._worldInstances)
+            {
+                pair.Value.World.Stop();
+                this._worldInstances.Remove(id);
+
+                return true;
+            }
+
+            return false;
+        }
+
         public bool IsRunning()
         {
-            foreach (var gameWorld in this)
+            foreach (var pair in this._worldInstances)
             {
-                if (gameWorld.Thread.ThreadState != ThreadState.Stopped)
+                if (pair.Value.Thread.ThreadState != ThreadState.Stopped)
                 {
                     return true;
                 }
@@ -85,50 +78,9 @@ namespace Game.Server
 
         public void StopAll()
         {
-            foreach (var gameWorld in this)
+            foreach (var pair in this._worldInstances)
             {
-                gameWorld.World.Stop();
-            }
-        }
-
-
-        public Enumerator GetEnumerator()
-        {
-            return new Enumerator(this);
-        }
-
-        public struct Enumerator
-        {
-            private GameWorlds _gameWorlds;
-            private int _current;
-            private int _freeIndex;
-
-            public Enumerator(GameWorlds gameWorlds)
-            {
-                this._gameWorlds = gameWorlds;
-                this._current = -1;
-                this._freeIndex = 0;
-            }
-
-            public ref GameWorldThread Current
-            {
-                get => ref this._gameWorlds._spawnedWorlds[this._current];
-            }
-
-            public bool MoveNext()
-            {
-                this._current++;
-
-                while (
-                    this._current < this._gameWorlds._worldCount &&
-                    this._freeIndex < this._gameWorlds._freeWorldCount &&
-                    this._current == this._gameWorlds._freeWorldIds[this._freeIndex])
-                {
-                    this._freeIndex++;
-                    this._current++;
-                }
-
-                return _current < this._gameWorlds._worldCount;
+                pair.Value.World.Stop();
             }
         }
 

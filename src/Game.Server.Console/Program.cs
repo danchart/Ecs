@@ -1,4 +1,5 @@
 ﻿using Common.Core;
+using Game.Networking;
 
 namespace Game.Server.Console
 {
@@ -12,7 +13,11 @@ namespace Game.Server.Console
 
             GameServer gameServer = new GameServer(DefaultServerConfig.Instance, _logger);
 
-            gameServer.SpawnWorld();
+            HttpServer httpServer = new HttpServer(_logger);
+
+            httpServer.Start(new string[] { "http://localhost:8110/" });
+
+            gameServer.SpawnWorld(new WorldType(0));
             //gameServer.SpawnWorld();
 
             _logger.Info("Running...");

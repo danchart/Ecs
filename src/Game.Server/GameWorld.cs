@@ -14,7 +14,7 @@ namespace Game.Server
 
         private bool _isStopped;
 
-        public readonly WorldId Id;
+        public readonly WorldInstanceId Id;
 
         private readonly World _world;
         private readonly Systems _systems;
@@ -30,7 +30,7 @@ namespace Game.Server
         private readonly float _fixedTick;
 
         public GameWorld(
-            WorldId id, 
+            WorldInstanceId id, 
             ILogger logger,
             IServerConfig config,
             ServerChannelOutgoing channelManager)

@@ -34,7 +34,7 @@ namespace Game.Networking
         }
 
         public void Add(
-            WorldId worldId, 
+            WorldInstanceId worldId, 
             PlayerId playerId, 
             byte[] encryptionKey, 
             IPEndPoint endPoint)
