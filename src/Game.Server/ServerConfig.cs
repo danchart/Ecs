@@ -1,5 +1,6 @@
 ﻿using Ecs.Core;
 using Game.Networking;
+using Game.Simulation.Core;
 using Game.Simulation.Server;
 
 namespace Game.Server
@@ -12,6 +13,7 @@ namespace Game.Server
         TransportConfig Transport { get; }
         ServerConfig Server { get; }
         WorldConfig World { get;  }
+        SimulationConfig Simulation { get; }
     }
 
     public sealed class DefaultServerConfig : IServerConfig
@@ -29,6 +31,8 @@ namespace Game.Server
         public ServerConfig Server => ServerConfig.Default;
 
         public WorldConfig World => WorldConfig.Default;
+
+        public SimulationConfig Simulation => SimulationConfig.Default;
     }
 
     public sealed class TransportConfig

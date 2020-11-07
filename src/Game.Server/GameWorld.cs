@@ -16,9 +16,6 @@ namespace Game.Server
         // Configurations
         //
 
-        private readonly EcsConfig _ecsConfig = EcsConfig.Default;
-        private readonly SimulationConfig _simulationConfig = SimulationConfig.Default;
-
         private readonly World _world;
         private readonly Systems _systems;
         private readonly ServerSimulation<InputComponent> _simulation;
@@ -35,6 +32,8 @@ namespace Game.Server
 
         private bool _isStopped;
 
+        private float _fixedTick;
+
         public GameWorld(
             WorldId id, 
             ILogger logger,
@@ -45,7 +44,9 @@ namespace Game.Server
             this.Id = id;
             this._logger = logger ?? throw new ArgumentNullException(nameof(logger));
             this._isStopped = false;
-            this._world = new World(this._ecsConfig);
+            this._world = new World(config.Ecs);
+
+            this._fixedTick = config.Simulation.FixedTick;
 
             this._channelManager = channelManager ?? throw new ArgumentNullException(nameof(channelManager));
 
@@ -65,7 +66,7 @@ namespace Game.Server
                         this._replicationManager));
 
             this._simulation = new ServerSimulation<InputComponent>(
-                this._simulationConfig,
+                config.Simulation,
                 this._world,
                 this._systems);
 
@@ -74,10 +75,12 @@ namespace Game.Server
 
         public void Run()
         {
-            int tickMillieconds = (int) (1000 * _simulationConfig.FixedTick);
+            int tickMillieconds = (int) (1000 * this._fixedTick);
 
             var autoEvent = new AutoResetEvent(initialState: false);
 
+            // TODO: Timer is limited to system clock resolution. The max (worst) seems to be 15.625 ms which 
+            // is maybe sufficient (64 ticks/s). See ClockRes SysInternal tool.
             using (var stateTimer = new Timer(
                 callback: Update,
                 state: autoEvent,
@@ -97,7 +100,7 @@ namespace Game.Server
             AutoResetEvent autoEvent = (AutoResetEvent)stateInfo;
 
             // Run simulation tick
-            this._simulation.FixedUpdate(_simulationConfig.FixedTick);
+            this._simulation.FixedUpdate(this._fixedTick);
 
             // Update clients
             this._channelManager.ReplicateToClients(this._frameIndex, this._players);
