@@ -25,6 +25,7 @@
     <Compile Include="FixedIndexDictionary.cs" />
     <Compile Include="Hashing\HashCodeHelper.cs" />
     <Compile Include="IClock.cs" />
+    <Compile Include="Ids\WorldName.cs" />
     <Compile Include="Ids\PlayerId.cs" />
     <Compile Include="Logging\ConsoleLogger.cs" />
     <Compile Include="Logging\ILogger.cs" />

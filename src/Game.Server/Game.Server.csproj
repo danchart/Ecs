@@ -45,6 +45,7 @@
     <Compile Include="Controllers\SimulationPacketController.cs" />
     <Compile Include="GameSever.cs" />
     <Compile Include="GameWorld.cs" />
+    <Compile Include="GameWorldFactory.cs" />
     <Compile Include="GameWorlds.cs" />
     <Compile Include="ServerChannelIncoming.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />

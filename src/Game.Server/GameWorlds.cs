@@ -39,7 +39,7 @@ namespace Game.Server
             return this._spawnedWorlds[id].World;
         }
 
-        public WorldId Spawn()
+        public WorldId Spawn(IGameWorldFactory factory)
         {
             int worldId;
 
@@ -57,11 +57,8 @@ namespace Game.Server
                 worldId = this._worldCount++;
             }
 
-            var world = new GameWorld(
-                new WorldId(worldId),
-                this._logger,
-                this._serverConfig,
-                this._channelManager);
+            var world = factory.CreateInstance();
+
             var thread = new Thread(world.Run);
             thread.Start();
 

@@ -10,11 +10,11 @@ namespace Game.Server
 {
     public sealed class GameWorld
     {
-        public readonly WorldId Id;
+        private FrameIndex _frameIndex;
 
-        //
-        // Configurations
-        //
+        private bool _isStopped;
+
+        public readonly WorldId Id;
 
         private readonly World _world;
         private readonly Systems _systems;
@@ -27,12 +27,7 @@ namespace Game.Server
         private readonly ServerChannelOutgoing _channelManager;
 
         private readonly ILogger _logger;
-        
-        private FrameIndex _frameIndex;
-
-        private bool _isStopped;
-
-        private float _fixedTick;
+        private readonly float _fixedTick;
 
         public GameWorld(
             WorldId id, 
