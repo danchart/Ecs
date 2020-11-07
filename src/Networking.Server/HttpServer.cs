@@ -1,15 +1,16 @@
 ﻿using Common.Core;
 using System;
 using System.Net;
-using System.Text;
 
-namespace Game.Server.Console
+namespace Networking.Server
 {
-    internal sealed class HttpServer
+    public abstract class HttpServer
     {
         private readonly ILogger _logger;
 
         private static AsyncCallback GetContextCallback = new AsyncCallback(GetContext);
+
+        private delegate void HandleRequestDelegate(HttpListenerRequest request, HttpListenerResponse response);
 
         public HttpServer(ILogger logger)
         {
@@ -33,35 +34,28 @@ namespace Game.Server.Console
             var state = new State
             { 
                 Listener = listener,
+                HandleRequest = HandleRequest,
             };
 
             listener.BeginGetContext(GetContextCallback, state);
         }
+
+        protected abstract void HandleRequest(HttpListenerRequest request, HttpListenerResponse response);
 
         private static void GetContext(IAsyncResult ar)
         {
             State state = (State)ar.AsyncState;
             HttpListenerContext context = state.Listener.EndGetContext(ar);
 
-            HttpListenerRequest request = context.Request;
-            HttpListenerResponse response = context.Response;
-
-            string responseString = "<HTML><BODY> Hello world!</BODY></HTML>";
-            byte[] buffer = Encoding.UTF8.GetBytes(responseString);
-
-            // Get a response stream and write the response to it.
-            response.ContentLength64 = buffer.Length;
-            System.IO.Stream output = response.OutputStream;
-            output.Write(buffer, 0, buffer.Length);
-            // You must close the output stream.
-            output.Close();
-
             state.Listener.BeginGetContext(GetContextCallback, state);
+
+            state.HandleRequest(context.Request, context.Response);
         }
 
         private sealed class State
         {
             public HttpListener Listener;
+            public HandleRequestDelegate HandleRequest;
         }
     }
 }

@@ -43,7 +43,6 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="HttpServer.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
@@ -62,6 +61,10 @@
     <ProjectReference Include="..\Game.Server\Game.Server.csproj">
       <Project>{f9d4ba66-d855-4a5e-a113-ec3a91e2eb7b}</Project>
       <Name>Game.Server</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\Networking.Server\Networking.Server.csproj">
+      <Project>{7FA93B6E-639B-476E-9CDF-8B085DFCBD0A}</Project>
+      <Name>Networking.Server</Name>
     </ProjectReference>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />

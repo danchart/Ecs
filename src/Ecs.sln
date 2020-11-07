@@ -62,9 +62,9 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Database.Server.Client", "D
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Database.Server.Protocol", "Database.Server.Protocol\Database.Server.Protocol.csproj", "{794B5EBC-85E1-4906-AAD5-CC29FB84D18B}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Networking.Tcp", "Networking.Tcp\Networking.Tcp.csproj", "{7FA93B6E-639B-476E-9CDF-8B085DFCBD0A}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Networking.Server", "Networking.Server\Networking.Server.csproj", "{7FA93B6E-639B-476E-9CDF-8B085DFCBD0A}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Networking.Tcp.Tests", "tests\Networking.Tcp.Tests\Networking.Tcp.Tests.csproj", "{D003F47B-5D23-47F5-809F-ED03F2621036}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Networking.Server.Tests", "tests\Networking.Server.Tests\Networking.Server.Tests.csproj", "{D003F47B-5D23-47F5-809F-ED03F2621036}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

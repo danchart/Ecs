@@ -8,8 +8,8 @@
     <ProjectGuid>{D003F47B-5D23-47F5-809F-ED03F2621036}</ProjectGuid>
     <OutputType>Library</OutputType>
     <AppDesignerFolder>Properties</AppDesignerFolder>
-    <RootNamespace>Networking.Tcp.Tests</RootNamespace>
-    <AssemblyName>Networking.Tcp.Tests</AssemblyName>
+    <RootNamespace>Networking.Server.Tests</RootNamespace>
+    <AssemblyName>Networking.Server.Tests</AssemblyName>
     <TargetFrameworkVersion>v4.7.2</TargetFrameworkVersion>
   </PropertyGroup>
   <ItemGroup>
@@ -43,9 +43,9 @@
       <Project>{83de9636-9348-4678-b986-02987685b57d}</Project>
       <Name>Common.Core</Name>
     </ProjectReference>
-    <ProjectReference Include="..\..\Networking.Tcp\Networking.Tcp.csproj">
+    <ProjectReference Include="..\..\Networking.Server\Networking.Server.csproj">
       <Project>{7fa93b6e-639b-476e-9cdf-8b085dfcbd0a}</Project>
-      <Name>Networking.Tcp</Name>
+      <Name>Networking.Server</Name>
     </ProjectReference>
     <ProjectReference Include="..\Test.Common\Test.Common.csproj">
       <Project>{c3f2cc20-4d19-4d07-bde2-63d92df2746b}</Project>

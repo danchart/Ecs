@@ -1,4 +1,4 @@
-﻿namespace Networking.Tcp
+﻿namespace Networking.Server
 {
     using Common.Core;
     using System;

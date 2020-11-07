@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Net.Sockets;
 
-namespace Networking.Tcp
+namespace Networking.Server
 {
     public static class NetworkStreamExtensions
     {

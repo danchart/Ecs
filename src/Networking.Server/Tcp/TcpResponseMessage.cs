@@ -1,4 +1,4 @@
-﻿namespace Networking.Tcp
+﻿namespace Networking.Server
 {
     public sealed class TcpResponseMessage
     {
