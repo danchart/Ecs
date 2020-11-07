@@ -8,7 +8,7 @@ namespace Networking.Server
     {
         private readonly ILogger _logger;
 
-        private static AsyncCallback GetContextCallback = new AsyncCallback(GetContext);
+        private static readonly AsyncCallback GetContextCallback = new AsyncCallback(GetContext);
 
         private delegate void HandleRequestDelegate(HttpListenerRequest request, HttpListenerResponse response);
 
@@ -17,7 +17,7 @@ namespace Networking.Server
             this._logger = logger ?? throw new ArgumentNullException(nameof(logger));
         }
 
-        public void Start(string[] prefixes) // "http://localhost:57789/"
+        public void Start(string[] prefixes) // e.g. "http://localhost:57789/"
         {
             // Create a listener.
             HttpListener listener = new HttpListener();
@@ -47,15 +47,17 @@ namespace Networking.Server
             State state = (State)ar.AsyncState;
             HttpListenerContext context = state.Listener.EndGetContext(ar);
 
+            // Begin handling next request.
             state.Listener.BeginGetContext(GetContextCallback, state);
 
+            // Handle the request on this thread.
             state.HandleRequest(context.Request, context.Response);
         }
 
         private sealed class State
         {
             public HttpListener Listener;
-            public HandleRequestDelegate HandleRequest;
+            public HandleRequestDelegate HandleRequest; // save delegate reference to avoid allocation.
         }
     }
 }

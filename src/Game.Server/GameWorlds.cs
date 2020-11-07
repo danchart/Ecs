@@ -10,7 +10,7 @@ namespace Game.Server
     {
         private Dictionary<WorldInstanceId, GameWorldThread> _worldInstances;
 
-        private int _nexInstanceId;
+        private int _nextInstanceId;
 
         private readonly ILogger _logger;
         private readonly IServerConfig _serverConfig;
@@ -25,14 +25,14 @@ namespace Game.Server
             this._serverConfig = serverConfig ?? throw new ArgumentNullException(nameof(serverConfig));
 
             this._worldInstances = new Dictionary<WorldInstanceId, GameWorldThread>(capacity);
-            this._nexInstanceId = 1;
+            this._nextInstanceId = 1;
         }
 
         public GameWorld Get(WorldInstanceId id) => this._worldInstances[id].World;
 
         public WorldInstanceId Spawn(IGameWorldFactory factory)
         {
-            var worldInstanceId = new WorldInstanceId(this._nexInstanceId++);
+            var worldInstanceId = new WorldInstanceId(this._nextInstanceId++);
             var world = factory.CreateInstance(worldInstanceId);
             var thread = new Thread(world.Run);
 

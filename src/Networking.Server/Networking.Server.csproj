@@ -33,7 +33,7 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="HttpServer.cs" />
+    <Compile Include="Http\HttpServer.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="NetworkStreamExtensions.cs" />
     <Compile Include="Tcp\TcpClientData.cs" />
