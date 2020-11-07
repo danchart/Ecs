@@ -4,12 +4,14 @@ using Game.Networking;
 using Game.Simulation.Core;
 using Game.Simulation.Server;
 using System;
+using System.Runtime.CompilerServices;
 using System.Threading;
 
 namespace Game.Server
 {
     public sealed class GameWorld
     {
+        private bool _isLoaded;
         private FrameIndex _frameIndex;
 
         private bool _isStopped;
@@ -35,6 +37,7 @@ namespace Game.Server
             IServerConfig config,
             ServerChannelOutgoing channelManager)
         {
+            this._isLoaded = false;
             this._frameIndex = FrameIndex.New();
             this.Id = id;
             this._logger = logger ?? throw new ArgumentNullException(nameof(logger));
@@ -68,8 +71,18 @@ namespace Game.Server
             this._simulation.Create();
         }
 
+        public void Load(IGameWorldLoader loader)
+        {
+            loader.LoadWorld(this._world);
+        }
+
         public void Run()
         {
+            if (!this._isLoaded)
+            {
+                throw new InvalidOperationException("Cannot run a world until it has been loaded.");
+            }
+
             int tickMillieconds = (int) (1000 * this._fixedTick);
 
             var autoEvent = new AutoResetEvent(initialState: false);

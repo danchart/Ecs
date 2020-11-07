@@ -76,7 +76,11 @@ namespace Game.Server
 
         public WorldInstanceId SpawnWorld(WorldType worldType)
         {
-            var factory = new GameWorldFactory(worldType, _logger, _serverConfig, _channelOutgoing);
+            var factory = new GameWorldFactory(
+                logger, 
+                _serverConfig, 
+                _channelOutgoing,
+                new GameWorldLoader();
 
             return this._gameWorlds.Spawn(factory);
         }
