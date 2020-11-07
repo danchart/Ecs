@@ -80,5 +80,10 @@ namespace Game.Server
 
             return this._gameWorlds.Spawn(factory);
         }
+
+        public bool KillWorld(WorldInstanceId id)
+        {
+            return this._gameWorlds.Kill(id);
+        }
     }
 }
