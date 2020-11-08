@@ -1,4 +1,5 @@
 ﻿using Common.Core;
+using Common.Core.Numerics;
 using Ecs.Core;
 using Game.Simulation.Core;
 using System;
@@ -24,12 +25,12 @@ namespace Game.Server
         {
             // TODO: Load world based on WorldType
 
-            // TEST: Create test objects
+            // TEST: Create test grid
 
-            int
+            const int
                 rows = 100,
                 cols = 100;
-
+            const float unitSize = 0.1f;
 
             for (int row = 0; row < rows; row++)
             {
@@ -39,10 +40,13 @@ namespace Game.Server
 
                     ref var transform = ref entity.GetComponent<TransformComponent>();
 
-                    transform.position.x = ((float) row - (row / 2)) 
+                    transform.position.x = ((float)row - (row / 2)) * unitSize;
+                    transform.position.y = ((float)col - (col / 2)) * unitSize;
+                    transform.rotation = 0;
 
-                    entity.GetComponent<MovementComponent>();
+                    ref var movement = ref entity.GetComponent<MovementComponent>();
 
+                    movement.velocity = Vector2.Zero;
                 }
             }
 
