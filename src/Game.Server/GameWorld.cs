@@ -3,6 +3,7 @@ using Ecs.Core;
 using Game.Networking;
 using Game.Simulation.Core;
 using Game.Simulation.Server;
+using Simulation.Core;
 using System;
 using System.Runtime.CompilerServices;
 using System.Threading;
@@ -21,6 +22,8 @@ namespace Game.Server
         private readonly World _world;
         private readonly Systems _systems;
         private readonly ServerSimulation<InputComponent> _simulation;
+
+        private readonly IPhysicsWorld _physicsWorld;
 
         private readonly WorldPlayers _players;
 
@@ -55,6 +58,8 @@ namespace Game.Server
 
             this._replicationManager = new WorldReplicationManager(config.Replication, this._players);
 
+            this._physicsWorld = new VolatilePhysicsWorld();
+
             this._systems =
                 new Systems(this._world)
                 .Add(new GatherReplicatedDataSystem())
@@ -73,7 +78,7 @@ namespace Game.Server
 
         public void Load(IGameWorldLoader loader)
         {
-            loader.LoadWorld(this._world);
+            _isLoaded = loader.LoadWorld(this._world, this._physicsWorld);
         }
 
         public void Run()

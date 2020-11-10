@@ -2,12 +2,13 @@
 using Common.Core.Numerics;
 using Ecs.Core;
 using Game.Simulation.Core;
+using Simulation.Core;
 
 namespace Game.Server
 {
     public interface IGameWorldLoader
     {
-        bool LoadWorld(World world);
+        bool LoadWorld(World world, IPhysicsWorld physicsWorld);
     }
 
     public class GameWorldLoader : IGameWorldLoader
@@ -19,16 +20,15 @@ namespace Game.Server
             this._worldType = worldType;
         }
 
-        public bool LoadWorld(World world)
+        public bool LoadWorld(World world, IPhysicsWorld physicsWorld)
         {
             // TODO: Load world based on WorldType
-
-            // TEST: Create test grid
 
             const int
                 rows = 100,
                 cols = 100;
             const float unitSize = 0.1f;
+            const float halfUnitSize = 0.5f * unitSize;
 
             for (int row = 0; row < rows; row++)
             {
@@ -38,13 +38,32 @@ namespace Game.Server
 
                     ref var transform = ref entity.GetComponent<TransformComponent>();
 
-                    transform.position.x = ((float)row - (row / 2)) * unitSize;
-                    transform.position.y = ((float)col - (col / 2)) * unitSize;
+                    float x = unitSize * ((float)row - ((float)rows / 2));
+                    float y = unitSize * ((float)col - ((float)cols / 2));
+
+                    transform.position.x = x;
+                    transform.position.y = y;
                     transform.rotation = 0;
 
                     ref var movement = ref entity.GetComponent<MovementComponent>();
 
                     movement.velocity = Vector2.Zero;
+
+                    //physicsWorld.AddCircle(entity, isStatic: false, transform.position, 0, 0.5f * unitSize);
+
+                    // Create square rigid body.
+                    physicsWorld.AddPolygon(
+                        entity, 
+                        isStatic: false, 
+                        originWS: transform.position, 
+                        rotation: 0, 
+                        vertices: new Vector2[]
+                        {
+                            new Vector2(x - halfUnitSize, y + halfUnitSize),
+                            new Vector2(x + halfUnitSize, y + halfUnitSize),
+                            new Vector2(x + halfUnitSize, y - halfUnitSize),
+                            new Vector2(x - halfUnitSize, y - halfUnitSize),
+                        });
                 }
             }
 

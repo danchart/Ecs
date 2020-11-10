@@ -45,7 +45,7 @@ namespace Game.Server
 
             thread.Start();
 
-            this._logger.Info($"Spawned world instance: id={world.Id:x8}, threadId={thread.ManagedThreadId}");
+            this._logger.Info($"Spawned world instance: id={world.Id}, threadId={thread.ManagedThreadId}");
 
             return world.Id;
         }

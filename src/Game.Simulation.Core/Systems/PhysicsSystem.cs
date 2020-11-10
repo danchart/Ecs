@@ -10,11 +10,20 @@ namespace Simulation.Core.Systems
     {
         public EntityQuery<RigidBodyComponent, TransformComponent> _transformQuery = null;
 
-        public IPhysicsSystemProxy PhysicsProxy = null;
+        public IPhysicsSystemProxy _physicsProxy = null;
 
         public override void OnUpdate(float deltaTime)
         {
+            //foreach (ref var transform in this._transformQuery.GetComponents2())
+            foreach (var entity in this._transformQuery)
+            {
+                ref var transform = ref entity.GetComponent<TransformComponent>();
+                var body = this._physicsProxy.GetRigidBody(entity);
 
+                transform.position.x = body.Position.x;
+                transform.position.y = body.Position.y;
+                transform.rotation = body.Angle;
+            }
         }
     }
 }
