@@ -66,6 +66,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Networking.Server", "Networ
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Networking.Server.Tests", "tests\Networking.Server.Tests\Networking.Server.Tests.csproj", "{D003F47B-5D23-47F5-809F-ED03F2621036}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "VolatilePhysics", "VolatilePhysics\VolatilePhysics.csproj", "{B12397DE-261A-4D27-ADFC-14B0D6841A56}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -184,6 +186,10 @@ Global
 		{D003F47B-5D23-47F5-809F-ED03F2621036}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{D003F47B-5D23-47F5-809F-ED03F2621036}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{D003F47B-5D23-47F5-809F-ED03F2621036}.Release|Any CPU.Build.0 = Release|Any CPU
+		{B12397DE-261A-4D27-ADFC-14B0D6841A56}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{B12397DE-261A-4D27-ADFC-14B0D6841A56}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{B12397DE-261A-4D27-ADFC-14B0D6841A56}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{B12397DE-261A-4D27-ADFC-14B0D6841A56}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

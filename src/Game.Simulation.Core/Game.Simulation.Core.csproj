@@ -50,8 +50,10 @@
     <Compile Include="Components\MovementComponent.cs" />
     <Compile Include="Components\ReplicatedComponent.cs" />
     <Compile Include="Components\TransformComponent.cs" />
+    <Compile Include="IPhysicsSystemProxy.cs" />
     <Compile Include="SimulationConfig.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="Systems\PhysicsSystem.cs" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\Common.Core\Common.Core.csproj">
@@ -61,6 +63,10 @@
     <ProjectReference Include="..\Ecs.Core\Ecs.Core.csproj">
       <Project>{65beb14c-5414-4516-b566-e668e494c3eb}</Project>
       <Name>Ecs.Core</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\VolatilePhysics\VolatilePhysics.csproj">
+      <Project>{b12397de-261a-4d27-adfc-14b0d6841a56}</Project>
+      <Name>VolatilePhysics</Name>
     </ProjectReference>
   </ItemGroup>
   <ItemGroup>
