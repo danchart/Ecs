@@ -19,7 +19,9 @@ namespace Game.Server.Console
 
             httpServer.Start(new string[] { "http://localhost:8110/" });
 
-            gameServer.SpawnWorld(new WorldType(0));
+            IGameWorldLoader worldLoader = new GameWorldLoader(new WorldType("dummy"));
+
+            gameServer.SpawnWorld(worldLoader);
             //gameServer.SpawnWorld();
 
             _logger.Info("Running...");

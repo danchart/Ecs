@@ -74,13 +74,13 @@ namespace Game.Server
             this._gameWorlds.StopAll();
         }
 
-        public WorldInstanceId SpawnWorld(WorldType worldType)
+        public WorldInstanceId SpawnWorld(IGameWorldLoader loader)
         {
             var factory = new GameWorldFactory(
-                logger, 
-                _serverConfig, 
-                _channelOutgoing,
-                new GameWorldLoader();
+                this._logger,
+                this._serverConfig,
+                this._channelOutgoing,
+                loader);
 
             return this._gameWorlds.Spawn(factory);
         }
