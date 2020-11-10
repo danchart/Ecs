@@ -4,6 +4,7 @@
     {
         Transform,
         Movement,
+        RigidBody,
         Player,
 
         // Use as ID count
