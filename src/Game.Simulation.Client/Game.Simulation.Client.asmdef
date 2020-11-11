@@ -1,0 +1,13 @@
+﻿{
+    "name": "Game.Simulation.Client",
+    "references": [ "Common.Core", "Ecs.Core", "Game.Simulation.Core" ],
+    "includePlatforms": [],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": true,
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": false
+}

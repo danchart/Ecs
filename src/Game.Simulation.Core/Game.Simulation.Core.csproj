@@ -73,5 +73,8 @@
   <ItemGroup>
     <Folder Include="Components\Tags\" />
   </ItemGroup>
+  <ItemGroup>
+    <None Include="Game.Simulation.Core.asmdef" />
+  </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>

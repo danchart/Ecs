@@ -1,0 +1,13 @@
+﻿{
+    "name": "Game.Simulation.Core",
+    "references": [ "Common.Core", "Ecs.Core", "VolatilePhysics" ],
+    "includePlatforms": [],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": true,
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": false
+}

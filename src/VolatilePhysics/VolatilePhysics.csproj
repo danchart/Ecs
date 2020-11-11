@@ -51,5 +51,8 @@
     <Compile Include="VoltShape.cs" />
     <Compile Include="VoltWorld.cs" />
   </ItemGroup>
+  <ItemGroup>
+    <None Include="VolatilePhysics.asmdef" />
+  </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>
