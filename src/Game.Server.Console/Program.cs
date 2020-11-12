@@ -60,6 +60,26 @@ namespace Game.Server.Console
 
             protected override void HandleRequest(HttpListenerRequest request, HttpListenerResponse response)
             {
+                // Paths:
+                //  /player/<id>/connect
+                if (request.HttpMethod == "POST")
+                {
+                    if (request.Url.Segments.Length > 3)
+                    {
+                        if (request.Url.Segments[1].Replace("/", "") == "player" &&
+                            PlayerId.TryParse(request.Url.Segments[2].Replace("/", ""), out PlayerId playerId))
+                        {
+                            if (request.Url.Segments[3] == "connect")
+                            {
+                                var content = GetRequesContent(request);
+
+                                int i = 0;
+                            }
+                        }
+
+                    }
+                }
+
                 string responseString = "<HTML><BODY> Hello world!</BODY></HTML>";
                 byte[] buffer = System.Text.Encoding.UTF8.GetBytes(responseString);
 
@@ -69,6 +89,22 @@ namespace Game.Server.Console
                 output.Write(buffer, 0, buffer.Length);
                 // You must close the output stream.
                 output.Close();
+            }
+
+            public static string GetRequesContent(HttpListenerRequest request)
+            {
+                if (!request.HasEntityBody)
+                {
+                    return null;
+                }
+
+                using (var body = request.InputStream) // here we have data
+                {
+                    using (var reader = new System.IO.StreamReader(body, request.ContentEncoding))
+                    {
+                        return reader.ReadToEnd();
+                    }
+                }
             }
         }
     }

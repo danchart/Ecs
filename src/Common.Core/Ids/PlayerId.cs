@@ -11,6 +11,20 @@ namespace Common.Core
             Id = id;
         }
 
+        public static bool TryParse(string value, out PlayerId id)
+        {
+            id = default;
+
+            if (int.TryParse(value, out int valueAsInt))
+            {
+                id = new PlayerId(valueAsInt);
+
+                return true;
+            }
+
+            return false;
+        }
+
         public static implicit operator int(PlayerId id) => id.Id;
 
         public static bool operator ==(in PlayerId lhs, in PlayerId rhs)
