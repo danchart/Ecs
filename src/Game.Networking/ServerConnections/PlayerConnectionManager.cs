@@ -34,7 +34,7 @@ namespace Game.Networking
         }
 
         public void Add(
-            WorldInstanceId worldId, 
+            WorldInstanceId worldInstanceId, 
             PlayerId playerId, 
             byte[] encryptionKey, 
             IPEndPoint endPoint)
@@ -44,7 +44,7 @@ namespace Game.Networking
             ref var connection = ref this._connections[playerId];
 
             connection.State = PlayerConnection.ConnectionState.None;
-            connection.WorldId = worldId;
+            connection.WorldId = worldInstanceId;
             connection.PlayerId = playerId;
             connection.PacketEncryptionKey = encryptionKey;
             connection.EndPoint = endPoint;

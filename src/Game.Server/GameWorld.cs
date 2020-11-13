@@ -5,7 +5,6 @@ using Game.Simulation.Core;
 using Game.Simulation.Server;
 using Simulation.Core;
 using System;
-using System.Runtime.CompilerServices;
 using System.Threading;
 
 namespace Game.Server

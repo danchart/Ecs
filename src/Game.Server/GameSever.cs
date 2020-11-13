@@ -1,6 +1,7 @@
 ﻿using Common.Core;
 using Game.Networking;
 using System;
+using System.Net;
 
 namespace Game.Server
 {
@@ -93,6 +94,40 @@ namespace Game.Server
         public bool KillWorld(WorldInstanceId id)
         {
             return this._gameWorlds.Kill(id);
+        }
+
+        public bool ConnectPlayer(
+            WorldInstanceId instanceId,
+            PlayerId playerId,
+            byte[] encryptionKey,
+            IPEndPoint ipEndPoint)
+        {
+            // TODO: Error handling.
+
+            var gameWorld = this._gameWorlds.Get(instanceId);
+
+            this._playerConnectionManager.Add(instanceId, playerId, encryptionKey, ipEndPoint);
+
+            var playerConnectionRef = this._playerConnectionManager.GetRef(playerId);
+
+            gameWorld.Connect(playerConnectionRef);
+
+            return true;
+        }
+
+        public bool DisconnectPlayer(
+            WorldInstanceId instanceId,
+            PlayerId playerId)
+        {
+            // TODO: Error handling.
+
+            var gameWorld = this._gameWorlds.Get(instanceId);
+
+            var playerConnectionRef = this._playerConnectionManager.GetRef(playerId);
+
+            gameWorld.Disconnect(playerConnectionRef);
+
+            return true;
         }
     }
 }
