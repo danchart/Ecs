@@ -1,4 +1,5 @@
-﻿using Game.Networking;
+﻿using Common.Core;
+using Game.Networking;
 using Test.Common;
 using Xunit;
 
@@ -20,12 +21,15 @@ namespace Game.Server.Tests
                 udpTransport,
                 packetEncryption,
                 logger);
+            IGameWorldLoader gameWorldLoader = new GameWorldLoader();
 
             var gameWorld = new GameWorld(
-                id: new WorldInstanceId(0),
+                worldType: WorldType.New(),
+                id: WorldInstanceId.New(),
                 logger: logger,
                 config: config,
-                channelManager: channelManager);
+                channelManager: channelManager,
+                gameWorldLoader: gameWorldLoader);
         }
     }
 }

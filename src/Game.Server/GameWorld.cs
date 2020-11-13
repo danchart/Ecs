@@ -17,7 +17,7 @@ namespace Game.Server
 
         private bool _isStopped;
 
-        public readonly WorldType Type;
+        public readonly WorldType WorldType;
         public readonly WorldInstanceId Id;
 
         private readonly World _world;
@@ -36,12 +36,14 @@ namespace Game.Server
         private readonly float _fixedTick;
 
         public GameWorld(
+            WorldType worldType,
             WorldInstanceId id, 
             ILogger logger,
             IServerConfig config,
-            ServerChannelOutgoing channelManager)
+            ServerChannelOutgoing channelManager,
+            IGameWorldLoader gameWorldLoader)
         {
-            this._isLoaded = false;
+            this.WorldType = worldType;
             this._frameIndex = FrameIndex.New();
             this.Id = id;
             this._logger = logger ?? throw new ArgumentNullException(nameof(logger));
@@ -75,20 +77,12 @@ namespace Game.Server
                 this._systems);
 
             this._simulation.Create();
-        }
 
-        public void Load(IGameWorldLoader loader)
-        {
-            _isLoaded = loader.LoadWorld(this._world, this._physicsWorld, out Type);
+            gameWorldLoader.LoadWorld(this.WorldType, this._world, this._physicsWorld);
         }
 
         public void Run()
         {
-            if (!this._isLoaded)
-            {
-                throw new InvalidOperationException("Cannot run a world until it has been loaded.");
-            }
-
             int tickMillieconds = (int) (1000 * this._fixedTick);
 
             var autoEvent = new AutoResetEvent(initialState: false);

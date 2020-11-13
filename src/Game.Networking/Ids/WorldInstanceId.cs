@@ -11,6 +11,8 @@ namespace Game.Networking
             Id = id;
         }
 
+        public static WorldInstanceId New() => new WorldInstanceId(new Random().Next(0, int.MaxValue));
+
         public static implicit operator int(WorldInstanceId id) => id.Id;
 
         public static bool operator ==(in WorldInstanceId lhs, in WorldInstanceId rhs)

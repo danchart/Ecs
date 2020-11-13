@@ -11,6 +11,8 @@ namespace Game.Server
         private readonly ServerChannelIncoming _channelIncoming;
         private readonly PlayerConnectionManager _playerConnectionManager;
 
+        private readonly IGameWorldLoader _worldLoader;
+
         private readonly GameWorlds _gameWorlds;
 
         private readonly ILogger _logger;
@@ -55,6 +57,8 @@ namespace Game.Server
                     this._playerConnectionManager,
                     this._gameWorlds),
                 this._logger);
+
+            this._worldLoader = new GameWorldLoader();
         }
 
         public void Start()
@@ -74,13 +78,14 @@ namespace Game.Server
             this._gameWorlds.StopAll();
         }
 
-        public WorldInstanceId SpawnWorld(IGameWorldLoader loader)
+        public WorldInstanceId SpawnWorld(WorldType worldType)
         {
             var factory = new GameWorldFactory(
+                worldType,
                 this._logger,
                 this._serverConfig,
                 this._channelOutgoing,
-                loader);
+                this._worldLoader);
 
             return this._gameWorlds.Spawn(factory);
         }

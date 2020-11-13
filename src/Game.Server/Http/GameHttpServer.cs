@@ -32,7 +32,7 @@ namespace Game.Server
 
                             int i = 0;
 
-                            _gameServer.SpawnWorld
+                            var gameWorld = _gameServer.SpawnWorld
                         }
                     }
 

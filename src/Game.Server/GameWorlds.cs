@@ -32,8 +32,13 @@ namespace Game.Server
         {
             foreach (var pair in this._worldInstances)
             {
-                if (pair.Value.World.Id)
+                if (pair.Value.World.WorldType == type)
+                {
+                    return pair.Value.World;
+                }
             }
+
+            return null;
         }
 
         public GameWorld Get(WorldInstanceId id) => this._worldInstances[id].World;

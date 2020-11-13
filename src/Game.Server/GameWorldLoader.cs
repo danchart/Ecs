@@ -8,23 +8,19 @@ namespace Game.Server
 {
     public interface IGameWorldLoader
     {
-        bool LoadWorld(World world, IPhysicsWorld physicsWorld, out WorldType type);
+        bool LoadWorld(WorldType worldType, World world, IPhysicsWorld physicsWorld);
     }
 
     public class GameWorldLoader : IGameWorldLoader
     {
-        private readonly WorldType _worldType;
-
-        public GameWorldLoader(WorldType worldType)
+        public GameWorldLoader()
         {
-            this._worldType = worldType;
         }
 
-        public bool LoadWorld(World world, IPhysicsWorld physicsWorld, out WorldType type)
+        public bool LoadWorld(WorldType worldType, World world, IPhysicsWorld physicsWorld)
         {
             // TODO: Load world based on WorldType
 
-            type = this._worldType;
 
             const int
                 rows = 100,

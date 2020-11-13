@@ -11,6 +11,8 @@ namespace Common.Core
             Name = name;
         }
 
+        public static WorldType New() => new WorldType(Guid.NewGuid().ToString("N"));
+
         public static implicit operator string(WorldType name) => name.Name;
 
         public static bool operator ==(in WorldType lhs, in WorldType rhs)
