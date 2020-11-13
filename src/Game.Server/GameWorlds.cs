@@ -8,10 +8,9 @@ namespace Game.Server
 {
     public sealed class GameWorlds
     {
-        private Dictionary<WorldInstanceId, GameWorldThread> _worldInstances;
-
         private int _nextInstanceId;
 
+        private readonly Dictionary<WorldInstanceId, GameWorldThread> _worldInstances;
         private readonly ILogger _logger;
         private readonly IServerConfig _serverConfig;
 

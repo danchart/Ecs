@@ -30,6 +30,10 @@ namespace Game.Server
                         {
                             var content = HttpListenerRequestHelper.GetRequestContent<PostPlayerConnectRequestBody>(request);
 
+                            this._gameServer.
+
+                            this._gameServer.ConnectPlayer()
+
                             int i = 0;
 
                             var gameWorld = _gameServer.SpawnWorld

@@ -19,6 +19,8 @@ namespace Game.Server
         private readonly ILogger _logger;
         private readonly IServerConfig _serverConfig;
 
+        private readonly object _stateLock = new object();
+
         public GameServer(
             IServerConfig serverConfig,
             ILogger logger)
@@ -81,20 +83,25 @@ namespace Game.Server
 
         public WorldInstanceId SpawnWorld(WorldType worldType)
         {
-            var factory = new GameWorldFactory(
+            lock (_stateLock)
+            {
+                var factory = new GameWorldFactory(
                 worldType,
                 this._logger,
                 this._serverConfig,
                 this._channelOutgoing,
                 this._worldLoader);
 
-            return this._gameWorlds.Spawn(factory);
+                return this._gameWorlds.Spawn(factory);
+            }
         }
 
         public bool KillWorld(WorldInstanceId id)
         {
             return this._gameWorlds.Kill(id);
         }
+
+        public 
 
         public bool ConnectPlayer(
             WorldInstanceId instanceId,
@@ -104,13 +111,18 @@ namespace Game.Server
         {
             // TODO: Error handling.
 
-            var gameWorld = this._gameWorlds.Get(instanceId);
+            lock (_stateLock)
+            {
+                var gameWorld = this._gameWorlds.Get(instanceId);
 
-            this._playerConnectionManager.Add(instanceId, playerId, encryptionKey, ipEndPoint);
+                // Create player connection.
+                this._playerConnectionManager.Add(instanceId, playerId, encryptionKey, ipEndPoint);
 
-            var playerConnectionRef = this._playerConnectionManager.GetRef(playerId);
+                var playerConnectionRef = this._playerConnectionManager.GetRef(playerId);
 
-            gameWorld.Connect(playerConnectionRef);
+                // Connect player to the world.
+                gameWorld.Connect(playerConnectionRef);
+            }
 
             return true;
         }
@@ -121,11 +133,17 @@ namespace Game.Server
         {
             // TODO: Error handling.
 
-            var gameWorld = this._gameWorlds.Get(instanceId);
+            lock (_stateLock)
+            {
+                var gameWorld = this._gameWorlds.Get(instanceId);
 
-            var playerConnectionRef = this._playerConnectionManager.GetRef(playerId);
+                var playerConnectionRef = this._playerConnectionManager.GetRef(playerId);
 
-            gameWorld.Disconnect(playerConnectionRef);
+                gameWorld.Disconnect(playerConnectionRef);
+
+                // Remove player connection,  
+                this._playerConnectionManager.Remove(playerId);
+            }
 
             return true;
         }
