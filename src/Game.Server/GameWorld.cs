@@ -17,6 +17,7 @@ namespace Game.Server
 
         private bool _isStopped;
 
+        public readonly WorldType Type;
         public readonly WorldInstanceId Id;
 
         private readonly World _world;
@@ -78,7 +79,7 @@ namespace Game.Server
 
         public void Load(IGameWorldLoader loader)
         {
-            _isLoaded = loader.LoadWorld(this._world, this._physicsWorld);
+            _isLoaded = loader.LoadWorld(this._world, this._physicsWorld, out Type);
         }
 
         public void Run()

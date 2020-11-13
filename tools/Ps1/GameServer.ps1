@@ -1,8 +1,10 @@
 
 
+# Connect player
+
 $Body = @{
-     User = 'jdoe'
+     WorldType = 'eden'
      password = 'P@S$w0rd!'
- } |ConvertTo-Json
+ } | ConvertTo-Json
 
  Invoke-WebRequest -Uri "http://localhost:8110/player/123/connect" -Method Post -ContentType "application/json" -Body $Body

@@ -28,6 +28,14 @@ namespace Game.Server
             this._nextInstanceId = 1;
         }
 
+        public GameWorld Get(WorldType type)
+        {
+            foreach (var pair in this._worldInstances)
+            {
+                if (pair.Value.World.Id)
+            }
+        }
+
         public GameWorld Get(WorldInstanceId id) => this._worldInstances[id].World;
 
         public WorldInstanceId Spawn(IGameWorldFactory factory)
