@@ -1,5 +1,4 @@
-﻿using Ecs.Core;
-using Ecs.Core.Collections;
+﻿using Ecs.Core.Collections;
 using System;
 
 namespace Game.Simulation.Server

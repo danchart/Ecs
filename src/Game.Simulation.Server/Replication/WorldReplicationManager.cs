@@ -104,13 +104,13 @@ namespace Game.Simulation.Server
                     playerTransform.position);
 
                 return
-                    distSquared < _config.DistanceSquardRing0
-                    ? _config.Ring3Priority
-                    : distSquared < _config.DistanceSquardRing1
-                        ? _config.Ring1Priority
-                        : distSquared < _config.DistanceSquardRing2
-                            ? _config.Ring2Priority
-                            : _config.Ring3Priority;
+                    distSquared < this._config.DistanceSquardRing0
+                    ? this._config.Ring3Priority
+                    : distSquared < this._config.DistanceSquardRing1
+                        ? this._config.Ring1Priority
+                        : distSquared < this._config.DistanceSquardRing2
+                            ? this._config.Ring2Priority
+                            : this._config.Ring3Priority;
             }
         }
     }
