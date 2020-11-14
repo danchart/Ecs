@@ -8,6 +8,8 @@
         public PacketPriorityConfig PacketPriority = new PacketPriorityConfig();
         public NetworkingConfig Networking = new NetworkingConfig();
 
+        public float GridSize = 10.0f;
+
         public sealed class CapacityConfig
         {
             public int InitialReplicatedEntityCapacity = 1024;

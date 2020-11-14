@@ -10,11 +10,12 @@ namespace Game.Simulation.Server
     /// </summary>
     public class GatherReplicatedDataSystem : SystemBase
     {
-        public EntityQueryWithChangeFilter<ReplicatedComponent, TransformComponent> _transformQuery = null;
-        public EntityQueryWithChangeFilter<ReplicatedComponent, MovementComponent> _movementQuery = null;
-        public EntityQueryWithChangeFilter<ReplicatedComponent, PlayerComponent> _playerQuery = null;
+        public EntityQueryWithChangeFilter<ReplicatedComponent, TransformComponent> ChangedTransformQuery = null;
+        public EntityQueryWithChangeFilter<ReplicatedComponent, MovementComponent> ChangedMovementQuery = null;
+        public EntityQueryWithChangeFilter<ReplicatedComponent, PlayerComponent> ChangedPlayerQuery = null;
 
         public IReplicationDataBroker ReplicationDataBroker = null;
+        public IEntityGridMap EntityGridMap = null;
 
         public override void OnUpdate(float deltaTime)
         {
@@ -25,34 +26,39 @@ namespace Game.Simulation.Server
             var modifiedEntityComponents = ReplicationDataBroker.BeginDataCollection();
 
             // TransformComponent
-            foreach (int index in _transformQuery.GetIndices())
+
+            foreach (int index in ChangedTransformQuery.GetIndices())
             {
-                var entity = _transformQuery.GetEntity(index);
+                var entity = ChangedTransformQuery.GetEntity(index);
+                ref readonly var transform = ref ChangedTransformQuery.GetReadonly2(index);
 
                 ref var component = ref modifiedEntityComponents[entity].New();
-                _transformQuery
-                    .GetReadonly2(index)
-                    .ToPacket(ref component.Transform);
+                transform.ToPacket(ref component.Transform);
+
+                // Update the entity grid map.
+                this.EntityGridMap.AddOrUpdate(entity, transform.position);
             }
 
             // MovementComponent
-            foreach (int index in _movementQuery.GetIndices())
+
+            foreach (int index in ChangedMovementQuery.GetIndices())
             {
-                var entity = _movementQuery.GetEntity(index);
+                var entity = ChangedMovementQuery.GetEntity(index);
 
                 ref var component = ref modifiedEntityComponents[entity].New();
-                _movementQuery
+                ChangedMovementQuery
                     .GetReadonly2(index)
                     .ToPacket(ref component.Movement);
             }
 
             // PlayerComponent
-            foreach (int index in _playerQuery.GetIndices())
+
+            foreach (int index in ChangedPlayerQuery.GetIndices())
             {
-                var entity = _playerQuery.GetEntity(index);
+                var entity = ChangedPlayerQuery.GetEntity(index);
 
                 ref var component = ref modifiedEntityComponents[entity].New();
-                _playerQuery
+                ChangedPlayerQuery
                     .GetReadonly2(index)
                     .ToPacket(ref component.Player);
             }

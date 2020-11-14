@@ -66,8 +66,11 @@ namespace Game.Server
                 .Add(new GatherReplicatedDataSystem())
                 .Inject(
                     new ReplicationDataBroker(
-                        config.Replication.Capacity, 
-                        this._replicationManager));
+                        config.Replication.Capacity,
+                        this._replicationManager))
+                .Inject(
+                    new EntityGridMap(
+                        config.Replication.GridSize));
 
             this._simulation = new ServerSimulation<InputComponent>(
                 config.Simulation,
