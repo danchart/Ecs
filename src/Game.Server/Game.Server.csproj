@@ -69,8 +69,13 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Commands\ConnectPlayerCommand.cs" />
+    <Compile Include="Commands\GetWorldTypeCommand.cs" />
+    <Compile Include="Commands\IServerCommand.cs" />
+    <Compile Include="Commands\SpawnWorldCommand.cs" />
     <Compile Include="Controllers\ControlPacketController.cs" />
     <Compile Include="Controllers\SimulationPacketController.cs" />
+    <Compile Include="GameServerCommander.cs" />
     <Compile Include="Http\GameHttpServer.cs" />
     <Compile Include="GameSever.cs" />
     <Compile Include="GameWorld.cs" />

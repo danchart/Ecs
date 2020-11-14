@@ -2,6 +2,7 @@
 using Game.Networking;
 using System;
 using System.Collections.Generic;
+using System.Collections.ObjectModel;
 using System.Threading;
 
 namespace Game.Server
@@ -14,6 +15,8 @@ namespace Game.Server
         private readonly ILogger _logger;
         private readonly IServerConfig _serverConfig;
 
+        private readonly ReadOnlyDictionary<WorldInstanceId, GameWorldThread> _readOnlyInstances;
+
         public GameWorlds(
             ILogger logger, 
             IServerConfig serverConfig, 
@@ -25,7 +28,11 @@ namespace Game.Server
 
             this._worldInstances = new Dictionary<WorldInstanceId, GameWorldThread>(capacity);
             this._nextInstanceId = 1;
+
+            this._readOnlyInstances = new ReadOnlyDictionary<WorldInstanceId, GameWorldThread>(this._worldInstances);
         }
+
+        public ReadOnlyDictionary<WorldInstanceId, GameWorldThread> Instances => this._readOnlyInstances;
 
         public GameWorld Get(WorldType type)
         {
@@ -94,6 +101,11 @@ namespace Game.Server
             {
                 pair.Value.World.Stop();
             }
+        }
+
+        public Dictionary<WorldInstanceId, GameWorldThread>.Enumerator GetEnumerator()
+        {
+            return this._worldInstances.GetEnumerator();
         }
 
         public struct GameWorldThread

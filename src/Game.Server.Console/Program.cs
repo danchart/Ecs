@@ -1,7 +1,5 @@
 ﻿using Common.Core;
 using Networking.Server;
-using System;
-using System.Net;
 
 namespace Game.Server.Console
 {
@@ -19,8 +17,14 @@ namespace Game.Server.Console
 
             httpServer.Start(new string[] { "http://localhost:8110/" });
 
-            gameServer.SpawnWorld(new WorldType("eden"));
-            //gameServer.SpawnWorld();
+            //gameServer.SpawnWorld(new WorldType("eden"));
+
+            var id = gameServer
+                .Commander
+                .RunCommandAsync(
+                    new SpawnWorldCommand(
+                            new WorldType("eden")))
+                .Result;
 
             _logger.Info("Running...");
 

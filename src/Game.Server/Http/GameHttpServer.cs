@@ -2,6 +2,7 @@
 using Networking.Server;
 using System;
 using System.Net;
+using System.Text;
 
 namespace Game.Server
 {
@@ -9,10 +10,14 @@ namespace Game.Server
     {
         private readonly GameServer _gameServer;
 
+        private readonly byte[] _encryptionKey;
+
         public GameHttpServer(ILogger logger, GameServer gameServer)
             : base(logger)
         {
             this._gameServer = gameServer ?? throw new ArgumentNullException(nameof(gameServer));
+
+            this._encryptionKey = Encoding.UTF8.GetBytes("abc");
         }
 
         protected override void HandleRequest(HttpListenerRequest request, HttpListenerResponse response)
@@ -30,13 +35,9 @@ namespace Game.Server
                         {
                             var content = HttpListenerRequestHelper.GetRequestContent<PostPlayerConnectRequestBody>(request);
 
-                            this._gameServer.
+                            this._gameServer.Commander.RunCommandAsync(
+                                new ConnectPlayerCommand(, playerId, this._encryptionKey, request.RemoteEndPoint));
 
-                            this._gameServer.ConnectPlayer()
-
-                            int i = 0;
-
-                            var gameWorld = _gameServer.SpawnWorld
                         }
                     }
 
