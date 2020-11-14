@@ -70,7 +70,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Commands\ConnectPlayerCommand.cs" />
-    <Compile Include="Commands\GetWorldTypeCommand.cs" />
+    <Compile Include="Commands\GetWorldByTypeCommand.cs" />
     <Compile Include="Commands\IServerCommand.cs" />
     <Compile Include="Commands\SpawnWorldCommand.cs" />
     <Compile Include="Controllers\ControlPacketController.cs" />

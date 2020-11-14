@@ -1,6 +1,8 @@
 ﻿using Common.Core;
 using Game.Networking;
 using System;
+using System.Collections.Generic;
+using System.Collections.ObjectModel;
 using System.Net;
 
 namespace Game.Server
@@ -66,6 +68,11 @@ namespace Game.Server
             this._worldLoader = new GameWorldLoader();
         }
 
+        public IEnumerable<GameWorld> GetWorlds()
+        {
+            return this._gameWorlds.GetWorlds();
+        }
+
         public void Start()
         {
             this._channelIncoming.Start();
@@ -83,7 +90,7 @@ namespace Game.Server
             this._gameWorlds.StopAll();
         }
 
-        public WorldInstanceId SpawnWorld(WorldType worldType)
+        public GameWorld SpawnWorld(WorldType worldType)
         {
             var factory = new GameWorldFactory(
             worldType,

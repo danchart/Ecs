@@ -14,13 +14,16 @@ namespace Networking.Core
         {
             this._state = new State
             {
-                Socket = new Socket(AddressFamily.InterNetwork, SocketType.Dgram, ProtocolType.Udp),
+                //Socket = new Socket(AddressFamily.InterNetwork, SocketType.Dgram, ProtocolType.Udp),
+                Socket = new Socket(AddressFamily.InterNetworkV6, SocketType.Dgram, ProtocolType.Udp),
                 ReceiveBuffer = receiveBuffer ?? throw new ArgumentNullException(nameof(receiveBuffer)),
                 EndPointFrom = new IPEndPoint(IPAddress.Any, 0),
                 Logger = logger ?? throw new ArgumentNullException(nameof(logger)),
                 ReceiveAsync = ReceiveAsync,
                 SendAsync = SendAsync,
             };
+
+            this._state.Socket.SetSocketOption(SocketOptionLevel.IPv6, SocketOptionName.IPv6Only, false);
         }
 
         protected class State

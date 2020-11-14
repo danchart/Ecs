@@ -44,12 +44,13 @@ namespace Game.Simulation.Server
 
             var index = this._count++;
 
-            ref var player = ref this._players[index];
-
-            player.ConnectionRef = playerConnectionRef;
-            player.Entity = entity;
-            player.PlayerReplicationDataPoolIndex = this._replicationDataPool.New();
-            player.PlayerInputsPoolIndex = this._playerInputsPool.New();
+            this._players[index] = new WorldPlayer(this._replicationDataPool, _playerInputsPool)
+            {
+                ConnectionRef = playerConnectionRef,
+                Entity = entity,
+                PlayerReplicationDataPoolIndex = this._replicationDataPool.New(),
+                PlayerInputsPoolIndex = this._playerInputsPool.New(),
+            };
 
             var playerId = playerConnectionRef.Unref().PlayerId;
 

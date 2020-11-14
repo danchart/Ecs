@@ -35,12 +35,25 @@ namespace Game.Server
                         {
                             var content = HttpListenerRequestHelper.GetRequestContent<PostPlayerConnectRequestBody>(request);
 
-                            this._gameServer.Commander.RunCommandAsync(
-                                new ConnectPlayerCommand(, playerId, this._encryptionKey, request.RemoteEndPoint));
+                            var worldType = new WorldType(content.WorldType);
 
+                            var gameWorld = this._gameServer.Commander
+                                .RunCommandAsync(
+                                    new GetWorldByTypeCommand(
+                                        worldType, 
+                                        createIfNeeded: true))
+                                .Result;
+
+                            var connected = this._gameServer.Commander
+                                .RunCommandAsync(
+                                    new ConnectPlayerCommand(
+                                        gameWorld.InstanceId, 
+                                        playerId, 
+                                        this._encryptionKey, 
+                                        request.RemoteEndPoint))
+                                .Result;
                         }
                     }
-
                 }
             }
 

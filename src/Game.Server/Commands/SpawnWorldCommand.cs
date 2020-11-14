@@ -1,10 +1,9 @@
 ﻿using Common.Core;
-using Game.Networking;
 using System.Threading.Tasks;
 
 namespace Game.Server
 {
-    public sealed class SpawnWorldCommand : IServerCommand<WorldInstanceId>
+    public sealed class SpawnWorldCommand : IServerCommand<GameWorld>
     {
         WorldType _worldType;
 
@@ -18,7 +17,7 @@ namespace Game.Server
             return true;
         }
 
-        public async Task<WorldInstanceId> ExecuteAsync(GameServer gameServer)
+        public async Task<GameWorld> ExecuteAsync(GameServer gameServer)
         {
             return gameServer.SpawnWorld(_worldType);
         }

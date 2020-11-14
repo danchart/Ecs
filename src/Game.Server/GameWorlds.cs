@@ -11,11 +11,10 @@ namespace Game.Server
     {
         private int _nextInstanceId;
 
-        private readonly Dictionary<WorldInstanceId, GameWorldThread> _worldInstances;
+        private readonly List<GameWorldThread> _worldInstances;
+
         private readonly ILogger _logger;
         private readonly IServerConfig _serverConfig;
-
-        private readonly ReadOnlyDictionary<WorldInstanceId, GameWorldThread> _readOnlyInstances;
 
         public GameWorlds(
             ILogger logger, 
@@ -26,55 +25,70 @@ namespace Game.Server
             this._logger = logger ?? throw new ArgumentNullException(nameof(logger));
             this._serverConfig = serverConfig ?? throw new ArgumentNullException(nameof(serverConfig));
 
-            this._worldInstances = new Dictionary<WorldInstanceId, GameWorldThread>(capacity);
+            this._worldInstances = new List<GameWorldThread>(capacity);
             this._nextInstanceId = 1;
-
-            this._readOnlyInstances = new ReadOnlyDictionary<WorldInstanceId, GameWorldThread>(this._worldInstances);
         }
 
-        public ReadOnlyDictionary<WorldInstanceId, GameWorldThread> Instances => this._readOnlyInstances;
+        public IEnumerable<GameWorld> GetWorlds()
+        {
+            foreach (var instance in this._worldInstances)
+            {
+                yield return instance.World;
+            }
+        }
 
         public GameWorld Get(WorldType type)
         {
-            foreach (var pair in this._worldInstances)
+            foreach (var instance in this._worldInstances)
             {
-                if (pair.Value.World.WorldType == type)
+                if (instance.World.WorldType == type)
                 {
-                    return pair.Value.World;
+                    return instance.World;
                 }
             }
 
             return null;
         }
 
-        public GameWorld Get(WorldInstanceId id) => this._worldInstances[id].World;
+        public GameWorld Get(WorldInstanceId id)
+        {
+            foreach (var instance in this._worldInstances)
+            {
+                if (instance.World.InstanceId == id)
+                {
+                    return instance.World;
+                }
+            }
 
-        public WorldInstanceId Spawn(IGameWorldFactory factory)
+            return null;
+        }
+
+        public GameWorld Spawn(IGameWorldFactory factory)
         {
             var worldInstanceId = new WorldInstanceId(this._nextInstanceId++);
             var world = factory.CreateInstance(worldInstanceId);
             var thread = new Thread(world.Run);
 
-            this._worldInstances[worldInstanceId] =
+            this._worldInstances.Add(
                 new GameWorldThread
                 {
                     World = world,
                     Thread = thread,
-                };
+                });
 
             thread.Start();
 
-            this._logger.Info($"Spawned world instance: id={world.Id}, threadId={thread.ManagedThreadId}");
+            this._logger.Info($"Spawned world instance: id={world.InstanceId}, threadId={thread.ManagedThreadId}");
 
-            return world.Id;
+            return world;
         }
 
         public bool Kill(WorldInstanceId id)
         {
-            foreach (var pair in this._worldInstances)
+            foreach (var instance in this._worldInstances)
             {
-                pair.Value.World.Stop();
-                this._worldInstances.Remove(id);
+                instance.World.Stop();
+                this._worldInstances.Remove(instance);
 
                 return true;
             }
@@ -84,9 +98,9 @@ namespace Game.Server
 
         public bool IsRunning()
         {
-            foreach (var pair in this._worldInstances)
+            foreach (var instance in this._worldInstances)
             {
-                if (pair.Value.Thread.ThreadState != ThreadState.Stopped)
+                if (instance.Thread.ThreadState != ThreadState.Stopped)
                 {
                     return true;
                 }
@@ -97,13 +111,20 @@ namespace Game.Server
 
         public void StopAll()
         {
-            foreach (var pair in this._worldInstances)
+            foreach (var instance in this._worldInstances)
             {
-                pair.Value.World.Stop();
+                instance.World.Stop();
             }
         }
 
-        public Dictionary<WorldInstanceId, GameWorldThread>.Enumerator GetEnumerator()
+        public void KillAll()
+        {
+            StopAll();
+
+            this._worldInstances.Clear();
+        }
+
+        public List<GameWorldThread>.Enumerator GetEnumerator()
         {
             return this._worldInstances.GetEnumerator();
         }

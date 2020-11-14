@@ -11,13 +11,12 @@ namespace Game.Server
 {
     public sealed class GameWorld
     {
-        private bool _isLoaded;
         private FrameIndex _frameIndex;
 
         private bool _isStopped;
 
         public readonly WorldType WorldType;
-        public readonly WorldInstanceId Id;
+        public readonly WorldInstanceId InstanceId;
 
         private readonly World _world;
         private readonly Systems _systems;
@@ -44,7 +43,7 @@ namespace Game.Server
         {
             this.WorldType = worldType;
             this._frameIndex = FrameIndex.New();
-            this.Id = id;
+            this.InstanceId = id;
             this._logger = logger ?? throw new ArgumentNullException(nameof(logger));
             this._isStopped = false;
             this._world = new World(config.Ecs);
@@ -94,12 +93,12 @@ namespace Game.Server
                 dueTime: 0,
                 period: tickMillieconds))
             {
-                _logger.Info($"World started: Id={this.Id:x8}, period={tickMillieconds}ms");
+                _logger.Info($"World started: Id={this.InstanceId:x8}, period={tickMillieconds}ms");
 
                 autoEvent.WaitOne();
             }
 
-            _logger.Info($"World stopped: Id={this.Id:x8}");
+            _logger.Info($"World stopped: Id={this.InstanceId:x8}");
         }
 
         private void Update(object stateInfo)
@@ -132,12 +131,12 @@ namespace Game.Server
 
             if (this._players.Contains(connection.PlayerId))
             {
-                this._logger.Warning($"Tried to connect player already in world: worldId={this.Id}, playerId={connection.PlayerId}");
+                this._logger.Warning($"Tried to connect player already in world: worldId={this.InstanceId}, playerId={connection.PlayerId}");
 
                 return;
             }
 
-            connection.WorldId = this.Id;
+            connection.WorldId = this.InstanceId;
             connection.LastAcknowledgedSimulationFrame = FrameIndex.Nil;
             connection.LastInputFrame = FrameIndex.Nil;
 
@@ -160,7 +159,7 @@ namespace Game.Server
 
             if (!this._players.Contains(connection.PlayerId))
             {
-                this._logger.Warning($"Tried to disconnect player not in world: worldId={this.Id}, playerId={connection.PlayerId}");
+                this._logger.Warning($"Tried to disconnect player not in world: worldId={this.InstanceId}, playerId={connection.PlayerId}");
 
                 return;
             }

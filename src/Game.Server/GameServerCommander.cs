@@ -1,5 +1,4 @@
-﻿using Game.Server.Commands;
-using System;
+﻿using System;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -7,13 +6,13 @@ namespace Game.Server
 {
     public sealed class GameServerCommander
     {
-        readonly GameServer _server;
+        readonly GameServer _gameServer;
 
         readonly SemaphoreSlim _semaphore = new SemaphoreSlim(initialCount: 1, maxCount: 1);
 
         public GameServerCommander(GameServer server)
         {
-            _server = server ?? throw new ArgumentNullException(nameof(server));
+            _gameServer = server ?? throw new ArgumentNullException(nameof(server));
         }
 
         public async Task<T> RunCommandAsync<T>(IServerCommand<T> command)
@@ -22,9 +21,9 @@ namespace Game.Server
 
             try
             {
-                if (command.CanExecute())
+                if (command.CanExecute(_gameServer))
                 {
-                    return await command.ExecuteAsync(_server);
+                    return await command.ExecuteAsync(_gameServer);
                 }
             }
             finally
