@@ -11,8 +11,6 @@ namespace Game.Server
 {
     public sealed class GameWorld
     {
-        private FrameIndex _frameIndex;
-
         private bool _isStopped;
 
         public readonly WorldType WorldType;
@@ -42,7 +40,6 @@ namespace Game.Server
             IGameWorldLoader gameWorldLoader)
         {
             this.WorldType = worldType;
-            this._frameIndex = FrameIndex.New();
             this.InstanceId = id;
             this._logger = logger ?? throw new ArgumentNullException(nameof(logger));
             this._isStopped = false;
@@ -86,40 +83,55 @@ namespace Game.Server
         {
             int tickMillieconds = (int) (1000 * this._fixedTick);
 
-            var autoEvent = new AutoResetEvent(initialState: false);
+            var state = new FixedUpdateState
+            {
+                WaitHandle = new AutoResetEvent(initialState: false),
+
+                FrameIndex = FrameIndex.New(),
+            };
 
             // TODO: Timer is limited to system clock resolution. The max (worst) seems to be 15.625 ms which 
             // is maybe sufficient (64 ticks/s). See ClockRes SysInternal tool.
+            //
+            // In the future look into using Windows multi-media (winmm.dll) timers:
+            //  https://www.codeproject.com/Articles/17474/Timer-surprises-and-how-to-avoid-them
             using (var stateTimer = new Timer(
                 callback: Update,
-                state: autoEvent,
+                state: state,
                 dueTime: 0,
                 period: tickMillieconds))
             {
                 _logger.Info($"World started: Id={this.InstanceId:x8}, period={tickMillieconds}ms");
 
-                autoEvent.WaitOne();
+                state.WaitHandle.WaitOne();
             }
 
             _logger.Info($"World stopped: Id={this.InstanceId:x8}");
         }
 
-        private void Update(object stateInfo)
+        private void Update(object obj)
         {
-            AutoResetEvent autoEvent = (AutoResetEvent)stateInfo;
+            // This callback can be invoked concurrently from the timer, so we must lock. Because we are simply 
+            // running the simulation on the next frame & tick we can simply lock and let the next callback handle 
+            // the next simulation tick.
 
-            // Run simulation tick
-            this._simulation.FixedUpdate(this._fixedTick);
-
-            // Update clients
-            this._channelManager.ReplicateToClients(this._frameIndex, this._players);
-
-            // Increment frame index
-            this._frameIndex = this._frameIndex.GetNext();
-
-            if (this._isStopped)
+            lock (obj)
             {
-                autoEvent.Set();
+                var state = (FixedUpdateState)obj;
+
+                // Run simulation tick
+                this._simulation.FixedUpdate(this._fixedTick);
+
+                // Update clients
+                this._channelManager.ReplicateToClients(state.FrameIndex, this._players);
+
+                // Increment frame index
+                state.FrameIndex = state.FrameIndex.GetNext();
+
+                if (this._isStopped)
+                {
+                    state.WaitHandle.Set();
+                }
             }
         }
 
@@ -170,6 +182,13 @@ namespace Game.Server
             var entity = this._players[connection.PlayerId].Entity;
             this._players.Remove(connection.PlayerId);
             entity.Free();
+        }
+
+        private class FixedUpdateState
+        {
+            public AutoResetEvent WaitHandle;
+
+            public FrameIndex FrameIndex;
         }
     }
 }

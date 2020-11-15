@@ -9,11 +9,11 @@ namespace Ecs.Core.Collections
     {
         private EntityItem[] _entityItems;
 
-        private Dictionary<Entity, int> _entityIndexToDataIndex;
-
         private int _count;
 
         internal uint _version;
+
+        private readonly Dictionary<int, int> _entityIndexToDataIndex;
 
         private readonly int ListCapacity;
 
@@ -21,7 +21,7 @@ namespace Ecs.Core.Collections
         public EntityMapList(int entityCapacity, int listCapacity)
         {
             this._entityItems = new EntityItem[entityCapacity];
-            this._entityIndexToDataIndex = new Dictionary<Entity, int>(entityCapacity);
+            this._entityIndexToDataIndex = new Dictionary<int, int>(entityCapacity);
 
             this._count = 0;
             this._version = 0;
@@ -29,7 +29,7 @@ namespace Ecs.Core.Collections
             this.ListCapacity = listCapacity;
         }
 
-        public bool Contains(Entity entity) => this._entityIndexToDataIndex.ContainsKey(entity);
+        public bool Contains(Entity entity) => this._entityIndexToDataIndex.ContainsKey(entity.Id);
 
         public int Count
         {
@@ -49,7 +49,7 @@ namespace Ecs.Core.Collections
         {
             get
             {
-                if (!this._entityIndexToDataIndex.ContainsKey(entity))
+                if (!this._entityIndexToDataIndex.ContainsKey(entity.Id))
                 {
                     // Allocate this index
 
@@ -58,17 +58,17 @@ namespace Ecs.Core.Collections
                         Array.Resize(ref this._entityItems, 2 * this._count);
                     }
 
-                    this._entityIndexToDataIndex[entity] = this._count;
-                    this._entityItems[_count] = new EntityItem(this, ListCapacity)
+                    this._entityIndexToDataIndex[entity.Id] = this._count;
+                    this._entityItems[this._count] = new EntityItem(this, ListCapacity)
                     {
                         Entity = entity,
                     };
 
-                    return ref _entityItems[_count++].Items;
+                    return ref this._entityItems[this._count++].Items;
                 }
                 else
                 {
-                    var entityIndex = this._entityIndexToDataIndex[entity];
+                    var entityIndex = this._entityIndexToDataIndex[entity.Id];
 
                     if (this._entityItems[entityIndex].Entity != entity)
                     {
@@ -101,10 +101,10 @@ namespace Ecs.Core.Collections
                 this._current = -1;
             }
 
-            public EntityItem Current 
+            public ref EntityItem Current 
             {
                 [MethodImpl(MethodImplOptions.AggressiveInlining)]
-                get => this._mapList._entityItems [_current];
+                get => ref this._mapList._entityItems[_current];
             }
 
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
