@@ -5,10 +5,20 @@ using System.Diagnostics;
 
 namespace Ecs.Core
 {
+    public interface IEntityQueryListener
+    {
+        void OnEntityAdded(in Entity entity);
+        void OnEntityRemoved(in Entity entity);
+    }
+
     public abstract class EntityQueryBase
     {
         // Input System State
         internal World World;
+
+        // Listeners
+        internal IEntityQueryListener[] _listeners = new IEntityQueryListener[4];
+        internal int _listenerCount = 0;
 
         // Query 
         internal int[] IncludedComponentTypeIndices;
@@ -32,6 +42,59 @@ namespace Ecs.Core
         internal protected EntityQueryBase(World world)
         {
             World = world;
+        }
+
+        public void AddListener(IEntityQueryListener listener)
+        {
+            for (int i = 0; i < this._listenerCount; i++)
+            {
+                if (this._listeners[i] == listener)
+                {
+                    throw new Exception("Listener already added.");
+                }
+            }
+
+            if (this._listenerCount == this._listeners.Length)
+            {
+                Array.Resize(ref this._listeners, 2 * this._listenerCount);
+            }
+
+            this._listeners[this._listenerCount++] = listener;
+        }
+
+        public bool RemoveListener(IEntityQueryListener listener)
+        {
+            for (int i = 0; i < this._listenerCount; i++)
+            {
+                if (this._listeners[i] == listener)
+                {
+                    this._listenerCount--;
+
+                    // Can't swap with last because listeners are ordered.
+                    Array.Copy(this._listeners, i + 1, this._listeners, i, this._listenerCount - i);
+
+                    return true;
+                }
+            }
+            
+            // Not found.
+            return false;
+        }
+
+        protected void InvokeAddListeners(in Entity entity)
+        {
+            for (int i = 0; i < this._listenerCount; i++)
+            {
+                this._listeners[i].OnEntityAdded(entity);
+            }
+        }
+
+        protected void InvokeRemoveListeners(in Entity entity)
+        {
+            for (int i = 0; i < this._listenerCount; i++)
+            {
+                this._listeners[i].OnEntityRemoved(entity);
+            }
         }
 
         public Entity GetEntity(int index)
@@ -347,6 +410,8 @@ namespace Ecs.Core
             AddComponentsToResult(entity, this._entityCount);
 
             this._entityCount++;
+
+            InvokeAddListeners(entity);
         }
 
         private void RemoveEntityFromQueryResults(in Entity entity)
@@ -369,6 +434,8 @@ namespace Ecs.Core
             this._entityIndexToQueryIndex.Remove(entity.Id);
 
             this._entityCount--;
+
+            InvokeRemoveListeners(entity);
         }
 
         private void ProcessPendingUpdates()

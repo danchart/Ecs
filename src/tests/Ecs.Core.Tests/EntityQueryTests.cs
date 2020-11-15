@@ -17,31 +17,44 @@ namespace Ecs.Core.Tests
                 systems.World
                 .GetEntityQuery<EntityQuery<SampleStructs.Foo>>();
 
+            int listenerCount = 0;
+
+            querySingleInclude.AddListener(new TestListener
+            {
+                OnAdd = (entity) => listenerCount++,
+                OnRemove = (entity) => listenerCount--
+            });
+
             // Create test entities
             var entity1 = systems.World.NewEntity();
             var entity2 = systems.World.NewEntity();
 
             Assert.Equal(0, querySingleInclude.GetEntityCount());
+            Assert.Equal(querySingleInclude.GetEntityCount(), listenerCount);
 
             // Add inclusion #1
             entity1.GetComponent<SampleStructs.Foo>();
 
             Assert.Equal(1, querySingleInclude.GetEntityCount());
+            Assert.Equal(querySingleInclude.GetEntityCount(), listenerCount);
 
             // Add inclusion #2
             entity2.GetComponent<SampleStructs.Foo>();
 
             Assert.Equal(2, querySingleInclude.GetEntityCount());
+            Assert.Equal(querySingleInclude.GetEntityCount(), listenerCount);
 
             // Remove inclusion #1 
             entity1.RemoveComponent<SampleStructs.Foo>();
 
             Assert.Equal(1, querySingleInclude.GetEntityCount());
+            Assert.Equal(querySingleInclude.GetEntityCount(), listenerCount);
 
             // Remove inclusion #2 - should place entity in query results.
             entity2.RemoveComponent<SampleStructs.Foo>();
 
             Assert.Equal(0, querySingleInclude.GetEntityCount());
+            Assert.Equal(querySingleInclude.GetEntityCount(), listenerCount);
         }
 
         [Fact]
@@ -220,6 +233,22 @@ namespace Ecs.Core.Tests
 
                     LastTotalEntityCount++;
                 }
+            }
+        }
+
+        internal class TestListener : IEntityQueryListener
+        {
+            public Action<Entity> OnAdd;
+            public Action<Entity> OnRemove;
+
+            public void OnEntityAdded(in Entity entity)
+            {
+                OnAdd?.Invoke(entity);
+            }
+
+            public void OnEntityRemoved(in Entity entity)
+            {
+                OnRemove?.Invoke(entity);
             }
         }
     }

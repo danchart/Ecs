@@ -29,7 +29,7 @@ namespace Ecs.Core.Collections
             this.ListCapacity = listCapacity;
         }
 
-        public bool Contains(Entity entity) => this._entityIndexToDataIndex.ContainsKey(entity.Id);
+        public bool Contains(in Entity entity) => this._entityIndexToDataIndex.ContainsKey(entity.Id);
 
         public int Count
         {
@@ -45,7 +45,7 @@ namespace Ecs.Core.Collections
             this._version++;
         }
 
-        public ref ItemList this[Entity entity]
+        public ref ItemList this[in Entity entity]
         {
             get
             {
