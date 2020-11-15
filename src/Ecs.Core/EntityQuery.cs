@@ -746,7 +746,7 @@ namespace Ecs.Core
                 this._componentIds2);
         }
 
-        public class Exclude<ExcType> : EntityQuery<IncType1> 
+        public class Exclude<ExcType> : EntityQuery<IncType1, IncType2> 
             where ExcType : unmanaged
         {
             internal Exclude(World world) : base(world)
