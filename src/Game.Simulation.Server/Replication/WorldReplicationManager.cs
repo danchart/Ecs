@@ -16,26 +16,38 @@ namespace Game.Simulation.Server
         private readonly ReplicationPriorityEntityComponents _packetPriorityComponents;
         private readonly WorldPlayers _players;
 
+        private readonly IEntityGridMap _entityGridMap;
         private readonly PacketPriorityCalculator _packetPriorityCalculator;
+
+        private Entity[] _entityBuffer;
 
         public WorldReplicationManager(
             ReplicationConfig config,
-            WorldPlayers players)
+            WorldPlayers players,
+            IEntityGridMap entityGridMap)
         {
             this._players = players ?? throw new ArgumentNullException(nameof(players));
+            this._entityGridMap = entityGridMap ?? throw new ArgumentNullException(nameof(entityGridMap));
             this._packetPriorityComponents = new ReplicationPriorityEntityComponents(config.Capacity.InitialReplicatedEntityCapacity);
             this._packetPriorityCalculator = new PacketPriorityCalculator(config.PacketPriority);
+            this._entityBuffer = new Entity[256];
         }
 
         public void ApplyEntityChanges(EntityMapList<ReplicatedComponentData> modifiedEntityComponents)
         {
             this._packetPriorityComponents.Clear();
 
+            var playerReplicationECs = new EntityMapList<ReplicatedComponentData>(entityCapacity: 512, listCapacity: 16);
+
             // Apply changes to player entity change lists
             foreach (ref var player in this._players)
             {
+                this._entityGridMap.GetEntitiesOfInterest(player.Entity, ref this._entityBuffer, out int entityCount);
+
                 AddPacketPrioritizedEntityChangesToPlayer(
                     player.Entity,
+                    this._entityBuffer,
+                    entityCount,
                     modifiedEntityComponents,
                     this._packetPriorityComponents,
                     player.ReplicationData);
@@ -44,18 +56,21 @@ namespace Game.Simulation.Server
 
         private void AddPacketPrioritizedEntityChangesToPlayer(
             in Entity playerEntity,
+            Entity[] entitiesOfInterest,
+            int entityCount,
             EntityMapList<ReplicatedComponentData> replicatedEntities,
             ReplicationPriorityEntityComponents packetPriorityComponents,
             PlayerReplicationData playerReplicationData)
         {
             ref readonly var playerTransform = ref playerEntity.GetReadOnlyComponent<TransformComponent>();
 
-            foreach (var replicatedEntityComponents in replicatedEntities)
+            for (int i = 0; i < entityCount; i++)
             {
-                ref readonly var components = ref packetPriorityComponents.GetComponents(replicatedEntityComponents.Entity);
+                var entity = entitiesOfInterest[i];
 
-                ref readonly var transform = ref components.Transform.UnrefReadOnly();
-                ref readonly var replicated = ref components.Replicated.UnrefReadOnly();
+                ref readonly var prioritizationComponents = ref packetPriorityComponents.GetComponents(entity);
+                ref readonly var transform = ref prioritizationComponents.Transform.UnrefReadOnly();
+                ref readonly var replicated = ref prioritizationComponents.Replicated.UnrefReadOnly();
 
                 float entityPacketPriority = this._packetPriorityCalculator.GetBasePriority(replicated.BasePriority);
                 entityPacketPriority *= this._packetPriorityCalculator.GetFactorFromDistance(playerTransform, transform);
@@ -64,10 +79,10 @@ namespace Game.Simulation.Server
                 float entityPlayerRelevance = 1.0f;
 
                 playerReplicationData.AddEntityChanges(
-                    replicatedEntityComponents.Entity,
-                    replicatedEntityComponents.Items,
+                    entity,
+                    modifiedComponents: replicatedEntities[entity],
                     priority: entityPacketPriority,
-                    relevance: entityPlayerRelevance); 
+                    relevance: entityPlayerRelevance);
             }
         }
 

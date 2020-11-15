@@ -35,6 +35,7 @@
     <Compile Include="Replication\ReplicationDataBroker.cs" />
     <Compile Include="Replication\WorldReplicationManager.cs" />
     <Compile Include="ServerSimulation.cs" />
+    <Compile Include="Systems\JiggleSystem.cs" />
     <Compile Include="Systems\GatherReplicatedDataSystem.cs" />
     <Compile Include="WorldConfig.cs" />
     <Compile Include="WorldPlayer.cs" />

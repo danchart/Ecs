@@ -45,7 +45,7 @@ namespace Ecs.Core.Collections
             this._version++;
         }
 
-        public ref ItemList this[in Entity entity]
+        public ItemList this[in Entity entity]
         {
             get
             {
@@ -64,7 +64,7 @@ namespace Ecs.Core.Collections
                         Entity = entity,
                     };
 
-                    return ref this._entityItems[this._count++].Items;
+                    return this._entityItems[this._count++].Items;
                 }
                 else
                 {
@@ -78,7 +78,7 @@ namespace Ecs.Core.Collections
                         this._entityItems[entityIndex].Items.Clear();
                     }
 
-                    return ref this._entityItems[entityIndex].Items;
+                    return this._entityItems[entityIndex].Items;
                 }
             }
         }

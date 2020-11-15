@@ -22,6 +22,8 @@ namespace Game.Server
 
         private readonly IPhysicsWorld _physicsWorld;
 
+        private readonly IEntityGridMap _entityGridMap;
+
         private readonly WorldPlayers _players;
 
         private readonly IWorldReplicationManager _replicationManager;
@@ -49,25 +51,22 @@ namespace Game.Server
 
             this._channelManager = channelManager ?? throw new ArgumentNullException(nameof(channelManager));
 
+            this._entityGridMap = new EntityGridMap(config.Replication.GridSize);
+
             this._players = new WorldPlayers(
                 config.Replication,
                 config.World,
                 config.PlayerConnection.Capacity.InitialConnectionsCapacity);
 
-            this._replicationManager = new WorldReplicationManager(config.Replication, this._players);
+            this._replicationManager = new WorldReplicationManager(config.Replication, this._players, this._entityGridMap);
 
             this._physicsWorld = new VolatilePhysicsWorld();
 
             this._systems =
                 new Systems(this._world)
                 .Add(new GatherReplicatedDataSystem())
-                .Inject(
-                    new ReplicationDataBroker(
-                        config.Replication.Capacity,
-                        this._replicationManager))
-                .Inject(
-                    new EntityGridMap(
-                        config.Replication.GridSize));
+                .Inject(new ReplicationDataBroker(config.Replication.Capacity, this._replicationManager))
+                .Inject(this._entityGridMap);
 
             this._simulation = new ServerSimulation<InputComponent>(
                 config.Simulation,
