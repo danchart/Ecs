@@ -1251,8 +1251,6 @@ namespace Ecs.Core
         private ComponentPool<IncType1> _componentPool1;
         private ComponentPool<IncType2> _componentPool2;
 
-        internal protected int[] _componentIds2 = null;
-
         internal EntityQueryWithChangeFilter(World world, int systemsIndex)
             : base(world, systemsIndex)
         {
@@ -1450,18 +1448,25 @@ namespace Ecs.Core
         {
             var entityData = entity.World.GetEntityData(entity);
 
+            int remainingComponentCount = 2;
+
             for (int i = 0; i < entityData.ComponentCount; i++)
             {
                 if (entityData.Components[i].TypeIndex == ComponentType<IncType1>.Index)
                 {
                     componentIds1[index] = entityData.Components[i].ItemIndex;
 
-                    break;
+                    remainingComponentCount--;
                 }
                 else if (entityData.Components[i].TypeIndex == ComponentType<IncType2>.Index)
                 {
                     componentIds2[index] = entityData.Components[i].ItemIndex;
 
+                    remainingComponentCount--;
+                }
+
+                if (remainingComponentCount == 0)
+                {
                     break;
                 }
             }

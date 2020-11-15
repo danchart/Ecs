@@ -34,6 +34,8 @@ namespace Game.Server
                 {
                     var entity = world.NewEntity();
 
+                    ref var replicated = ref entity.GetComponent<ReplicatedComponent>();
+
                     ref var transform = ref entity.GetComponent<TransformComponent>();
 
                     float x = unitSize * ((float)row - ((float)rows / 2));
