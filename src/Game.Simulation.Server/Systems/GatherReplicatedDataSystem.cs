@@ -1,6 +1,7 @@
 ﻿using Ecs.Core;
 using Game.Networking.PacketData;
 using Game.Simulation.Core;
+using System;
 
 namespace Game.Simulation.Server
 {
@@ -16,6 +17,11 @@ namespace Game.Simulation.Server
 
         public IReplicationDataBroker ReplicationDataBroker = null;
         public IEntityGridMap EntityGridMap = null;
+
+        public override void OnCreate()
+        {
+            ChangedTransformQuery.AddListener(new EntityGridMapListener(this.EntityGridMap));
+        }
 
         public override void OnUpdate(float deltaTime)
         {
@@ -64,6 +70,26 @@ namespace Game.Simulation.Server
             }
 
             ReplicationDataBroker.EndDataCollection();
+        }
+
+        private class EntityGridMapListener : IEntityQueryListener
+        {
+            private readonly IEntityGridMap _entityGridMap;
+
+            public EntityGridMapListener(IEntityGridMap entityGridMap)
+            {
+                this._entityGridMap = entityGridMap ?? throw new ArgumentNullException(nameof(entityGridMap));
+            }
+
+            public void OnEntityAdded(in Entity entity)
+            {
+                // Do nothing, will add to grid map in the system.
+            }
+
+            public void OnEntityRemoved(in Entity entity)
+            {
+                this._entityGridMap.Remove(entity);
+            }
         }
     }
 }

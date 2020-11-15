@@ -31,7 +31,7 @@ namespace Game.Simulation.Server
 
         public bool Contains(PlayerId id) => this._playerIdToIndex.ContainsKey(id);
 
-        public ref WorldPlayer this[PlayerId id] => ref this._players[this._playerIdToIndex[id]];
+        public ref WorldPlayer this[in PlayerId id] => ref this._players[this._playerIdToIndex[id]];
 
         public void Add(
             in PlayerConnectionRef playerConnectionRef,
@@ -57,7 +57,7 @@ namespace Game.Simulation.Server
             this._playerIdToIndex[playerId] = index;
         }
 
-        public void Remove(PlayerId playerId)
+        public void Remove(in PlayerId playerId)
         {
             var indexToRemove = this._playerIdToIndex[playerId];
 

@@ -10,9 +10,8 @@ namespace Game.Simulation.Server
 
         public Entity Entity;
 
-        public int PlayerReplicationDataPoolIndex;
-
-        public int PlayerInputsPoolIndex;
+        internal int PlayerReplicationDataPoolIndex;
+        internal int PlayerInputsPoolIndex;
 
         private readonly PlayerReplicationDataPool _replicationDataPool;
         private readonly PlayerInputsPool _playerInputsPool;

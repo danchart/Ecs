@@ -6,8 +6,8 @@ namespace Game.Simulation.Server
 {
     public interface IEntityGridMap
     {
-        void AddOrUpdate(Entity entity, in Vector2 position);
-        bool Remove(Entity entity);
+        void AddOrUpdate(in Entity entity, in Vector2 position);
+        bool Remove(in Entity entity);
 
         HashSet<Entity> GetEntities(int row, int column);
 
@@ -34,7 +34,7 @@ namespace Game.Simulation.Server
             this.CellCapacity = cellCapacity;
         }
 
-        public void AddOrUpdate(Entity entity, in Vector2 position)
+        public void AddOrUpdate(in Entity entity, in Vector2 position)
         {
             GetGridPosition(position, out int row, out int column);
 
@@ -62,7 +62,7 @@ namespace Game.Simulation.Server
             this._entityToHash[entity] = gridHash;
         }
 
-        public bool Remove(Entity entity)
+        public bool Remove(in Entity entity)
         {
             return
                 this._hashToEntities[this._entityToHash[entity]].Remove(entity) ||
