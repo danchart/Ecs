@@ -215,7 +215,7 @@ namespace Ecs.Core
                     item.Version =
                         isReadonly
                         ? item.Version
-                        : entity.World.State.GlobalSystemVersion;
+                        : entity.World.State.GlobalVersion;
 
                     return ref item;
                 }
@@ -240,7 +240,7 @@ namespace Ecs.Core
             entity.World.OnAddComponent(componentTypeIndex, entity, entityData);
 
             ref var componentItem = ref pool.GetItem(index);
-            componentItem.Version = entity.World.State.GlobalSystemVersion;
+            componentItem.Version = entity.World.State.GlobalVersion;
 
             return ref componentItem;
         }

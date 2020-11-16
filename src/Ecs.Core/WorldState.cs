@@ -5,7 +5,7 @@ namespace Ecs.Core
 {
     public struct WorldState
     {
-        internal Version GlobalSystemVersion;
+        internal Version GlobalVersion;
 
         internal IComponentPool[] ComponentPools;
 
@@ -29,7 +29,7 @@ namespace Ecs.Core
         /// </summary>
         public static WorldState CopyStateTo(this in WorldState source, ref WorldState copiedState)
         {
-            copiedState.GlobalSystemVersion = source.GlobalSystemVersion;
+            copiedState.GlobalVersion = source.GlobalVersion;
             copiedState.LastSystemVersion = source.LastSystemVersion;
 
             copiedState._freeEntityIds = source._freeEntityIds;

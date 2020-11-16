@@ -25,7 +25,7 @@ namespace Game.Server
             const int
                 rows = 100,
                 cols = 100;
-            const float unitSize = 0.1f;
+            const float unitSize = 0.5f;
             const float halfUnitSize = 0.5f * unitSize;
 
             for (int row = 0; row < rows; row++)

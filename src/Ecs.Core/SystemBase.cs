@@ -2,7 +2,14 @@
 {
     public abstract class SystemBase
     {
-        protected internal Version GlobalSystemVersion;
+        /// <summary>
+        /// The version of the current system update.
+        /// </summary>
+        protected internal Version GlobalVersion;
+
+        /// <summary>
+        /// The version of the last system update.
+        /// </summary>
         protected internal Version LastSystemVersion;
 
         /// <summary>

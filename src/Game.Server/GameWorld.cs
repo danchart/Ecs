@@ -5,6 +5,7 @@ using Game.Simulation.Core;
 using Game.Simulation.Server;
 using Simulation.Core;
 using System;
+using System.Diagnostics;
 using System.Threading;
 
 namespace Game.Server
@@ -88,6 +89,10 @@ namespace Game.Server
                 WaitHandle = new AutoResetEvent(initialState: false),
 
                 FrameIndex = FrameIndex.New(),
+
+                ExceedTickCountReportingCountdown = FixedUpdateState.Diagnostics.GetCountdownFromFixedTick(this._fixedTick),
+                ExceedTickCount = 0,
+                Stopwatch = new Stopwatch(),
             };
 
             // TODO: Timer is limited to system clock resolution. The max (worst) seems to be 15.625 ms which 
@@ -119,6 +124,8 @@ namespace Game.Server
             {
                 var state = (FixedUpdateState)obj;
 
+                PreUpdateDiagnostics(state);
+
                 // Run simulation tick
                 this._simulation.FixedUpdate(this._fixedTick);
 
@@ -131,6 +138,35 @@ namespace Game.Server
                 if (this._isStopped)
                 {
                     state.WaitHandle.Set();
+                }
+
+                PostUpdateDiagnostics(state);
+            }
+        }
+
+        private static void PreUpdateDiagnostics(FixedUpdateState state)
+        {
+            state.Stopwatch.Restart();
+        }
+
+        private void PostUpdateDiagnostics(FixedUpdateState state)
+        {
+            state.Stopwatch.Stop();
+
+            if (state.Stopwatch.ElapsedMilliseconds > FixedUpdateState.Diagnostics.GetMsFromFixedTick(this._fixedTick))
+            {
+                state.ExceedTickCount++;
+            }
+
+            if (--state.ExceedTickCountReportingCountdown == 0)
+            {
+                state.ExceedTickCountReportingCountdown = FixedUpdateState.Diagnostics.GetCountdownFromFixedTick(this._fixedTick);
+
+                if (state.ExceedTickCount > 0)
+                {
+                    this._logger.Error($"Fixed update exceeded tick speed: count={state.ExceedTickCount}, framesCounted={state.ExceedTickCountReportingCountdown}, fixedTick={FixedUpdateState.Diagnostics.GetMsFromFixedTick(this._fixedTick)}ms, lastElapsed={state.Stopwatch.ElapsedMilliseconds}ms");
+
+                    state.ExceedTickCount = 0;
                 }
             }
         }
@@ -189,6 +225,17 @@ namespace Game.Server
             public AutoResetEvent WaitHandle;
 
             public FrameIndex FrameIndex;
+
+            // For diagnostics...
+            public int ExceedTickCountReportingCountdown;
+            public int ExceedTickCount;
+            public Stopwatch Stopwatch; 
+
+            internal static class Diagnostics
+            {
+                internal static int GetCountdownFromFixedTick(float fixedTick) => (int)(1.0f / fixedTick);
+                internal static int GetMsFromFixedTick(float fixedTick) => (int)(1000 * fixedTick);
+            }
         }
     }
 }

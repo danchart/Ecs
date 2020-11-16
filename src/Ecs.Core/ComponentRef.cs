@@ -27,7 +27,7 @@
 
             ref var entityData = ref _entity.World.GetEntityData(_entity);
 
-            item.Version = _entity.World.State.GlobalSystemVersion;
+            item.Version = _entity.World.State.GlobalVersion;
 
             return ref item.Item;
         }

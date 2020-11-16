@@ -220,7 +220,7 @@ namespace Ecs.Core.Tests
             {
                 LastFilteredEntityCount = 0;
 
-                foreach (var entity in QueryWithChangeFilter)
+                foreach (var entity in QueryWithChangeFilter.GetEntities(this.LastSystemVersion))
                 {
                     LastFilteredEntityCount++;
                 }

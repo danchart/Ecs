@@ -32,13 +32,13 @@ namespace Ecs.Core
             State._globalQueries = new AppendOnlyList<GlobalEntityQuery>(Config.InitialEntityQueryCapacity);
             State._perSystemsQueries = new AppendOnlyList<AppendOnlyList<PerSystemsEntityQuery>>(Config.InitialSystemsCapacity);
 
-            State.GlobalSystemVersion = new Version();
+            State.GlobalVersion = new Version();
             State.LastSystemVersion = new AppendOnlyList<Version>(Config.InitialSystemsCapacity); 
         }
 
         public int NewSystems()
         {
-            this.State.LastSystemVersion.Add(this.State.GlobalSystemVersion);
+            this.State.LastSystemVersion.Add(this.State.GlobalVersion);
             this.State._perSystemsQueries.Add(new AppendOnlyList<PerSystemsEntityQuery>(Config.InitialEntityQueryCapacity));
 
             return this.State.LastSystemVersion.Count - 1;
@@ -119,7 +119,7 @@ namespace Ecs.Core
                 entityQueryType,
                 BindingFlags.NonPublic | BindingFlags.Instance,
                 null,
-                new object[] { this, systemsIndex }, // args: World, SystemsIndex
+                new object[] { this }, // args: World
                 CultureInfo.InvariantCulture);
 
             queries.Add(entityQuery);
