@@ -65,6 +65,7 @@ namespace Game.Server
             this._systems =
                 new Systems(this._world)
                 .Add(new GatherReplicatedDataSystem())
+                .Add(new JiggleSystem())
                 .Inject(new ReplicationDataBroker(config.Replication.Capacity, this._replicationManager))
                 .Inject(this._entityGridMap);
 
