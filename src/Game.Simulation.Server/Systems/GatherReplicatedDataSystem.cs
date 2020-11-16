@@ -33,7 +33,7 @@ namespace Game.Simulation.Server
 
             // TransformComponent
 
-            foreach (int index in ChangedTransformQuery.GetIndices())
+            foreach (int index in ChangedTransformQuery.GetIndices2())
             {
                 var entity = ChangedTransformQuery.GetEntity(index);
                 ref readonly var transform = ref ChangedTransformQuery.GetReadonly2(index);
@@ -47,7 +47,7 @@ namespace Game.Simulation.Server
 
             // MovementComponent
 
-            foreach (int index in ChangedMovementQuery.GetIndices())
+            foreach (int index in ChangedMovementQuery.GetIndices2())
             {
                 var entity = ChangedMovementQuery.GetEntity(index);
 
@@ -59,7 +59,7 @@ namespace Game.Simulation.Server
 
             // PlayerComponent
 
-            foreach (int index in ChangedPlayerQuery.GetIndices())
+            foreach (int index in ChangedPlayerQuery.GetIndices2())
             {
                 var entity = ChangedPlayerQuery.GetEntity(index);
 

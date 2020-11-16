@@ -837,39 +837,46 @@ namespace Ecs.Core
             private readonly EntityQueryBase _query;
             private readonly Version _lastSystemVersion;
 
-            public IndexEnumerable(EntityQueryBase query, Version lastSystemVersion)
+            private readonly int[] _componentIds;
+
+            public IndexEnumerable(EntityQueryBase query, int[] componentIds, Version lastSystemVersion)
             {
                 this._query = query;
+                this._componentIds = componentIds ?? throw new ArgumentNullException(nameof(componentIds));
                 this._lastSystemVersion = lastSystemVersion;
             }
 
             public IndexEnumerator<T> GetEnumerator()
             {
-                return new IndexEnumerator<T>(this._query, this._lastSystemVersion);
+                return new IndexEnumerator<T>(this._query, this._componentIds, this._lastSystemVersion);
             }
         }
 
-        public struct IndexEnumerator<IncType1> : IDisposable
-            where IncType1 : unmanaged
+        public struct IndexEnumerator<T> : IDisposable
+            where T : unmanaged
         {
             private EntityQueryBase _query;
             private int _current;
 
             private Version _lastSystemVersion;
 
-            private readonly ComponentPool<IncType1> _componentPool;
+            private readonly int[] _componentIds;
+            private readonly ComponentPool<T> _componentPool;
 
             internal IndexEnumerator(
                 EntityQueryBase query,
+                int[] componentIds,
                 Version lastSystemVersion)
             {
                 this._query = query ?? throw new ArgumentNullException(nameof(query));
+                this._componentIds = componentIds ?? throw new ArgumentNullException(nameof(componentIds));
+
                 this._current = -1;
 
                 this._query.Lock();
 
                 this._lastSystemVersion = lastSystemVersion;
-                this._componentPool = _query.World.GetPool<IncType1>();
+                this._componentPool = _query.World.GetPool<T>();
             }
 
             public int Current => this._current;
@@ -883,7 +890,7 @@ namespace Ecs.Core
             {
                 while (++this._current < this._query._entityCount)
                 {
-                    if (this._lastSystemVersion < _componentPool.GetItemVersion(_query._componentIds1[_current]) ||
+                    if (this._lastSystemVersion < _componentPool.GetItemVersion(this._componentIds[_current]) ||
                         this._lastSystemVersion == Version.Zero)
                     {
                         return true;
@@ -1190,6 +1197,7 @@ namespace Ecs.Core
         {
             return new IndexEnumerable<IncType1>(
                 this,
+                this._componentIds1,
                 this.World.State.LastSystemVersion.Items[this._systemsIndex]);
         }
 
@@ -1416,10 +1424,19 @@ namespace Ecs.Core
                 this.World.State.LastSystemVersion.Items[this._systemsIndex]);
         }
 
-        public IndexEnumerable<IncType1> GetIndices()
+        public IndexEnumerable<IncType1> GetIndices1()
         {
             return new IndexEnumerable<IncType1>(
                 this,
+                this._componentIds1,
+                this.World.State.LastSystemVersion.Items[this._systemsIndex]);
+        }
+
+        public IndexEnumerable<IncType2> GetIndices2()
+        {
+            return new IndexEnumerable<IncType2>(
+                this,
+                this._componentIds2,
                 this.World.State.LastSystemVersion.Items[this._systemsIndex]);
         }
 
