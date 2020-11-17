@@ -19,11 +19,8 @@ namespace Ecs.Core.Tests
 
             int listenerCount = 0;
 
-            querySingleInclude.AddListener(new TestListener
-            {
-                OnAdd = (entity) => listenerCount++,
-                OnRemove = (entity) => listenerCount--
-            });
+            querySingleInclude.AddEntityAddedListener((in Entity entity) => listenerCount++);
+            querySingleInclude.AddEntityRemovedListener((in Entity entity) => listenerCount--);
 
             // Create test entities
             var entity1 = systems.World.NewEntity();
@@ -233,22 +230,6 @@ namespace Ecs.Core.Tests
 
                     LastTotalEntityCount++;
                 }
-            }
-        }
-
-        internal class TestListener : IEntityQueryListener
-        {
-            public Action<Entity> OnAdd;
-            public Action<Entity> OnRemove;
-
-            public void OnEntityAdded(in Entity entity)
-            {
-                OnAdd?.Invoke(entity);
-            }
-
-            public void OnEntityRemoved(in Entity entity)
-            {
-                OnRemove?.Invoke(entity);
             }
         }
     }

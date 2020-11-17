@@ -5,11 +5,14 @@ using System.Diagnostics;
 
 namespace Ecs.Core
 {
-    public interface IEntityQueryListener
-    {
-        void OnEntityAdded(in Entity entity);
-        void OnEntityRemoved(in Entity entity);
-    }
+    //public interface IEntityQueryListener
+    //{
+    //    void OnEntityAdded(in Entity entity);
+    //    void OnEntityRemoved(in Entity entity);
+    //}
+
+    public delegate void OnEntityAddedCallback(in Entity entity);
+    public delegate void OnEntityRemovedCallback(in Entity entity);
 
     public abstract class EntityQueryBase
     {
@@ -17,8 +20,11 @@ namespace Ecs.Core
         internal World World;
 
         // Listeners
-        internal IEntityQueryListener[] _listeners = new IEntityQueryListener[4];
-        internal int _listenerCount = 0;
+        internal OnEntityAddedCallback[] _onEntityAddedCallbacks = new OnEntityAddedCallback[4];
+        internal int _onEntityAddedCallbackCount = 0;
+
+        internal OnEntityRemovedCallback[] _onEntityRemovedCallbacks = new OnEntityRemovedCallback[4];
+        internal int _onEntityRemovedCallbackCount = 0;
 
         // Query 
         internal int[] IncludedComponentTypeIndices;
@@ -44,34 +50,34 @@ namespace Ecs.Core
             World = world;
         }
 
-        public void AddListener(IEntityQueryListener listener)
+        public void AddEntityAddedListener(OnEntityAddedCallback callback)
         {
-            for (int i = 0; i < this._listenerCount; i++)
+            for (int i = 0; i < this._onEntityAddedCallbackCount; i++)
             {
-                if (this._listeners[i] == listener)
+                if (this._onEntityAddedCallbacks[i] == callback)
                 {
-                    throw new Exception("Listener already added.");
+                    throw new Exception("Callback already added.");
                 }
             }
 
-            if (this._listenerCount == this._listeners.Length)
+            if (this._onEntityAddedCallbackCount == this._onEntityAddedCallbacks.Length)
             {
-                Array.Resize(ref this._listeners, 2 * this._listenerCount);
+                Array.Resize(ref this._onEntityAddedCallbacks, 2 * this._onEntityAddedCallbackCount);
             }
 
-            this._listeners[this._listenerCount++] = listener;
+            this._onEntityAddedCallbacks[this._onEntityAddedCallbackCount++] = callback;
         }
 
-        public bool RemoveListener(IEntityQueryListener listener)
+        public bool RemoveEntityAddedListener(OnEntityAddedCallback callback)
         {
-            for (int i = 0; i < this._listenerCount; i++)
+            for (int i = 0; i < this._onEntityAddedCallbackCount; i++)
             {
-                if (this._listeners[i] == listener)
+                if (this._onEntityAddedCallbacks[i] == callback)
                 {
-                    this._listenerCount--;
+                    this._onEntityAddedCallbackCount--;
 
                     // Can't swap with last because listeners are ordered.
-                    Array.Copy(this._listeners, i + 1, this._listeners, i, this._listenerCount - i);
+                    Array.Copy(this._onEntityAddedCallbacks, i + 1, this._onEntityAddedCallbacks, i, this._onEntityAddedCallbackCount - i);
 
                     return true;
                 }
@@ -81,19 +87,56 @@ namespace Ecs.Core
             return false;
         }
 
+        public void AddEntityRemovedListener(OnEntityRemovedCallback callback)
+        {
+            for (int i = 0; i < this._onEntityRemovedCallbackCount; i++)
+            {
+                if (this._onEntityRemovedCallbacks[i] == callback)
+                {
+                    throw new Exception("Callback already added.");
+                }
+            }
+
+            if (this._onEntityRemovedCallbackCount == this._onEntityRemovedCallbacks.Length)
+            {
+                Array.Resize(ref this._onEntityRemovedCallbacks, 2 * this._onEntityRemovedCallbackCount);
+            }
+
+            this._onEntityRemovedCallbacks[this._onEntityRemovedCallbackCount++] = callback;
+        }
+
+        public bool RemoveEntityRemovedListener(OnEntityRemovedCallback callback)
+        {
+            for (int i = 0; i < this._onEntityRemovedCallbackCount; i++)
+            {
+                if (this._onEntityRemovedCallbacks[i] == callback)
+                {
+                    this._onEntityRemovedCallbackCount--;
+
+                    // Can't swap with last because listeners are ordered.
+                    Array.Copy(this._onEntityRemovedCallbacks, i + 1, this._onEntityRemovedCallbacks, i, this._onEntityRemovedCallbackCount - i);
+
+                    return true;
+                }
+            }
+
+            // Not found.
+            return false;
+        }
+
         protected void InvokeAddListeners(in Entity entity)
         {
-            for (int i = 0; i < this._listenerCount; i++)
+            for (int i = 0; i < this._onEntityAddedCallbackCount; i++)
             {
-                this._listeners[i].OnEntityAdded(entity);
+                this._onEntityAddedCallbacks[i].Invoke(entity);
             }
         }
 
         protected void InvokeRemoveListeners(in Entity entity)
         {
-            for (int i = 0; i < this._listenerCount; i++)
+            for (int i = 0; i < this._onEntityRemovedCallbackCount; i++)
             {
-                this._listeners[i].OnEntityRemoved(entity);
+                this._onEntityRemovedCallbacks[i].Invoke(entity);
             }
         }
 

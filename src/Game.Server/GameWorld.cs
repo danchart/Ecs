@@ -61,14 +61,14 @@ namespace Game.Server
 
             this._replicationManager = new WorldReplicationManager(config.Replication, this._players, this._entityGridMap);
 
-            this._physicsWorld = new VolatilePhysicsWorld();
+            this._physicsWorld = new VolatilePhysicsWorld(config.Replication.PhysicsHistoryCount);
 
             this._systems =
                 new Systems(this._world)
                 .Add(new PhysicsSystem())
                 .Add(new GatherReplicatedDataSystem())
                 .Add(new JiggleSystem())
-                .Inject((IPhysicsSystemProxy) new VolatilePhysicsWorld(config.Replication.PhysicsHistoryCount))
+                .Inject(this._physicsWorld)
                 .Inject(new ReplicationDataBroker(config.Replication.Capacity, this._replicationManager))
                 .Inject(this._entityGridMap);
 
@@ -92,10 +92,13 @@ namespace Game.Server
 
                 FrameIndex = FrameIndex.New(),
 
-                ExceedTickCountReportingCountdown = FixedUpdateState.Diagnostics.GetCountdownFromFixedTick(this._fixedTick),
-                ExceedTickCount = 0,
-                TotalTickElapsed = 0,
-                Stopwatch = new Stopwatch(),
+                Diagnostics = new FixedUpdateState.DiagnosticsState
+                {
+                    ExceedTickCountReportingCountdown = FixedUpdateState.DiagnosticsState.GetCountdownFromFixedTick(this._fixedTick),
+                    ExceedTickCount = 0,
+                    TotalTickElapsed = 0,
+                    Stopwatch = new Stopwatch(),
+                }
             };
 
             // TODO: Timer is limited to system clock resolution. The max (worst) seems to be 15.625 ms which 
@@ -149,34 +152,34 @@ namespace Game.Server
 
         private static void PreUpdateDiagnostics(FixedUpdateState state)
         {
-            state.Stopwatch.Restart();
+            state.Diagnostics.Stopwatch.Restart();
         }
 
         private void PostUpdateDiagnostics(FixedUpdateState state)
         {
-            state.Stopwatch.Stop();
+            state.Diagnostics.Stopwatch.Stop();
 
-            state.TotalTickElapsed += (int) state.Stopwatch.ElapsedMilliseconds;
+            state.Diagnostics.TotalTickElapsed += (int) state.Diagnostics.Stopwatch.ElapsedMilliseconds;
 
-            if (state.Stopwatch.ElapsedMilliseconds > FixedUpdateState.Diagnostics.GetMsFromFixedTick(this._fixedTick))
+            if (state.Diagnostics.Stopwatch.ElapsedMilliseconds > FixedUpdateState.DiagnosticsState.GetMsFromFixedTick(this._fixedTick))
             {
-                state.ExceedTickCount++;
+                state.Diagnostics.ExceedTickCount++;
 
-                state.LastExceedElasped = (int) state.Stopwatch.ElapsedMilliseconds;
+                state.Diagnostics.LastExceedElasped = (int) state.Diagnostics.Stopwatch.ElapsedMilliseconds;
             }
 
-            if (--state.ExceedTickCountReportingCountdown == 0)
+            if (--state.Diagnostics.ExceedTickCountReportingCountdown == 0)
             {
-                state.ExceedTickCountReportingCountdown = FixedUpdateState.Diagnostics.GetCountdownFromFixedTick(this._fixedTick);
+                state.Diagnostics.ExceedTickCountReportingCountdown = FixedUpdateState.DiagnosticsState.GetCountdownFromFixedTick(this._fixedTick);
 
-                if (state.ExceedTickCount > 0)
+                if (state.Diagnostics.ExceedTickCount > 0)
                 {
-                    this._logger.Error($"Fixed update exceeded tick speed: count={state.ExceedTickCount}, framesCounted={state.ExceedTickCountReportingCountdown}, fixedTick={FixedUpdateState.Diagnostics.GetMsFromFixedTick(this._fixedTick)}ms, lastExceedElapsed={state.LastExceedElasped}ms, avgElapsed={state.TotalTickElapsed / state.ExceedTickCountReportingCountdown}ms");
+                    this._logger.Error($"Fixed update exceeded tick speed: count={state.Diagnostics.ExceedTickCount}, framesCounted={state.Diagnostics.ExceedTickCountReportingCountdown}, fixedTick={FixedUpdateState.DiagnosticsState.GetMsFromFixedTick(this._fixedTick)}ms, lastExceedElapsed={state.Diagnostics.LastExceedElasped}ms, avgElapsed={state.Diagnostics.TotalTickElapsed / state.Diagnostics.ExceedTickCountReportingCountdown}ms");
 
-                    state.ExceedTickCount = 0;
+                    state.Diagnostics.ExceedTickCount = 0;
                 }
 
-                state.TotalTickElapsed = 0;
+                state.Diagnostics.TotalTickElapsed = 0;
             }
         }
 
@@ -235,15 +238,17 @@ namespace Game.Server
 
             public FrameIndex FrameIndex;
 
-            // For diagnostics...
-            public int ExceedTickCountReportingCountdown;
-            public int ExceedTickCount;
-            public int TotalTickElapsed;
-            public int LastExceedElasped;
-            public Stopwatch Stopwatch; 
+            public DiagnosticsState Diagnostics;
 
-            internal static class Diagnostics
+            // For diagnostics...
+            internal class DiagnosticsState
             {
+                public int ExceedTickCountReportingCountdown;
+                public int ExceedTickCount;
+                public int TotalTickElapsed;
+                public int LastExceedElasped;
+                public Stopwatch Stopwatch;
+
                 internal static int GetCountdownFromFixedTick(float fixedTick) => (int)(1.0f / fixedTick);
                 internal static int GetMsFromFixedTick(float fixedTick) => (int)(1000 * fixedTick);
             }

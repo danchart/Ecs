@@ -67,7 +67,6 @@ namespace Simulation.Core
                 density);
 
             this._entityToBody[entity] = CreateBody(isStatic, originWS, rotation, shape);
-
         }
 
         bool IPhysicsWorld.Remove(Entity entity)
@@ -78,6 +77,12 @@ namespace Simulation.Core
         #endregion
 
         #region IPhysicsSystemProxy
+
+        public void Run(float deltaTime)
+        {
+            this._world.DeltaTime = deltaTime;
+            this._world.Update();
+        }
 
         VoltBody IPhysicsSystemProxy.GetRigidBody(Entity entity)
         {

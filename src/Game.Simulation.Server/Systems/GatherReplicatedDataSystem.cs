@@ -20,7 +20,7 @@ namespace Game.Simulation.Server
 
         public override void OnCreate()
         {
-            ChangedTransformQuery.AddListener(new EntityGridMapListener(this.EntityGridMap));
+            ChangedTransformQuery.AddEntityRemovedListener(new OnEntityRemovedCallback(RemoveEntityFromGridMap));
         }
 
         public override void OnUpdate(float deltaTime)
@@ -72,24 +72,9 @@ namespace Game.Simulation.Server
             ReplicationDataBroker.EndDataCollection();
         }
 
-        private class EntityGridMapListener : IEntityQueryListener
+        public void RemoveEntityFromGridMap(in Entity entity)
         {
-            private readonly IEntityGridMap _entityGridMap;
-
-            public EntityGridMapListener(IEntityGridMap entityGridMap)
-            {
-                this._entityGridMap = entityGridMap ?? throw new ArgumentNullException(nameof(entityGridMap));
-            }
-
-            public void OnEntityAdded(in Entity entity)
-            {
-                // Do nothing, will add to grid map in the system.
-            }
-
-            public void OnEntityRemoved(in Entity entity)
-            {
-                this._entityGridMap.Remove(entity);
-            }
+            this.EntityGridMap.Remove(entity);
         }
     }
 }

@@ -23,10 +23,10 @@ namespace Game.Server
 
 
             const int
-                rows = 100,
-                cols = 100;
+                rows = 32,
+                cols = 32;
             const float unitSize = 0.5f;
-            const float halfUnitSize = 0.5f * unitSize;
+            const float quarterUnitSize = 0.25f * unitSize;
 
             for (int row = 0; row < rows; row++)
             {
@@ -50,20 +50,20 @@ namespace Game.Server
 
                     movement.velocity = Vector2.Zero;
 
-                    //physicsWorld.AddCircle(entity, isStatic: false, transform.position, 0, 0.5f * unitSize);
+                    //physicsWorld.AddCircle(entity, isStatic: false, transform.position, 0, quarterUnitSize * unitSize);
 
                     // Create square rigid body.
                     physicsWorld.AddPolygon(
-                        entity, 
-                        isStatic: false, 
-                        originWS: transform.position, 
-                        rotation: 0, 
+                        entity,
+                        isStatic: false,
+                        originWS: transform.position,
+                        rotation: 0,
                         vertices: new Vector2[]
                         {
-                            new Vector2(x - halfUnitSize, y + halfUnitSize),
-                            new Vector2(x + halfUnitSize, y + halfUnitSize),
-                            new Vector2(x + halfUnitSize, y - halfUnitSize),
-                            new Vector2(x - halfUnitSize, y - halfUnitSize),
+                            new Vector2(-quarterUnitSize, quarterUnitSize),
+                            new Vector2(quarterUnitSize, quarterUnitSize),
+                            new Vector2(quarterUnitSize, -quarterUnitSize),
+                            new Vector2(-quarterUnitSize, -quarterUnitSize),
                         });
                 }
             }
