@@ -1378,7 +1378,7 @@ namespace Ecs.Core
                 this._componentIds2);
         }
 
-        public class Exclude<ExcType> : ChangedEntityQuery<IncType1>
+        public class Exclude<ExcType> : ChangedEntityQuery<IncType1, IncType2>
             where ExcType : unmanaged
         {
             internal Exclude(World world)
@@ -1391,7 +1391,7 @@ namespace Ecs.Core
             }
         }
 
-        public class Exclude<ExcType1, ExcType2> : ChangedEntityQuery<IncType1>
+        public class Exclude<ExcType1, ExcType2> : ChangedEntityQuery<IncType1, IncType2>
             where ExcType1 : unmanaged
             where ExcType2 : unmanaged
         {

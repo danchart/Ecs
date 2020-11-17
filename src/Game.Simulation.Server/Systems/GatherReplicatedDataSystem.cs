@@ -1,6 +1,7 @@
 ﻿using Ecs.Core;
 using Game.Networking.PacketData;
 using Game.Simulation.Core;
+using Simulation.Core;
 using System;
 
 namespace Game.Simulation.Server
@@ -11,9 +12,9 @@ namespace Game.Simulation.Server
     /// </summary>
     public class GatherReplicatedDataSystem : SystemBase
     {
-        public ChangedEntityQuery<ReplicatedComponent, TransformComponent> ChangedTransformQuery = null;
-        public ChangedEntityQuery<ReplicatedComponent, MovementComponent> ChangedMovementQuery = null;
-        public ChangedEntityQuery<ReplicatedComponent, PlayerComponent> ChangedPlayerQuery = null;
+        public ChangedEntityQuery<ReplicatedComponent, TransformComponent>.Exclude<IsDisabledComponent> ChangedTransformQuery = null;
+        public ChangedEntityQuery<ReplicatedComponent, MovementComponent>.Exclude<IsDisabledComponent> ChangedMovementQuery = null;
+        public ChangedEntityQuery<ReplicatedComponent, PlayerComponent>.Exclude<IsDisabledComponent> ChangedPlayerQuery = null;
 
         public IReplicationDataBroker ReplicationDataBroker = null;
         public IEntityGridMap EntityGridMap = null;

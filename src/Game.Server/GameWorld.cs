@@ -203,17 +203,30 @@ namespace Game.Server
             connection.LastAcknowledgedSimulationFrame = FrameIndex.Nil;
             connection.LastInputFrame = FrameIndex.Nil;
 
-            // TODO: Player will need more sophisticated construction, e.g. components, game objects
+            // TODO: Player will need more sophisticated construction, e.g. initial location
             var playerEntity = this._simulation.World.NewEntity();
-            playerEntity.GetComponent<TransformComponent>();
-            playerEntity.GetComponent<MovementComponent>();
+            // Disable from simulation until initialized.
+            playerEntity.GetComponent<IsDisabledComponent>();
 
             ref var playerComponent = ref playerEntity.GetComponent<PlayerComponent>();
             playerComponent.Id = connection.PlayerId;
+            playerEntity.GetComponent<RigidBodyComponent>();
+            ref var transform = ref playerEntity.GetComponent<TransformComponent>();
+            playerEntity.GetComponent<MovementComponent>();
+
+            this._physicsWorld.AddCircle(
+                playerEntity, 
+                isStatic: false, 
+                originWS: transform.position, 
+                rotation: 0, 
+                radius: 0.5f);
 
             this._players.Add(
                 in connectionRef,
                 playerEntity);
+
+            // Entity is ready for the simulation.
+            playerEntity.RemoveComponent<IsDisabledComponent>();
         }
 
         public void Disconnect(PlayerConnectionRef connectionRef)

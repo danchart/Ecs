@@ -8,7 +8,7 @@ namespace Simulation.Core
     /// </summary>
     public class PhysicsSystem : SystemBase
     {
-        private EntityQuery<RigidBodyComponent, TransformComponent> _transformQuery = null;
+        private EntityQuery<RigidBodyComponent, TransformComponent>.Exclude<IsDisabledComponent> _transformQuery = null;
 
         private IPhysicsSystemProxy _physicsProxy = null;
 

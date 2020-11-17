@@ -44,6 +44,7 @@
   <ItemGroup>
     <Compile Include="ComponentIdAttribute.cs" />
     <Compile Include="ComponentId.cs" />
+    <Compile Include="Components\Tags\IsDisabledComponent.cs" />
     <Compile Include="Components\RigidBodyComponent.cs" />
     <Compile Include="Components\PlayerComponent.cs" />
     <Compile Include="Components\InputComponent.cs" />
@@ -70,9 +71,7 @@
       <Name>VolatilePhysics</Name>
     </ProjectReference>
   </ItemGroup>
-  <ItemGroup>
-    <Folder Include="Components\Tags\" />
-  </ItemGroup>
+  <ItemGroup />
   <ItemGroup>
     <None Include="Game.Simulation.Core.asmdef" />
   </ItemGroup>
