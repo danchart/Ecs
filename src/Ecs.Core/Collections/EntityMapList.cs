@@ -59,11 +59,18 @@ namespace Ecs.Core.Collections
                     }
 
                     this._entityIndexToDataIndex[entity.Id] = this._count;
-                    this._entityItems[this._count] = new EntityItem(this, ListCapacity)
-                    {
-                        Entity = entity,
-                    };
 
+                    if (this._entityItems[this._count].IsUninitialized)
+                    {
+                        this._entityItems[this._count] = new EntityItem(this, ListCapacity);
+                    }
+                    else
+                    {
+                        this._entityItems[this._count].Items.Clear();
+                    }
+
+                    this._entityItems[this._count].Entity = entity;
+                    
                     return this._entityItems[this._count++].Items;
                 }
                 else
@@ -230,6 +237,12 @@ namespace Ecs.Core.Collections
             public EntityItem(EntityMapList<T> parent, int capacity) : this()
             {
                 Items = new ItemList(parent, capacity);
+            }
+
+            public bool IsUninitialized
+            {
+                [MethodImpl(MethodImplOptions.AggressiveInlining)]
+                get => Items == null;
             }
         }
     }

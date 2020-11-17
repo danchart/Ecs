@@ -1,7 +1,10 @@
-﻿namespace Common.Core.Numerics
+﻿using System.Runtime.CompilerServices;
+
+namespace Common.Core.Numerics
 {
     public static class HashCodeHelper
     {
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static int CombineHashCodes(int h1, int h2)
         {
             unchecked

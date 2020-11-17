@@ -37,8 +37,6 @@ namespace Game.Simulation.Server
         {
             this._packetPriorityComponents.Clear();
 
-            var playerReplicationECs = new EntityMapList<ReplicatedComponentData>(entityCapacity: 512, listCapacity: 16);
-
             // Apply changes to player entity change lists
             foreach (ref var player in this._players)
             {

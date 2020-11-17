@@ -92,6 +92,7 @@ namespace Game.Server
 
                 ExceedTickCountReportingCountdown = FixedUpdateState.Diagnostics.GetCountdownFromFixedTick(this._fixedTick),
                 ExceedTickCount = 0,
+                TotalTickElapsed = 0,
                 Stopwatch = new Stopwatch(),
             };
 
@@ -153,9 +154,13 @@ namespace Game.Server
         {
             state.Stopwatch.Stop();
 
+            state.TotalTickElapsed += (int) state.Stopwatch.ElapsedMilliseconds;
+
             if (state.Stopwatch.ElapsedMilliseconds > FixedUpdateState.Diagnostics.GetMsFromFixedTick(this._fixedTick))
             {
                 state.ExceedTickCount++;
+
+                state.LastExceedElasped = (int) state.Stopwatch.ElapsedMilliseconds;
             }
 
             if (--state.ExceedTickCountReportingCountdown == 0)
@@ -164,10 +169,12 @@ namespace Game.Server
 
                 if (state.ExceedTickCount > 0)
                 {
-                    this._logger.Error($"Fixed update exceeded tick speed: count={state.ExceedTickCount}, framesCounted={state.ExceedTickCountReportingCountdown}, fixedTick={FixedUpdateState.Diagnostics.GetMsFromFixedTick(this._fixedTick)}ms, lastElapsed={state.Stopwatch.ElapsedMilliseconds}ms");
+                    this._logger.Error($"Fixed update exceeded tick speed: count={state.ExceedTickCount}, framesCounted={state.ExceedTickCountReportingCountdown}, fixedTick={FixedUpdateState.Diagnostics.GetMsFromFixedTick(this._fixedTick)}ms, lastExceedElapsed={state.LastExceedElasped}ms, avgElapsed={state.TotalTickElapsed / state.ExceedTickCountReportingCountdown}ms");
 
                     state.ExceedTickCount = 0;
                 }
+
+                state.TotalTickElapsed = 0;
             }
         }
 
@@ -229,6 +236,8 @@ namespace Game.Server
             // For diagnostics...
             public int ExceedTickCountReportingCountdown;
             public int ExceedTickCount;
+            public int TotalTickElapsed;
+            public int LastExceedElasped;
             public Stopwatch Stopwatch; 
 
             internal static class Diagnostics
