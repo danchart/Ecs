@@ -1,21 +1,20 @@
 ﻿using Ecs.Core;
 using Game.Simulation.Core;
 
-namespace Simulation.Core.Systems
+namespace Simulation.Core
 {
     /// <summary>
     /// Synchronizes game simulation transform with the physics simulation rigid body.
     /// </summary>
     public class PhysicsSystem : SystemBase
     {
-        public EntityQuery<RigidBodyComponent, TransformComponent> _transformQuery = null;
+        public EntityQueryWithChangeFilter<RigidBodyComponent, TransformComponent> _transformQuery = null;
 
         public IPhysicsSystemProxy _physicsProxy = null;
 
         public override void OnUpdate(float deltaTime)
         {
-            //foreach (ref var transform in this._transformQuery.GetComponents2())
-            foreach (var entity in this._transformQuery)
+            foreach (var entity in this._transformQuery.GetEntities2(this.LastSystemVersion))
             {
                 ref var transform = ref entity.GetComponent<TransformComponent>();
                 var body = this._physicsProxy.GetRigidBody(entity);

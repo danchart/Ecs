@@ -4,6 +4,8 @@
     {
         public static readonly ReplicationConfig Default = new ReplicationConfig();
 
+        public int PhysicsHistoryCount = 10;
+
         public CapacityConfig Capacity = new CapacityConfig();
         public PacketPriorityConfig PacketPriority = new PacketPriorityConfig();
         public NetworkingConfig Networking = new NetworkingConfig();

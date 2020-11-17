@@ -35,6 +35,7 @@ namespace Game.Server
                     var entity = world.NewEntity();
 
                     ref var replicated = ref entity.GetComponent<ReplicatedComponent>();
+                    ref var rigidBody = ref entity.GetComponent<RigidBodyComponent>();
 
                     ref var transform = ref entity.GetComponent<TransformComponent>();
 
