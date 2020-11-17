@@ -208,7 +208,7 @@ namespace Ecs.Core.Tests
         internal class ChangeFilterSystem<T> : SystemBase 
             where T : unmanaged
         {
-            public EntityQueryWithChangeFilter<T> QueryWithChangeFilter = null;
+            public ChangedEntityQuery<T> QueryWithChangeFilter = null;
             public EntityQuery<T> Query = null;
 
             public int LastFilteredEntityCount = 0;

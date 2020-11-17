@@ -1064,12 +1064,12 @@ namespace Ecs.Core
         }
     }
 
-    public class EntityQueryWithChangeFilter<IncType1> : PerSystemsEntityQuery 
+    public class ChangedEntityQuery<IncType1> : PerSystemsEntityQuery 
         where IncType1 : unmanaged
     {
         private ComponentPool<IncType1> _componentPool;
 
-        internal EntityQueryWithChangeFilter(World world) 
+        internal ChangedEntityQuery(World world) 
             : base(world)
         {
             this.IncludedComponentTypeIndices = new[] 
@@ -1125,7 +1125,7 @@ namespace Ecs.Core
 
         internal override EntityQueryBase Clone()
         {
-            var query = new EntityQueryWithChangeFilter<IncType1>(this.World);
+            var query = new ChangedEntityQuery<IncType1>(this.World);
 
             CopyTo(query);
 
@@ -1136,7 +1136,7 @@ namespace Ecs.Core
         {
             base.CopyTo(queryBase);
 
-            var entityQuery = (EntityQueryWithChangeFilter<IncType1>)queryBase;
+            var entityQuery = (ChangedEntityQuery<IncType1>)queryBase;
 
             // EntityQueryWithChangeFilter
             entityQuery._componentPool = this._componentPool;
@@ -1147,7 +1147,7 @@ namespace Ecs.Core
             EntityQueryHelper.AddComponentsToResult<IncType1>(entity, index, _componentIds1);
         }
 
-        public class Exclude<ExcType> : EntityQueryWithChangeFilter<IncType1> 
+        public class Exclude<ExcType> : ChangedEntityQuery<IncType1> 
             where ExcType : unmanaged
         {
             internal Exclude(World world)
@@ -1160,7 +1160,7 @@ namespace Ecs.Core
             }
         }
 
-        public class Exclude<ExcType1, ExcType2> : EntityQueryWithChangeFilter<IncType1>
+        public class Exclude<ExcType1, ExcType2> : ChangedEntityQuery<IncType1>
             where ExcType1 : unmanaged
             where ExcType2 : unmanaged
         {
@@ -1176,14 +1176,14 @@ namespace Ecs.Core
         }
     }
 
-    public class EntityQueryWithChangeFilter<IncType1, IncType2> : PerSystemsEntityQuery
+    public class ChangedEntityQuery<IncType1, IncType2> : PerSystemsEntityQuery
         where IncType1 : unmanaged
         where IncType2 : unmanaged
     {
         private ComponentPool<IncType1> _componentPool1;
         private ComponentPool<IncType2> _componentPool2;
 
-        internal EntityQueryWithChangeFilter(World world)
+        internal ChangedEntityQuery(World world)
             : base(world)
         {
             this.IncludedComponentTypeIndices = new[] 
@@ -1308,7 +1308,7 @@ namespace Ecs.Core
 
         internal override EntityQueryBase Clone()
         {
-            var query = new EntityQueryWithChangeFilter<IncType1>(this.World);
+            var query = new ChangedEntityQuery<IncType1>(this.World);
 
             CopyTo(query);
 
@@ -1319,7 +1319,7 @@ namespace Ecs.Core
         {
             base.CopyTo(queryBase);
 
-            var entityQuery = (EntityQueryWithChangeFilter<IncType1, IncType2>)queryBase;
+            var entityQuery = (ChangedEntityQuery<IncType1, IncType2>)queryBase;
 
             // EntityQueryWithChangeFilter
             entityQuery._componentPool1 = this._componentPool1;
@@ -1335,7 +1335,7 @@ namespace Ecs.Core
                 this._componentIds2);
         }
 
-        public class Exclude<ExcType> : EntityQueryWithChangeFilter<IncType1>
+        public class Exclude<ExcType> : ChangedEntityQuery<IncType1>
             where ExcType : unmanaged
         {
             internal Exclude(World world)
@@ -1348,7 +1348,7 @@ namespace Ecs.Core
             }
         }
 
-        public class Exclude<ExcType1, ExcType2> : EntityQueryWithChangeFilter<IncType1>
+        public class Exclude<ExcType1, ExcType2> : ChangedEntityQuery<IncType1>
             where ExcType1 : unmanaged
             where ExcType2 : unmanaged
         {

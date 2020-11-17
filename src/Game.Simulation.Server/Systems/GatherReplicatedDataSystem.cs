@@ -11,9 +11,9 @@ namespace Game.Simulation.Server
     /// </summary>
     public class GatherReplicatedDataSystem : SystemBase
     {
-        public EntityQueryWithChangeFilter<ReplicatedComponent, TransformComponent> ChangedTransformQuery = null;
-        public EntityQueryWithChangeFilter<ReplicatedComponent, MovementComponent> ChangedMovementQuery = null;
-        public EntityQueryWithChangeFilter<ReplicatedComponent, PlayerComponent> ChangedPlayerQuery = null;
+        public ChangedEntityQuery<ReplicatedComponent, TransformComponent> ChangedTransformQuery = null;
+        public ChangedEntityQuery<ReplicatedComponent, MovementComponent> ChangedMovementQuery = null;
+        public ChangedEntityQuery<ReplicatedComponent, PlayerComponent> ChangedPlayerQuery = null;
 
         public IReplicationDataBroker ReplicationDataBroker = null;
         public IEntityGridMap EntityGridMap = null;
