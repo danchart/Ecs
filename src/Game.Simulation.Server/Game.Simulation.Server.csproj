@@ -23,6 +23,7 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Commands\SpawnPlayerSimulationCommand.cs" />
     <Compile Include="EntityGridMap.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Replication\PlayerReplicationData.cs" />

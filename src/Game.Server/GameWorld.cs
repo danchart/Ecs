@@ -21,8 +21,8 @@ namespace Game.Server
         private readonly Systems _systems;
         private readonly ServerSimulation<InputComponent> _simulation;
 
+        private readonly SimulationSynchronizer _simulationSynchronizer;
         private readonly IPhysicsWorld _physicsWorld;
-
         private readonly IEntityGridMap _entityGridMap;
 
         private readonly WorldPlayers _players;
@@ -52,6 +52,7 @@ namespace Game.Server
 
             this._channelManager = channelManager ?? throw new ArgumentNullException(nameof(channelManager));
 
+            this._simulationSynchronizer = new SimulationSynchronizer();
             this._entityGridMap = new EntityGridMap(config.Replication.GridSize);
 
             this._players = new WorldPlayers(
@@ -65,10 +66,12 @@ namespace Game.Server
 
             this._systems =
                 new Systems(this._world)
+                .Add(new SimulationSyncSystem())
                 .Add(new PhysicsSystem())
                 .Add(new GatherReplicatedDataSystem())
                 .Add(new JiggleSystem())
                 .Inject(this._physicsWorld)
+                .Inject(this._simulationSynchronizer)
                 .Inject(new ReplicationDataBroker(config.Replication.Capacity, this._replicationManager))
                 .Inject(this._entityGridMap);
 

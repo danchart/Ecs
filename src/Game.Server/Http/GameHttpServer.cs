@@ -46,7 +46,7 @@ namespace Game.Server
 
                             var connected = this._gameServer.Commander
                                 .RunCommandAsync(
-                                    new ConnectPlayerCommand(
+                                    new ConnectPlayerServerCommand(
                                         gameWorld.InstanceId, 
                                         playerId, 
                                         this._encryptionKey, 

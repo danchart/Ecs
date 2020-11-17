@@ -2,7 +2,6 @@
 using Game.Networking.PacketData;
 using Game.Simulation.Core;
 using Simulation.Core;
-using System;
 
 namespace Game.Simulation.Server
 {

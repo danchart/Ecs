@@ -5,14 +5,14 @@ using System.Threading.Tasks;
 
 namespace Game.Server
 {
-    public sealed class ConnectPlayerCommand : IServerCommand<bool>
+    public sealed class ConnectPlayerServerCommand : IServerCommand<bool>
     {
         WorldInstanceId _instanceId;
         PlayerId _playerId;
         byte[] _encryptionKey;
         IPEndPoint _ipEndPoint;
 
-        public ConnectPlayerCommand(
+        public ConnectPlayerServerCommand(
             WorldInstanceId instanceId,
             PlayerId playerId,
             byte[] encryptionKey,
