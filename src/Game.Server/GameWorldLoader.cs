@@ -23,8 +23,8 @@ namespace Game.Server
 
 
             const int
-                rows = 32,
-                cols = 32;
+                rows = 16,
+                cols = 16;
             const float unitSize = 0.5f;
             const float quarterUnitSize = 0.25f * unitSize;
 
