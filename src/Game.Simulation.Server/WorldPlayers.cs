@@ -29,7 +29,7 @@ namespace Game.Simulation.Server
             this._count = 0;
         }
 
-        public bool Contains(PlayerId id) => this._playerIdToIndex.ContainsKey(id);
+        public bool Contains(in PlayerId id) => this._playerIdToIndex.ContainsKey(id);
 
         public ref WorldPlayer this[in PlayerId id] => ref this._players[this._playerIdToIndex[id]];
 
@@ -43,6 +43,11 @@ namespace Game.Simulation.Server
             }
 
             var index = this._count++;
+
+            if (!this._players[index].IsConstructed)
+            {
+                this._players[index] = new WorldPlayer(this._replicationDataPool, _playerInputsPool);
+            }
 
             this._players[index] = new WorldPlayer(this._replicationDataPool, _playerInputsPool)
             {
@@ -79,7 +84,7 @@ namespace Game.Simulation.Server
 
         public struct Enumerator
         {
-            private WorldPlayer[] _players;
+            private readonly WorldPlayer[] _players;
             private int _count;
 
             private int _current;

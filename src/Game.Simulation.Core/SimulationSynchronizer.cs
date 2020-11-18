@@ -2,7 +2,17 @@
 
 namespace Simulation.Core
 {
-    public sealed class SimulationSynchronizer
+    public interface ISimulationIngressCommands
+    {
+        void AddIngress(ISimulationIngressCommand command);
+    }
+
+    public interface ISimulationEgressCommands
+    {
+        void AddEgress(ISimulationEgressCommand command);
+    }
+
+    public sealed class SimulationSynchronizer : ISimulationIngressCommands, ISimulationEgressCommands
     {
         private readonly World _world;
         private readonly AppendOnlyList<ISimulationIngressCommand> _commandsIngress = new AppendOnlyList<ISimulationIngressCommand>(16);
@@ -25,7 +35,7 @@ namespace Simulation.Core
 
                     if (command.CanExecute(this._world))
                     {
-                        command.Execute(this._world);
+                        command.Execute(this._world, (ISimulationEgressCommands)this);
                     }
                 }
 
@@ -33,12 +43,17 @@ namespace Simulation.Core
             }
         }
 
-        public void Add(ISimulationIngressCommand command)
+        public void AddIngress(ISimulationIngressCommand command)
         {
             lock (this._lock)
             {
                 this._commandsIngress.Add(command);
             }
+        }
+
+        public void AddEgress(ISimulationEgressCommand command)
+        {
+            throw new System.NotImplementedException();
         }
     }
 }

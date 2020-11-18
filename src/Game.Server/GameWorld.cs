@@ -52,7 +52,7 @@ namespace Game.Server
 
             this._channelManager = channelManager ?? throw new ArgumentNullException(nameof(channelManager));
 
-            this._simulationSynchronizer = new SimulationSynchronizer();
+            this._simulationSynchronizer = new SimulationSynchronizer(this._world);
             this._entityGridMap = new EntityGridMap(config.Replication.GridSize);
 
             this._players = new WorldPlayers(

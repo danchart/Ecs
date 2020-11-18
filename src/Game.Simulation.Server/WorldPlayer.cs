@@ -13,6 +13,8 @@ namespace Game.Simulation.Server
         internal int PlayerReplicationDataPoolIndex;
         internal int PlayerInputsPoolIndex;
 
+        private bool _isConstructed;
+
         private readonly PlayerReplicationDataPool _replicationDataPool;
         private readonly PlayerInputsPool _playerInputsPool;
 
@@ -23,7 +25,10 @@ namespace Game.Simulation.Server
         {
             this._replicationDataPool = replicationDataPool ?? throw new ArgumentNullException(nameof(replicationDataPool));
             this._playerInputsPool = playerInputsPool ?? throw new ArgumentNullException(nameof(playerInputsPool));
+            this._isConstructed = true;
         }
+
+        public bool IsConstructed => this._isConstructed;
 
         public PlayerInputs PlayerInputs
         {

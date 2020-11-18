@@ -6,6 +6,6 @@ namespace Simulation.Core
     {
         bool CanExecute(World world);
 
-        void Execute(World world);
+        void Execute(World world, ISimulationEgressCommands egressCommands);
     }
 }
