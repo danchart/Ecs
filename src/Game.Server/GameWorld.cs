@@ -66,12 +66,10 @@ namespace Game.Server
 
             this._systems =
                 new Systems(this._world)
-                .Add(new SimulationSyncSystem())
                 .Add(new PhysicsSystem())
                 .Add(new GatherReplicatedDataSystem())
                 .Add(new JiggleSystem())
                 .Inject(this._physicsWorld)
-                .Inject(this._simulationSynchronizer)
                 .Inject(new ReplicationDataBroker(config.Replication.Capacity, this._replicationManager))
                 .Inject(this._entityGridMap);
 
@@ -134,6 +132,9 @@ namespace Game.Server
                 var state = (FixedUpdateState)obj;
 
                 PreUpdateDiagnostics(state);
+
+                // Synchronize external state to ECS
+                this._simulationSynchronizer.Sync();
 
                 // Run simulation tick
                 this._simulation.FixedUpdate(this._fixedTick);

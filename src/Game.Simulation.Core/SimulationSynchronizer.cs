@@ -1,45 +1,44 @@
-﻿using Common.Core;
-using System.Threading;
+﻿using Ecs.Core;
 
 namespace Simulation.Core
 {
-    public interface ISimulationSynchronizer
+    public sealed class SimulationSynchronizer
     {
-        void Sync();
+        private readonly World _world;
+        private readonly AppendOnlyList<ISimulationIngressCommand> _commandsIngress = new AppendOnlyList<ISimulationIngressCommand>(16);
+        private readonly AppendOnlyList<ISimulationEgressCommand> _commandsEgress = new AppendOnlyList<ISimulationEgressCommand>(16);
 
-        void Lock();
-        void Unlock();
-    }
+        private object _lock = new object();
 
-    public sealed class SimulationSynchronizer : ISimulationSynchronizer
-    {
-        private int _lockCount = 0;
-
-        public SimulationSynchronizer()
+        public SimulationSynchronizer(World world)
         {
-        }
-
-        public void Lock()
-        {
-            Interlocked.Increment(ref _lockCount);
+            this._world = world;
         }
 
         public void Sync()
         {
-            throw new System.NotImplementedException();
-        }
-
-        public void Unlock()
-        {
-            if (Interlocked.Decrement(ref _lockCount) == 0)
+            lock (this._lock)
             {
-                // Add pending changes.
+                for (int i = 0; i < this._commandsIngress.Count; i++)
+                {
+                    var command = this._commandsIngress.Items[i];
+
+                    if (command.CanExecute(this._world))
+                    {
+                        command.Execute(this._world);
+                    }
+                }
+
+                this._commandsIngress.Clear();
             }
         }
 
-        public void AddPlayer(PlayerId id)
+        public void Add(ISimulationIngressCommand command)
         {
-
+            lock (this._lock)
+            {
+                this._commandsIngress.Add(command);
+            }
         }
     }
 }

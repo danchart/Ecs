@@ -2,10 +2,10 @@
 
 namespace Simulation.Core
 {
-    public interface ISimulationCommand
+    public interface ISimulationIngressCommand
     {
         bool CanExecute(World world);
 
-        void ExecuteAsync(World world);
+        void Execute(World world);
     }
 }

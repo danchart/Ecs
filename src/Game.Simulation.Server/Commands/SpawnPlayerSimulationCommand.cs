@@ -7,7 +7,7 @@ using System;
 
 namespace Game.Simulation.Server
 {
-    public class SpawnPlayerSimulationCommand : ISimulationCommand
+    public class SpawnPlayerSimulationCommand : ISimulationIngressCommand
     {
         private readonly PlayerId _playerId;
         private readonly IPhysicsWorld _physicsWorld;
@@ -26,7 +26,7 @@ namespace Game.Simulation.Server
             return true;
         }
 
-        public void ExecuteAsync(World world)
+        public void Execute(World world)
         {
             // TODO: Player will need more sophisticated construction, e.g. initial location
             var playerEntity = world.NewEntity();
