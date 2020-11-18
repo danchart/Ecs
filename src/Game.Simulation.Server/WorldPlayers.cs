@@ -33,9 +33,7 @@ namespace Game.Simulation.Server
 
         public ref WorldPlayer this[in PlayerId id] => ref this._players[this._playerIdToIndex[id]];
 
-        public void Add(
-            in PlayerConnectionRef playerConnectionRef,
-            in Entity entity)
+        public void Add(in PlayerConnectionRef playerConnectionRef)
         {
             if (this._count == this._players.Length)
             {
@@ -44,18 +42,7 @@ namespace Game.Simulation.Server
 
             var index = this._count++;
 
-            if (!this._players[index].IsConstructed)
-            {
-                this._players[index] = new WorldPlayer(this._replicationDataPool, _playerInputsPool);
-            }
-
-            this._players[index] = new WorldPlayer(this._replicationDataPool, _playerInputsPool)
-            {
-                ConnectionRef = playerConnectionRef,
-                Entity = entity,
-                PlayerReplicationDataPoolIndex = this._replicationDataPool.New(),
-                PlayerInputsPoolIndex = this._playerInputsPool.New(),
-            };
+            this._players[index] = new WorldPlayer(this._replicationDataPool, _playerInputsPool, playerConnectionRef);
 
             var playerId = playerConnectionRef.Unref().PlayerId;
 
@@ -66,8 +53,7 @@ namespace Game.Simulation.Server
         {
             var indexToRemove = this._playerIdToIndex[playerId];
 
-            this._replicationDataPool.Free(this._players[indexToRemove].PlayerReplicationDataPoolIndex);
-            this._playerInputsPool.Free(this._players[indexToRemove].PlayerInputsPoolIndex);
+            this._players[indexToRemove].Free();
             this._playerIdToIndex.Remove(playerId);
 
             // Swap index with last if at least one element remains.

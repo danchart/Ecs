@@ -40,15 +40,18 @@ namespace Game.Simulation.Server
             // Apply changes to player entity change lists
             foreach (ref var player in this._players)
             {
-                this._entityGridMap.GetEntitiesOfInterest(player.Entity, ref this._entityBuffer, out int entityCount);
+                if (player.TryGetEntity(out Entity playerEntity))
+                {
+                    this._entityGridMap.GetEntitiesOfInterest(playerEntity, ref this._entityBuffer, out int entityCount);
 
-                AddPacketPrioritizedEntityChangesToPlayer(
-                    player.Entity,
-                    this._entityBuffer,
-                    entityCount,
-                    modifiedEntityComponents,
-                    this._packetPriorityComponents,
-                    player.ReplicationData);
+                    AddPacketPrioritizedEntityChangesToPlayer(
+                        playerEntity,
+                        this._entityBuffer,
+                        entityCount,
+                        modifiedEntityComponents,
+                        this._packetPriorityComponents,
+                        player.ReplicationData);
+                }
             }
         }
 

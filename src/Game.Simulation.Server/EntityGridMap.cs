@@ -76,6 +76,11 @@ namespace Game.Simulation.Server
         {
             var gridHash = GetGridHashFromPosition(row, column);
 
+            if (!this._hashToEntities.ContainsKey(gridHash))
+            {
+                this._hashToEntities[gridHash] = new HashSet<Entity>(this.CellCapacity);
+            }
+
             return this._hashToEntities[gridHash];
         }
 

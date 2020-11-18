@@ -6,7 +6,7 @@ using Simulation.Core;
 
 namespace Game.Simulation.Server
 {
-    public class SpawnPlayerSimulationCommand : ISimulationIngressCommand
+    public class SpawnPlayerSimulationCommand : ISimulationCommand
     {
         private readonly WorldPlayers _players;
         private readonly PlayerConnectionRef _connectionRef;
@@ -27,14 +27,17 @@ namespace Game.Simulation.Server
 
         public bool CanExecute(World world) => true;
 
-        public void Execute(World world, ISimulationEgressCommands egressCommands)
+        public void Execute(World world)
         {
+            this._players.Add(this._connectionRef);
+
             // TODO: Player will need more sophisticated construction, e.g. initial location
             var playerEntity = world.NewEntity();
 
             ref var playerComponent = ref playerEntity.GetComponent<PlayerComponent>();
             playerComponent.Id = this._playerId;
             playerEntity.GetComponent<RigidBodyComponent>();
+            playerEntity.GetComponent<ReplicatedComponent>();
             ref var transform = ref playerEntity.GetComponent<TransformComponent>();
             playerEntity.GetComponent<MovementComponent>();
 
@@ -45,31 +48,33 @@ namespace Game.Simulation.Server
                 rotation: 0,
                 radius: 0.5f);
 
-            egressCommands.AddEgress(new AddConnectionEgressCommand(
-                this._players,
-                this._connectionRef,
-                playerEntity));
+            this._players[this._playerId].SetEntity(playerEntity);
+
+            //egressCommands.AddEgress(new AddConnectionEgressCommand(
+            //    this._players,
+            //    this._connectionRef,
+            //    playerEntity));
         }
 
-        private class AddConnectionEgressCommand : ISimulationEgressCommand
-        {
-            readonly WorldPlayers _players;
-            readonly PlayerConnectionRef _connectionRef;
-            readonly Entity _playerEntity;
+        //private class AddConnectionEgressCommand : ISimulationEgressCommand
+        //{
+        //    readonly WorldPlayers _players;
+        //    readonly PlayerConnectionRef _connectionRef;
+        //    readonly Entity _playerEntity;
 
-            public AddConnectionEgressCommand(WorldPlayers players, PlayerConnectionRef connectionRef, Entity playerEntity)
-            {
-                _players = players;
-                _connectionRef = connectionRef;
-                _playerEntity = playerEntity;
-            }
+        //    public AddConnectionEgressCommand(WorldPlayers players, PlayerConnectionRef connectionRef, Entity playerEntity)
+        //    {
+        //        _players = players;
+        //        _connectionRef = connectionRef;
+        //        _playerEntity = playerEntity;
+        //    }
 
-            public bool CanExecute(World world) => true;
+        //    public bool CanExecute(World world) => true;
 
-            public void Execute(World world)
-            {
-                this._players.Add(_connectionRef, _playerEntity);
-            }
-        }
+        //    public void Execute(World world)
+        //    {
+        //        this._players.Add(_connectionRef, _playerEntity);
+        //    }
+        //}
     }
 }

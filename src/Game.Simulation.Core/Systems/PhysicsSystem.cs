@@ -18,8 +18,15 @@ namespace Simulation.Core
 
             foreach (var entity in this._transformQuery)
             {
-                ref var transform = ref entity.GetComponent<TransformComponent>();
+                ref readonly var transform = ref entity.GetReadOnlyComponent<TransformComponent>();
                 var body = this._physicsProxy.GetRigidBody(entity);
+
+                if (transform.IsNotEqualTo(ToVolt body.Position))
+
+                transform.position.x = body.Position.x;
+                transform.position.y = body.Position.y;
+                transform.rotation = body.Angle;
+
 
                 transform.position.x = body.Position.x;
                 transform.position.y = body.Position.y;

@@ -34,6 +34,8 @@ namespace Game.Server
         private readonly ILogger _logger;
         private readonly float _fixedTick;
 
+        private readonly object _updateLock = new object();
+
         public GameWorld(
             WorldType worldType,
             WorldInstanceId id, 
@@ -127,7 +129,7 @@ namespace Game.Server
             // running the simulation on the next frame & tick we can simply lock and let the next callback handle 
             // the next simulation tick.
 
-            lock (obj)
+            lock (_updateLock)
             {
                 var state = (FixedUpdateState)obj;
 
@@ -207,30 +209,37 @@ namespace Game.Server
             connection.LastAcknowledgedSimulationFrame = FrameIndex.Nil;
             connection.LastInputFrame = FrameIndex.Nil;
 
-            // TODO: Player will need more sophisticated construction, e.g. initial location
-            var playerEntity = this._simulation.World.NewEntity();
-            // Disable from simulation until initialized.
-            playerEntity.GetComponent<IsDisabledComponent>();
+            this._simulationSynchronizer.Add(
+                new SpawnPlayerSimulationCommand(
+                    this._players, 
+                    connection.PlayerId, 
+                    this._physicsWorld, 
+                    connectionRef));
 
-            ref var playerComponent = ref playerEntity.GetComponent<PlayerComponent>();
-            playerComponent.Id = connection.PlayerId;
-            playerEntity.GetComponent<RigidBodyComponent>();
-            ref var transform = ref playerEntity.GetComponent<TransformComponent>();
-            playerEntity.GetComponent<MovementComponent>();
+            //// TODO: Player will need more sophisticated construction, e.g. initial location
+            //var playerEntity = this._simulation.World.NewEntity();
+            //// Disable from simulation until initialized.
+            //playerEntity.GetComponent<IsDisabledComponent>();
 
-            this._physicsWorld.AddCircle(
-                playerEntity, 
-                isStatic: false, 
-                originWS: transform.position, 
-                rotation: 0, 
-                radius: 0.5f);
+            //ref var playerComponent = ref playerEntity.GetComponent<PlayerComponent>();
+            //playerComponent.Id = connection.PlayerId;
+            //playerEntity.GetComponent<RigidBodyComponent>();
+            //ref var transform = ref playerEntity.GetComponent<TransformComponent>();
+            //playerEntity.GetComponent<MovementComponent>();
 
-            this._players.Add(
-                in connectionRef,
-                playerEntity);
+            //this._physicsWorld.AddCircle(
+            //    playerEntity, 
+            //    isStatic: false, 
+            //    originWS: transform.position, 
+            //    rotation: 0, 
+            //    radius: 0.5f);
+
+            //this._players.Add(
+            //    in connectionRef,
+            //    playerEntity);
 
             // Entity is ready for the simulation.
-            playerEntity.RemoveComponent<IsDisabledComponent>();
+            //playerEntity.RemoveComponent<IsDisabledComponent>();
         }
 
         public void Disconnect(PlayerConnectionRef connectionRef)
@@ -244,9 +253,7 @@ namespace Game.Server
                 return;
             }
 
-            var entity = this._players[connection.PlayerId].Entity;
             this._players.Remove(connection.PlayerId);
-            entity.Free();
         }
 
         private class FixedUpdateState

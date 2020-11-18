@@ -37,7 +37,6 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="EntityGridMapTests.cs" />
-    <Compile Include="PlayerConnectionsTests.cs" />
     <Compile Include="PlayerReplicationDataPoolTests.cs" />
     <Compile Include="ReplicatedEntitiesTests.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />

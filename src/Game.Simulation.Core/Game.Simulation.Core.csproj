@@ -42,8 +42,7 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="Commands\ISimulationEgressCommand.cs" />
-    <Compile Include="Commands\ISimulationIngressCommand.cs" />
+    <Compile Include="Commands\ISimulationCommand.cs" />
     <Compile Include="ComponentIdAttribute.cs" />
     <Compile Include="ComponentId.cs" />
     <Compile Include="Components\Tags\IsDisabledComponent.cs" />

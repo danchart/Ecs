@@ -2,7 +2,7 @@
 
 namespace Simulation.Core
 {
-    public interface ISimulationEgressCommand
+    public interface ISimulationCommand
     {
         bool CanExecute(World world);
 
