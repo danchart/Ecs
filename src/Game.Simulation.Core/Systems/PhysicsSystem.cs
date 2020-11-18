@@ -18,19 +18,21 @@ namespace Simulation.Core
 
             foreach (var entity in this._transformQuery)
             {
-                ref readonly var transform = ref entity.GetReadOnlyComponent<TransformComponent>();
+                ref readonly var transformReadOnly = ref entity.GetReadOnlyComponent<TransformComponent>();
                 var body = this._physicsProxy.GetRigidBody(entity);
 
-                if (transform.IsNotEqualTo(ToVolt body.Position))
+                if (transformReadOnly.IsNotEqualTo(
+                    new Common.Core.Numerics.Vector2(
+                        body.Position.x, 
+                        body.Position.y), 
+                    body.Angle))
+                {
+                    ref var transform = ref entity.GetComponent<TransformComponent>();
 
-                transform.position.x = body.Position.x;
-                transform.position.y = body.Position.y;
-                transform.rotation = body.Angle;
-
-
-                transform.position.x = body.Position.x;
-                transform.position.y = body.Position.y;
-                transform.rotation = body.Angle;
+                    transform.position.x = body.Position.x;
+                    transform.position.y = body.Position.y;
+                    transform.rotation = body.Angle;
+                }
             }
         }
     }
