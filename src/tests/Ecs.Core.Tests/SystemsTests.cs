@@ -239,16 +239,16 @@ namespace Ecs.Core.Tests
 
             public override void OnUpdate(float deltaTime)
             {
-                foreach (var entity in QueryFoo)
+                foreach (int index in QueryFoo)
                 {
-                    ref var foo = ref entity.GetComponent<SampleStructs.Foo>();
+                    ref SampleStructs.Foo foo = ref QueryFoo.Get(index);
 
                     foo.x++;
                 }
 
-                foreach (var entity in QueryBar)
+                foreach (int index in QueryBar)
                 {
-                    ref var bar = ref entity.GetComponent<SampleStructs.Bar>();
+                    ref SampleStructs.Bar bar = ref QueryBar.Get(index);
 
                     bar.a++;
                 }

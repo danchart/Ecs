@@ -16,10 +16,12 @@ namespace Simulation.Core
         {
             this._physicsProxy.Run(deltaTime);
 
-            foreach (var entity in this._transformQuery)
+            foreach (var index in this._transformQuery)
             {
-                ref readonly var transformReadOnly = ref entity.GetReadOnlyComponent<TransformComponent>();
+                var entity = this._transformQuery.GetEntity(index);
                 var body = this._physicsProxy.GetRigidBody(entity);
+
+                ref readonly TransformComponent transformReadOnly = ref this._transformQuery.Get2Readonly(index);
 
                 if (transformReadOnly.IsNotEqualTo(
                     new Common.Core.Numerics.Vector2(

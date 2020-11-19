@@ -205,7 +205,7 @@ namespace Ecs.Core.Tests
         internal class ChangeFilterSystem<T> : SystemBase 
             where T : unmanaged
         {
-            public ChangedEntityQuery<T> QueryWithChangeFilter = null;
+            public EntityQuery<T> QueryWithChangeFilter = null;
             public EntityQuery<T> Query = null;
 
             public int LastFilteredEntityCount = 0;
@@ -217,7 +217,7 @@ namespace Ecs.Core.Tests
             {
                 LastFilteredEntityCount = 0;
 
-                foreach (var entity in QueryWithChangeFilter.GetEntities(this.LastSystemVersion))
+                foreach (var entity in QueryWithChangeFilter.GetChangedEnumerator(this.LastSystemVersion))
                 {
                     LastFilteredEntityCount++;
                 }

@@ -150,8 +150,7 @@ namespace Ecs.Core
             var systemType = system.GetType();
             var worldType = world.GetType();
 
-            var perSystemEntityQueryType = typeof(PerSystemsEntityQuery);
-            var globalEntityQueryType = typeof(GlobalEntityQuery);
+            var entityQueryType = typeof(EntityQueryBase);
 
 
             foreach (var field in systemType.GetFields(BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance))
@@ -165,15 +164,9 @@ namespace Ecs.Core
                 }
 
                 // Assign entity query
-                if (field.FieldType.IsSubclassOf(perSystemEntityQueryType))
+                if (field.FieldType.IsSubclassOf(entityQueryType))
                 {
-                    field.SetValue(system, world.GetPerSystemsEntityQuery(field.FieldType, systemsIndex));
-
-                    continue;
-                }
-                else if (field.FieldType.IsSubclassOf(globalEntityQueryType))
-                {
-                    field.SetValue(system, world.GetGlobalEntityQuery(field.FieldType));
+                    field.SetValue(system, world.GetEntityQuery(field.FieldType));
 
                     continue;
                 }
@@ -203,9 +196,9 @@ namespace Ecs.Core
 
             public override void OnUpdate(float deltaTime)
             {
-                foreach (var entity in Query)
+                foreach (int index in Query)
                 {
-                    entity.RemoveComponent<T>();
+                    Query.GetEntity(index).RemoveComponent<T>();
                 }
             }
         }

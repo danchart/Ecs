@@ -11,9 +11,9 @@ namespace Game.Simulation.Server
     /// </summary>
     public class GatherReplicatedDataSystem : SystemBase
     {
-        public ChangedEntityQuery<ReplicatedComponent, TransformComponent>.Exclude<IsDisabledComponent> ChangedTransformQuery = null;
-        public ChangedEntityQuery<ReplicatedComponent, MovementComponent>.Exclude<IsDisabledComponent> ChangedMovementQuery = null;
-        public ChangedEntityQuery<ReplicatedComponent, PlayerComponent>.Exclude<IsDisabledComponent> ChangedPlayerQuery = null;
+        public EntityQuery<ReplicatedComponent, TransformComponent>.Exclude<IsDisabledComponent> ChangedTransformQuery = null;
+        public EntityQuery<ReplicatedComponent, MovementComponent>.Exclude<IsDisabledComponent> ChangedMovementQuery = null;
+        public EntityQuery<ReplicatedComponent, PlayerComponent>.Exclude<IsDisabledComponent> ChangedPlayerQuery = null;
 
         public IReplicationDataBroker ReplicationDataBroker = null;
         public IEntityGridMap EntityGridMap = null;
@@ -33,10 +33,10 @@ namespace Game.Simulation.Server
 
             // TransformComponent
 
-            foreach (int index in ChangedTransformQuery.GetIndices2(this.LastSystemVersion))
+            foreach (int index in ChangedTransformQuery.GetChangedEnumerator<TransformComponent>(this.LastSystemVersion))
             {
                 var entity = ChangedTransformQuery.GetEntity(index);
-                ref readonly var transform = ref ChangedTransformQuery.GetReadonly2(index);
+                ref readonly var transform = ref ChangedTransformQuery.Get2Readonly(index);
 
                 ref var component = ref modifiedEntityComponents[entity].New();
                 transform.ToPacket(ref component.Transform);
@@ -47,25 +47,25 @@ namespace Game.Simulation.Server
 
             // MovementComponent
 
-            foreach (int index in ChangedMovementQuery.GetIndices2(this.LastSystemVersion))
+            foreach (int index in ChangedMovementQuery.GetChangedEnumerator<MovementComponent>(this.LastSystemVersion))
             {
                 var entity = ChangedMovementQuery.GetEntity(index);
 
                 ref var component = ref modifiedEntityComponents[entity].New();
                 ChangedMovementQuery
-                    .GetReadonly2(index)
+                    .Get2Readonly(index)
                     .ToPacket(ref component.Movement);
             }
 
             // PlayerComponent
 
-            foreach (int index in ChangedPlayerQuery.GetIndices2(this.LastSystemVersion))
+            foreach (int index in ChangedPlayerQuery.GetChangedEnumerator<PlayerComponent>(this.LastSystemVersion))
             {
                 var entity = ChangedPlayerQuery.GetEntity(index);
 
                 ref var component = ref modifiedEntityComponents[entity].New();
                 ChangedPlayerQuery
-                    .GetReadonly2(index)
+                    .Get2Readonly(index)
                     .ToPacket(ref component.Player);
             }
 

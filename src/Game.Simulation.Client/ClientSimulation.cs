@@ -116,7 +116,7 @@ namespace Game.Simulation.Client
 
             // Capture input to the current snapshot
             var query = (EntityQuery<TInput>)World.GetEntityQuery<EntityQuery<TInput>>();
-            ref readonly var input = ref query.GetSingletonComponentReadonly();
+            ref readonly var input = ref query.GetSingletonReadonly();
 
             _snapShots.Current()
                 .ClientInputs

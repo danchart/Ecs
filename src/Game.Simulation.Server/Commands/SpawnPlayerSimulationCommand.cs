@@ -49,32 +49,6 @@ namespace Game.Simulation.Server
                 radius: 0.5f);
 
             this._players[this._playerId].SetEntity(playerEntity);
-
-            //egressCommands.AddEgress(new AddConnectionEgressCommand(
-            //    this._players,
-            //    this._connectionRef,
-            //    playerEntity));
         }
-
-        //private class AddConnectionEgressCommand : ISimulationEgressCommand
-        //{
-        //    readonly WorldPlayers _players;
-        //    readonly PlayerConnectionRef _connectionRef;
-        //    readonly Entity _playerEntity;
-
-        //    public AddConnectionEgressCommand(WorldPlayers players, PlayerConnectionRef connectionRef, Entity playerEntity)
-        //    {
-        //        _players = players;
-        //        _connectionRef = connectionRef;
-        //        _playerEntity = playerEntity;
-        //    }
-
-        //    public bool CanExecute(World world) => true;
-
-        //    public void Execute(World world)
-        //    {
-        //        this._players.Add(_connectionRef, _playerEntity);
-        //    }
-        //}
     }
 }

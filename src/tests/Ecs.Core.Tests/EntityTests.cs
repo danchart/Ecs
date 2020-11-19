@@ -203,8 +203,10 @@ namespace Ecs.Core.Tests
 
             public override void OnUpdate(float deltaTime)
             {
-                foreach (var entity in Query)
+                foreach (int index in Query)
                 {
+                    var entity = Query.GetEntity(index);
+
                     if (UseReadOnly)
                     {
                         ref readonly var foo = ref entity.GetReadOnlyComponent<SampleStructs.Foo>();
@@ -238,8 +240,10 @@ namespace Ecs.Core.Tests
 
             public override void OnUpdate(float deltaTime)
             {
-                foreach (var entity in Query)
+                foreach (int index in Query)
                 {
+                    var entity = Query.GetEntity(index);
+
                     if (UseReadOnly)
                     {
                         ref readonly var foo = ref entity.GetReadonlyComponentAndVersion<SampleStructs.Foo>(out Version);

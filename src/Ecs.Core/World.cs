@@ -29,8 +29,7 @@ namespace Ecs.Core
 
             _includedComponentIdToEntityQueries = new Dictionary<int, AppendOnlyList<EntityQueryBase>>(Config.InitialComponentToEntityQueryMapCapacity);
             _excludedComponentIdToEntityQueries = new Dictionary<int, AppendOnlyList<EntityQueryBase>>(Config.InitialComponentToEntityQueryMapCapacity);
-            State._globalQueries = new AppendOnlyList<GlobalEntityQuery>(Config.InitialEntityQueryCapacity);
-            State._perSystemsQueries = new AppendOnlyList<AppendOnlyList<PerSystemsEntityQuery>>(Config.InitialSystemsCapacity);
+            State._queries = new AppendOnlyList<EntityQueryBase>(Config.InitialEntityQueryCapacity);
 
             State.GlobalVersion = new Version();
             State.LastSystemVersion = new AppendOnlyList<Version>(Config.InitialSystemsCapacity); 
@@ -39,7 +38,6 @@ namespace Ecs.Core
         public int NewSystems()
         {
             this.State.LastSystemVersion.Add(this.State.GlobalVersion);
-            this.State._perSystemsQueries.Add(new AppendOnlyList<PerSystemsEntityQuery>(Config.InitialEntityQueryCapacity));
 
             return this.State.LastSystemVersion.Count - 1;
         }
@@ -86,7 +84,7 @@ namespace Ecs.Core
 
         public EntityQueryBase GetEntityQuery<T>()
         {
-            return GetGlobalEntityQuery(typeof(T));
+            return GetEntityQuery(typeof(T));
         }
 
         internal void FreeEntityData(int id, ref EntityData entityData)
@@ -101,63 +99,33 @@ namespace Ecs.Core
             return ref State._entities[entity.Id];
         }
 
-        internal EntityQueryBase GetPerSystemsEntityQuery(Type entityQueryType, int systemsIndex)
-        {
-            ref var queries = ref State._perSystemsQueries.Items[systemsIndex];
-
-            for (int i = 0; i < queries.Count; i++)
-            {
-                if (queries.Items[i].GetType() == entityQueryType)
-                {
-                    // Matching query exists.
-                    return queries.Items[i];
-                }
-            }
-
-            // Create query.
-            var entityQuery = (PerSystemsEntityQuery)Activator.CreateInstance(
-                entityQueryType,
-                BindingFlags.NonPublic | BindingFlags.Instance,
-                null,
-                new object[] { this }, // args: World
-                CultureInfo.InvariantCulture);
-
-            queries.Add(entityQuery);
-
-            AddQueryToComponentIdMaps(entityQuery);
-
-            Invariants.ValidateEntityQuery(queries, entityQueryType);
-
-            return entityQuery;
-        }
-
         /// <summary>
         /// Returns the global entity query of the matching type.
         /// </summary>
-        internal EntityQueryBase GetGlobalEntityQuery(Type entityQueryType)
+        internal EntityQueryBase GetEntityQuery(Type entityQueryType)
         {
-            for (int i = 0; i < State._globalQueries.Count; i++)
+            for (int i = 0; i < State._queries.Count; i++)
             {
-                if (State._globalQueries.Items[i].GetType() == entityQueryType)
+                if (State._queries.Items[i].GetType() == entityQueryType)
                 {
                     // Matching query exists.
-                    return State._globalQueries.Items[i];
+                    return State._queries.Items[i];
                 }
             }
 
             // Create query.
-            var entityQuery = (GlobalEntityQuery)Activator.CreateInstance(
+            var entityQuery = (EntityQueryBase)Activator.CreateInstance(
                 entityQueryType,
                 BindingFlags.NonPublic | BindingFlags.Instance,
                 null,
                 new[] { this },
                 CultureInfo.InvariantCulture);
 
-            State._globalQueries.Add(entityQuery);
+            State._queries.Add(entityQuery);
 
             AddQueryToComponentIdMaps(entityQuery);
 
-            Invariants.ValidateEntityQuery(State._globalQueries, entityQueryType);
+            Invariants.ValidateEntityQuery(State._queries, entityQueryType);
 
             return entityQuery;
         }
@@ -189,7 +157,7 @@ namespace Ecs.Core
                 }
             }
         }
-
+ 
         internal void OnAddComponent(
             int componentTypeIndex, 
             in Entity entity, 

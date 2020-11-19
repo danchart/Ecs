@@ -236,16 +236,9 @@ namespace Game.Simulation.Client.Tests
 
             public override void OnUpdate(float deltaTime)
             {
-                ref readonly var input = ref SingletoneInputQuery.GetSingletonComponentReadonly();
+                ref readonly var input = ref SingletoneInputQuery.GetSingletonReadonly();
 
-                Entity playerEnt = default;
-
-                foreach (var entity in SingletonPlayerQuery)
-                {
-                    playerEnt = entity;
-
-                    break;
-                }
+                Entity playerEnt = SingletonPlayerQuery.GetEntity(0);
 
                 if (input.isLeftDown || input.isRightDown)
                 {
@@ -271,9 +264,9 @@ namespace Game.Simulation.Client.Tests
 
             public override void OnUpdate(float deltaTime)
             {
-                foreach (var entity in MovementQuery)
+                foreach (int index in MovementQuery)
                 {
-                    ref var movement = ref entity.GetComponent<MovementComponent>();
+                    ref MovementComponent movement = ref MovementQuery.Get(index);
 
                     if (Math.Abs(movement.velocity.x) < 0.001f)
                     {
@@ -282,7 +275,7 @@ namespace Game.Simulation.Client.Tests
                         continue;
                     }
 
-                    ref var position = ref entity.GetComponent<PositionComponent>();
+                    ref PositionComponent position = ref MovementQuery.GetEntity(index).GetComponent<PositionComponent>();
 
                     // Move position by velocity.
                     position.xy.x += movement.velocity.x;

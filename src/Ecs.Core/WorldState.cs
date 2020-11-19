@@ -15,11 +15,10 @@ namespace Ecs.Core
         internal int _entityCount;
         internal int _freeEntityCount;
 
-        internal AppendOnlyList<GlobalEntityQuery> _globalQueries;
+        internal AppendOnlyList<EntityQueryBase> _queries;
 
         // Per-systems 
         internal AppendOnlyList<Version> LastSystemVersion;
-        internal AppendOnlyList<AppendOnlyList<PerSystemsEntityQuery>> _perSystemsQueries;
     }
 
     public static class WorldStateExtensions
@@ -82,74 +81,38 @@ namespace Ecs.Core
 
             // Queries are harder...
 
-            if (copiedState._globalQueries == null)
+            if (copiedState._queries == null)
             {
                 // Allocate and copy list
 
-                copiedState._globalQueries = new AppendOnlyList<GlobalEntityQuery>(source._globalQueries.Items.Length);
+                copiedState._queries = new AppendOnlyList<EntityQueryBase>(source._queries.Items.Length);
 
-                for (int i = 0; i < source._globalQueries.Count; i++)
+                for (int i = 0; i < source._queries.Count; i++)
                 {
-                    copiedState._globalQueries.Add((GlobalEntityQuery)source._globalQueries.Items[i].Clone());
+                    copiedState._queries.Add(source._queries.Items[i].Clone());
                 }
             }
             else
             {
                 // Resize and copy list
 
-                copiedState._globalQueries.Resize(source._globalQueries.Count);
+                copiedState._queries.Resize(source._queries.Count);
 
                 // Copy list
-                for (int i = 0; i < source._globalQueries.Count; i++)
+                for (int i = 0; i < source._queries.Count; i++)
                 {
-                    if (copiedState._globalQueries.Items[i] == null)
+                    if (copiedState._queries.Items[i] == null)
                     {
                         // ### Heap alloc
-                        copiedState._globalQueries.Items[i] = (GlobalEntityQuery)source._globalQueries.Items[i].Clone();
+                        copiedState._queries.Items[i] = source._queries.Items[i].Clone();
                     }
 
-                    source._globalQueries.Items[i].CopyTo(copiedState._globalQueries.Items[i]);
+                    source._queries.Items[i].CopyTo(copiedState._queries.Items[i]);
                 }
             }
 
             copiedState.LastSystemVersion = copiedState.LastSystemVersion ?? new AppendOnlyList<Version>(source.LastSystemVersion.Count);
             source.LastSystemVersion.ShallowCopyTo(copiedState.LastSystemVersion);
-
-            // Allocate and size systems list - this is fixed after Init();
-            if (copiedState._perSystemsQueries == null)
-            {
-                copiedState._perSystemsQueries = new AppendOnlyList<AppendOnlyList<PerSystemsEntityQuery>>(source._perSystemsQueries.Count);
-
-                // Copy list
-                for (int i = 0; i < source._perSystemsQueries.Count; i++)
-                {
-                    copiedState._perSystemsQueries.Add(new AppendOnlyList<PerSystemsEntityQuery>(source._perSystemsQueries.Items[i].Count));
-
-                    // Clone list
-
-                    for (int j = 0; j < source._perSystemsQueries.Items[i].Count; j++)
-                    {
-                        copiedState._perSystemsQueries.Items[i].Add((PerSystemsEntityQuery)source._perSystemsQueries.Items[i].Items[j]);
-                    }
-                }
-            }
-            else
-            {
-                // Copy per system query list
-                for (int i = 0; i < source._perSystemsQueries.Count; i++)
-                {
-                    var queryList = source._perSystemsQueries.Items[i];
-                    var copiedQueryList = copiedState._perSystemsQueries.Items[i];
-
-                    copiedQueryList.Resize(queryList.Count);
-
-                    // Copy list
-                    for (int j = 0; j < queryList.Count; j++)
-                    {
-                        queryList.Items[j].CopyTo(copiedQueryList.Items[j]);
-                    }
-                }
-            }
 
             return copiedState;
         }
