@@ -3,7 +3,7 @@ using System.Diagnostics;
 
 namespace Game.Networking
 {
-    public interface IPacketEncryption
+    public interface IPacketEncryptor
     {
         PacketEncryptionResult Encrypt(
             byte[] key, 
@@ -23,9 +23,6 @@ namespace Game.Networking
             byte[] data, 
             int offset, 
             out int decryptedSize);
-
-        //void AddPlayer(PlayerId id, byte[] key);
-        //void RemovePlayer(PlayerId id);
     }
 
     public enum PacketEncryptionResult
@@ -38,7 +35,7 @@ namespace Game.Networking
     /// <summary>
     /// Completely unshippable XOR key "encryption".
     /// </summary>
-    public class XorPacketEncryption : IPacketEncryption
+    public class XorPacketEncryptor : IPacketEncryptor
     {
         //private Dictionary<PlayerId, byte[]> PlayerIdToKey = new Dictionary<PlayerId, byte[]>(256);
 

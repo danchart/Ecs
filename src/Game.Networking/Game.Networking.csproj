@@ -28,7 +28,7 @@
     <Compile Include="ServerConnections\PlayerConnectionRef.cs" />
     <Compile Include="ServerConnections\PlayerConnectionRefs.cs" />
     <Compile Include="Ids\WorldInstanceId.cs" />
-    <Compile Include="PacketEncryption.cs" />
+    <Compile Include="PacketEncryptor.cs" />
     <Compile Include="Packets\ClientPacketEnvelope.cs" />
     <Compile Include="Packets\ServerPacketEnvelope.cs" />
     <Compile Include="PacketData\MovementData.cs" />
@@ -38,6 +38,7 @@
     <Compile Include="Packets\ClientInputPacket.cs" />
     <Compile Include="Packets\ReplicationPacket.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="NetworkTransportConfig.cs" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\Common.Core\Common.Core.csproj">

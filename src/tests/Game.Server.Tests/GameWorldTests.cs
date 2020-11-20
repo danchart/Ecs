@@ -14,10 +14,14 @@ namespace Game.Server.Tests
             var config = new DefaultServerConfig();
 
             var playerConnections = new PlayerConnectionManager(logger, config.PlayerConnection);
-            var udpTransport = new ServerUdpPacketTransport(logger, config.Transport.UdpPacket);
-            IPacketEncryption packetEncryption = new XorPacketEncryption();
+            var udpTransport = new UdpPacketServerTransport(
+                logger,
+                config.NetworkTransport.PacketEncryptor,
+                config.NetworkTransport,
+                config.UdpServer);
+            IPacketEncryptor packetEncryption = new XorPacketEncryptor();
             var channelManager = new ServerChannelOutgoing(
-                config.Transport,
+                config.NetworkTransport,
                 udpTransport,
                 packetEncryption,
                 logger);

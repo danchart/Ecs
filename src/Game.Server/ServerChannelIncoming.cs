@@ -13,15 +13,15 @@ namespace Game.Server
 
         private bool _isRunning;
 
-        private readonly IPacketEncryption _packetEncryption;
-        private readonly ServerUdpPacketTransport _transport;
+        private readonly IPacketEncryptor _packetEncryption;
+        private readonly UdpPacketServerTransport _transport;
         private readonly ControlPacketController _controlPacketController;
         private readonly SimulationPacketController _simulationPacketController;
         private readonly ILogger _logger;
 
         public ServerChannelIncoming(
-            ServerUdpPacketTransport transport,
-            IPacketEncryption packetEncryption,
+            UdpPacketServerTransport transport,
+            IPacketEncryptor packetEncryption,
             ControlPacketController controlPacketController,
             SimulationPacketController simulationPacketController,
             ILogger logger)

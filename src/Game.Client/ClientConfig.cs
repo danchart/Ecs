@@ -1,4 +1,5 @@
 ﻿using Ecs.Core;
+using Game.Networking;
 using Game.Simulation.Core;
 
 namespace Game.Client
@@ -8,7 +9,7 @@ namespace Game.Client
         EcsConfig Ecs { get; }
         PlayerInputConfig PlayerInput { get; }
         SimulationConfig Simulation { get;  }
-        TransportConfig Transport { get; } /
+        NetworkTransportConfig NetworkTransport { get; } 
     }
 
     public class DefaultClientConfig : IClientConfig
@@ -18,5 +19,7 @@ namespace Game.Client
         public PlayerInputConfig PlayerInput => PlayerInputConfig.Default;
 
         public SimulationConfig Simulation => SimulationConfig.Default;
+
+        public NetworkTransportConfig NetworkTransport => NetworkTransportConfig.Default;
     }
 }

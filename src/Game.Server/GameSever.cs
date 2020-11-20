@@ -2,7 +2,6 @@
 using Game.Networking;
 using System;
 using System.Collections.Generic;
-using System.Collections.ObjectModel;
 using System.Net;
 
 namespace Game.Server
@@ -11,7 +10,7 @@ namespace Game.Server
     {
         public readonly GameServerCommander Commander;
 
-        private readonly ServerUdpPacketTransport _udpTransport;
+        private readonly UdpPacketServerTransport _udpTransport;
         private readonly ServerChannelOutgoing _channelOutgoing;
         private readonly ServerChannelIncoming _channelIncoming;
         private readonly PlayerConnectionManager _playerConnectionManager;
@@ -32,13 +31,15 @@ namespace Game.Server
 
             this.Commander = new GameServerCommander(this);
 
-            this._udpTransport = new ServerUdpPacketTransport(
+            this._udpTransport = new UdpPacketServerTransport(
                 this._logger,
-                serverConfig.Transport.UdpPacket);
+                serverConfig.NetworkTransport.PacketEncryptor,
+                serverConfig.NetworkTransport,
+                serverConfig.UdpServer);
             this._channelOutgoing = new ServerChannelOutgoing(
-                serverConfig.Transport,
+                serverConfig.NetworkTransport,
                 this._udpTransport,
-                serverConfig.Transport.PacketEncryption,
+                serverConfig.NetworkTransport.PacketEncryptor,
                 this._logger);
 
             this._playerConnectionManager = new PlayerConnectionManager(
@@ -53,7 +54,7 @@ namespace Game.Server
 
             this._channelIncoming = new ServerChannelIncoming(
                 this._udpTransport,
-                serverConfig.Transport.PacketEncryption,
+                serverConfig.NetworkTransport.PacketEncryptor,
                 new ControlPacketController(
                     this._logger,
                     this._playerConnectionManager,
@@ -68,7 +69,7 @@ namespace Game.Server
             this._worldLoader = new GameWorldLoader();
         }
 
-        public IPEndPoint UdpPacketEndpoint => this._serverConfig.Transport.UdpPacket.HostIpEndPoint;
+        public IPEndPoint UdpPacketEndpoint => this._serverConfig.UdpServer.HostIpEndPoint;
 
         public IEnumerable<GameWorld> GetWorlds()
         {

@@ -1,35 +1,39 @@
 ﻿using Common.Core;
 using Game.Networking;
 using Networking.Core;
+using System;
 using System.IO;
 using System.Net;
 
 namespace Game.Server
 {
-    public class ServerUdpPacketTransport
+    public class UdpPacketServerTransport
     {
         private readonly ServerUdpSocket _udpSocket;
         private readonly ReceiveBuffer _receiveBuffer;
 
-        private readonly UdpPacketTransportConfig _config;
+        private readonly IPEndPoint _endPoint;
+        private readonly IPacketEncryptor _packetEncryption;
 
         private ByteArrayPool _packetSerializationBytePool;
 
-        public ServerUdpPacketTransport(ILogger logger, UdpPacketTransportConfig config)
+        public UdpPacketServerTransport(ILogger logger, IPacketEncryptor packetEncryption, NetworkTransportConfig transportConfig, UdpServerConfig udpServerConfig)
         {
-            this._config = config;
+            this._packetEncryption = packetEncryption ?? throw new ArgumentNullException(nameof(packetEncryption));
+            this._endPoint = udpServerConfig.HostIpEndPoint;
 
-            this._receiveBuffer = new ReceiveBuffer(config.MaxPacketSize, config.PacketReceiveQueueCapacity);
+            this._receiveBuffer = new ReceiveBuffer(transportConfig.MaxPacketSize, udpServerConfig.ReceivePacketQueueCapacity);
             this._udpSocket = new ServerUdpSocket(logger, this._receiveBuffer);
+            
 
-            this._packetSerializationBytePool = new ByteArrayPool(config.MaxPacketSize, config.PacketSendQueueCapacity);
+            this._packetSerializationBytePool = new ByteArrayPool(transportConfig.MaxPacketSize, udpServerConfig.SendPacketQueueCapacity);
         }
 
         public ReceiveBuffer ReceiveBuffer => this._receiveBuffer;
 
         public void Start()
         {
-            this._udpSocket.Start(this._config.HostIpEndPoint);
+            this._udpSocket.Start(this._endPoint);
         }
 
         public void SendPacket(IPEndPoint endPoint, in ServerPacketEnvelope packet)
@@ -40,7 +44,7 @@ namespace Game.Server
             int size;
             using (var stream = new MemoryStream(data))
             {
-                size = packet.Serialize(stream, measureOnly: false, packetEncryption: this._config.PacketEncryption);
+                size = packet.Serialize(stream, measureOnly: false, packetEncryption: this._packetEncryption);
             }
 
             this._udpSocket.SendTo(data, endPoint);

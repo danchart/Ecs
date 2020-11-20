@@ -9,7 +9,7 @@ namespace Game.Networking.Tests
         [Fact]
         public void XorTest()
         {
-            IPacketEncryption packetEncryption = new XorPacketEncryption();
+            IPacketEncryptor packetEncryption = new XorPacketEncryptor();
 
             var key = Encoding.UTF8.GetBytes("My secret key");
             var salt = (uint) new Random().Next();

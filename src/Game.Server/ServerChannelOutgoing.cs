@@ -13,15 +13,15 @@ namespace Game.Server
     {
         private ServerPacketEnvelope _serverPacketEnvelope;
 
-        private readonly IPacketEncryption _packetEncryption;
-        private readonly ServerUdpPacketTransport _transport;
-        private readonly TransportConfig _config;
+        private readonly IPacketEncryptor _packetEncryption;
+        private readonly UdpPacketServerTransport _transport;
+        private readonly NetworkTransportConfig _config;
         private readonly ILogger _logger;
 
         public ServerChannelOutgoing(
-            TransportConfig config,
-            ServerUdpPacketTransport transport,
-            IPacketEncryption packetEncryption,
+            NetworkTransportConfig config,
+            UdpPacketServerTransport transport,
+            IPacketEncryptor packetEncryption,
             ILogger logger)
         {
             this._config = config ?? throw new ArgumentNullException(nameof(config));

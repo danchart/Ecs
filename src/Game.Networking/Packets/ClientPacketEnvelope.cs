@@ -19,7 +19,7 @@ namespace Game.Networking
         public ClientInputPacket PlayerInputPacket;
         public ControlPacket ControlPacket;
 
-        public int Serialize(Stream stream, bool measureOnly, IPacketEncryption packetEncryption)
+        public int Serialize(Stream stream, bool measureOnly, IPacketEncryptor packetEncryption)
         {
             int size = stream.PacketWriteByte((byte)this.Type, measureOnly);
             size += stream.PacketWriteInt(this.PlayerId, measureOnly);
@@ -35,7 +35,7 @@ namespace Game.Networking
             return -1;
         }
 
-        public bool Deserialize(Stream stream, IPacketEncryption packetEncryption)
+        public bool Deserialize(Stream stream, IPacketEncryptor packetEncryption)
         {
             byte typeAsByte;
             stream.PacketReadByte(out typeAsByte);

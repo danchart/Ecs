@@ -10,7 +10,8 @@ namespace Game.Server
         ReplicationConfig Replication { get; }
         PlayerConnectionConfig PlayerConnection { get; }
         EcsConfig Ecs { get; }
-        TransportConfig Transport { get; }
+        NetworkTransportConfig NetworkTransport { get; }
+        UdpServerConfig UdpServer { get; }
         ServerConfig Server { get; }
         PlayerInputConfig PlayerInput { get;  }
         SimulationConfig Simulation { get; }
@@ -26,28 +27,15 @@ namespace Game.Server
 
         public EcsConfig Ecs => EcsConfig.Default;
 
-        public TransportConfig Transport => TransportConfig.Default;
+        public UdpServerConfig UdpServer => UdpServerConfig.Default;
+
+        public NetworkTransportConfig NetworkTransport => NetworkTransportConfig.Default;
 
         public ServerConfig Server => ServerConfig.Default;
 
         public PlayerInputConfig PlayerInput => PlayerInputConfig.Default;
 
         public SimulationConfig Simulation => SimulationConfig.Default;
-    }
-
-    public sealed class TransportConfig
-    {
-        public int MaxPacketSize;
-
-        public UdpPacketTransportConfig UdpPacket;
-        public IPacketEncryption PacketEncryption;
-
-        public static readonly TransportConfig Default = new TransportConfig
-        {
-            MaxPacketSize = 512,
-            UdpPacket = UdpPacketTransportConfig.Default,
-            PacketEncryption = new XorPacketEncryption(),
-        };
     }
 
     public sealed class ServerConfig
