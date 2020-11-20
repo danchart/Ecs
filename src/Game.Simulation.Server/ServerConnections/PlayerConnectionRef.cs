@@ -1,6 +1,6 @@
 ﻿using Common.Core;
 
-namespace Game.Networking
+namespace Game.Simulation.Server
 {
     /// <summary>
     /// Reference to player connection struct.

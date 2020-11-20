@@ -1,10 +1,10 @@
 ﻿using Common.Core;
-using Game.Simulation.Core;
+using Game.Networking;
 using System.Net;
 using Test.Common;
 using Xunit;
 
-namespace Game.Networking.Tests
+namespace Game.Simulation.Server.Tests
 {
     public class PlayerConnectionsTests
     {

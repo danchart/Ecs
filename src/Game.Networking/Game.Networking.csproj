@@ -22,11 +22,6 @@
   <ItemGroup>
     <Compile Include="DataTypes\FrameIndex.cs" />
     <Compile Include="PacketData\PlayerData.cs" />
-    <Compile Include="ServerConnections\PlayerConnection.cs" />
-    <Compile Include="ServerConnections\PlayerConnectionConfig.cs" />
-    <Compile Include="ServerConnections\PlayerConnectionManager.cs" />
-    <Compile Include="ServerConnections\PlayerConnectionRef.cs" />
-    <Compile Include="ServerConnections\PlayerConnectionRefs.cs" />
     <Compile Include="Ids\WorldInstanceId.cs" />
     <Compile Include="PacketEncryptor.cs" />
     <Compile Include="Packets\ClientPacketEnvelope.cs" />

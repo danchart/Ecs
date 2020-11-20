@@ -1,4 +1,4 @@
-﻿namespace Game.Networking
+﻿namespace Game.Simulation.Server
 {
     public class PlayerConnectionConfig
     {

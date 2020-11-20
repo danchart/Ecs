@@ -1,8 +1,9 @@
 ﻿using Common.Core;
+using Game.Networking;
 using System;
 using System.Net;
 
-namespace Game.Networking
+namespace Game.Simulation.Server
 {
     public sealed class PlayerConnectionManager
     {

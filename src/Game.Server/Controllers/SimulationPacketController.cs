@@ -1,6 +1,6 @@
 ﻿using Common.Core;
 using Game.Networking;
-using Game.Simulation.Core;
+using Game.Simulation.Server;
 using System;
 
 namespace Game.Server

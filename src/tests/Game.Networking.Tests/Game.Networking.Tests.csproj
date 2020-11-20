@@ -36,7 +36,6 @@
   <ItemGroup>
     <Compile Include="PacketEncryptionTests.cs" />
     <Compile Include="PacketTests.cs" />
-    <Compile Include="PlayerConnectionsTests.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <ItemGroup>

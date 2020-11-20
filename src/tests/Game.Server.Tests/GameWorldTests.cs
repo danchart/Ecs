@@ -1,5 +1,6 @@
 ﻿using Common.Core;
 using Game.Networking;
+using Game.Simulation.Server;
 using Test.Common;
 using Xunit;
 

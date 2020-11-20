@@ -35,6 +35,11 @@
     <Compile Include="Replication\ReplicationPriorityEntityComponents.cs" />
     <Compile Include="Replication\ReplicationDataBroker.cs" />
     <Compile Include="Replication\WorldReplicationManager.cs" />
+    <Compile Include="ServerConnections\PlayerConnection.cs" />
+    <Compile Include="ServerConnections\PlayerConnectionConfig.cs" />
+    <Compile Include="ServerConnections\PlayerConnectionManager.cs" />
+    <Compile Include="ServerConnections\PlayerConnectionRef.cs" />
+    <Compile Include="ServerConnections\PlayerConnectionRefs.cs" />
     <Compile Include="ServerSimulation.cs" />
     <Compile Include="Systems\JiggleSystem.cs" />
     <Compile Include="Systems\GatherReplicatedDataSystem.cs" />
