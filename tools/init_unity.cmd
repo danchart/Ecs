@@ -7,6 +7,7 @@ SET TARGET=%1
 
 mklink /d Common.Core %TARGET%\src\Common.Core
 mklink /d Ecs.Core %TARGET%\src\Ecs.Core
+mklink /d Game.Client %TARGET%\src\Game.Client
 mklink /d Game.Server.Contracts %TARGET%\src\Game.Server.Contracts
 mklink /d Game.Simulation.Client %TARGET%\src\Game.Simulation.Client 
 mklink /d Game.Simulation.Core %TARGET%\src\Game.Simulation.Core 

@@ -70,6 +70,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "VolatilePhysics", "Volatile
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Game.Server.Contracts", "Game.Server.Contracts\Game.Server.Contracts.csproj", "{F92A9314-8593-411D-89EF-93D37AED54B2}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Game.Client", "Game.Client\Game.Client.csproj", "{28282334-D8F9-4A63-A9FF-444AEECA8D3D}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -196,6 +198,10 @@ Global
 		{F92A9314-8593-411D-89EF-93D37AED54B2}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{F92A9314-8593-411D-89EF-93D37AED54B2}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{F92A9314-8593-411D-89EF-93D37AED54B2}.Release|Any CPU.Build.0 = Release|Any CPU
+		{28282334-D8F9-4A63-A9FF-444AEECA8D3D}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{28282334-D8F9-4A63-A9FF-444AEECA8D3D}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{28282334-D8F9-4A63-A9FF-444AEECA8D3D}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{28282334-D8F9-4A63-A9FF-444AEECA8D3D}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

@@ -1,20 +1,19 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <Project ToolsVersion="15.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <Import Project="$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props" Condition="Exists('$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props')" />
-  <Import Project="..\common.props" />
   <PropertyGroup>
-    <!-- <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
-    <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform> -->
-    <ProjectGuid>{03C4608E-69A7-4F46-8231-749DD5CB5ED2}</ProjectGuid>
+    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
+    <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
+    <ProjectGuid>{28282334-D8F9-4A63-A9FF-444AEECA8D3D}</ProjectGuid>
     <OutputType>Library</OutputType>
     <AppDesignerFolder>Properties</AppDesignerFolder>
-    <RootNamespace>Simulation.Core</RootNamespace>
-    <AssemblyName>Simulation.Core</AssemblyName>
-    <!-- <TargetFrameworkVersion>v4.7.2</TargetFrameworkVersion>
+    <RootNamespace>Game.Client</RootNamespace>
+    <AssemblyName>Game.Client</AssemblyName>
+    <TargetFrameworkVersion>v4.7.2</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
-    <Deterministic>true</Deterministic> -->
+    <Deterministic>true</Deterministic>
   </PropertyGroup>
-  <!-- <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
     <DebugSymbols>true</DebugSymbols>
     <DebugType>full</DebugType>
     <Optimize>false</Optimize>
@@ -30,7 +29,7 @@
     <DefineConstants>TRACE</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
-  </PropertyGroup> -->
+  </PropertyGroup>
   <ItemGroup>
     <Reference Include="System" />
     <Reference Include="System.Core" />
@@ -42,41 +41,42 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="Commands\ISimulationCommand.cs" />
-    <Compile Include="ComponentIdAttribute.cs" />
-    <Compile Include="ComponentId.cs" />
-    <Compile Include="Components\Tags\IsDisabledComponent.cs" />
-    <Compile Include="Components\RigidBodyComponent.cs" />
-    <Compile Include="Components\PlayerComponent.cs" />
-    <Compile Include="Components\InputComponent.cs" />
-    <Compile Include="Components\MovementComponent.cs" />
-    <Compile Include="Components\ReplicatedComponent.cs" />
-    <Compile Include="Components\TransformComponent.cs" />
-    <Compile Include="Physics\PhysicsWorld.cs" />
-    <Compile Include="Physics\IPhysicsSystemProxy.cs" />
-    <Compile Include="PlayerInputConfig.cs" />
-    <Compile Include="SimulationConfig.cs" />
+    <Compile Include="ClientConfig.cs" />
+    <Compile Include="GameClient.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="SimulationSynchronizer.cs" />
-    <Compile Include="Systems\PhysicsSystem.cs" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Game.Client.asmdef" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\Common.Core\Common.Core.csproj">
-      <Project>{83DE9636-9348-4678-B986-02987685B57D}</Project>
+      <Project>{83de9636-9348-4678-b986-02987685b57d}</Project>
       <Name>Common.Core</Name>
     </ProjectReference>
     <ProjectReference Include="..\Ecs.Core\Ecs.Core.csproj">
       <Project>{65beb14c-5414-4516-b566-e668e494c3eb}</Project>
       <Name>Ecs.Core</Name>
     </ProjectReference>
-    <ProjectReference Include="..\VolatilePhysics\VolatilePhysics.csproj">
-      <Project>{b12397de-261a-4d27-adfc-14b0d6841a56}</Project>
-      <Name>VolatilePhysics</Name>
+    <ProjectReference Include="..\Game.Networking\Game.Networking.csproj">
+      <Project>{769ce99b-f28d-4c73-9e98-e7d46eb17b42}</Project>
+      <Name>Game.Networking</Name>
     </ProjectReference>
-  </ItemGroup>
-  <ItemGroup />
-  <ItemGroup>
-    <None Include="Game.Simulation.Core.asmdef" />
+    <ProjectReference Include="..\Game.Server.Contracts\Game.Server.Contracts.csproj">
+      <Project>{f92a9314-8593-411d-89ef-93d37aed54b2}</Project>
+      <Name>Game.Server.Contracts</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\Game.Simulation.Client\Game.Simulation.Client.csproj">
+      <Project>{f43e34fa-18c1-44a8-bcb8-ba93400c0701}</Project>
+      <Name>Game.Simulation.Client</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\Game.Simulation.Core\Game.Simulation.Core.csproj">
+      <Project>{03c4608e-69a7-4f46-8231-749dd5cb5ed2}</Project>
+      <Name>Game.Simulation.Core</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\Networking.Core\Networking.Core.csproj">
+      <Project>{b19a0428-3713-43b2-81a5-1f228ce19489}</Project>
+      <Name>Networking.Core</Name>
+    </ProjectReference>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>

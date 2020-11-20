@@ -12,7 +12,7 @@ namespace Game.Server
         EcsConfig Ecs { get; }
         TransportConfig Transport { get; }
         ServerConfig Server { get; }
-        WorldConfig World { get;  }
+        PlayerInputConfig PlayerInput { get;  }
         SimulationConfig Simulation { get; }
     }
 
@@ -30,7 +30,7 @@ namespace Game.Server
 
         public ServerConfig Server => ServerConfig.Default;
 
-        public WorldConfig World => WorldConfig.Default;
+        public PlayerInputConfig PlayerInput => PlayerInputConfig.Default;
 
         public SimulationConfig Simulation => SimulationConfig.Default;
     }

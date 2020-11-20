@@ -68,6 +68,8 @@ namespace Game.Server
             this._worldLoader = new GameWorldLoader();
         }
 
+        public IPEndPoint UdpPacketEndpoint => this._serverConfig.Transport.UdpPacket.HostIpEndPoint;
+
         public IEnumerable<GameWorld> GetWorlds()
         {
             return this._gameWorlds.GetWorlds();

@@ -1,6 +1,6 @@
 ﻿using Common.Core;
-using Ecs.Core;
 using Game.Networking;
+using Game.Simulation.Core;
 using System;
 using System.Collections.Generic;
 
@@ -17,12 +17,12 @@ namespace Game.Simulation.Server
 
         public WorldPlayers(
             ReplicationConfig replicationConfig,
-            WorldConfig worldConfig,
+            PlayerInputConfig playerInputConfig,
             int capacity)
         {
             this._replicationDataPool = new PlayerReplicationDataPool(replicationConfig, capacity);
             this._playerInputsPool = new PlayerInputsPool(
-                inputFrameCount: worldConfig.PlayerInputMaxFrameCount,
+                inputFrameCount: playerInputConfig.MaxFrameCount,
                 capacity: capacity);
             this._playerIdToIndex = new Dictionary<PlayerId, int>(capacity);
             this._players = new WorldPlayer[capacity];

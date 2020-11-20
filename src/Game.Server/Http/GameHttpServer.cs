@@ -77,6 +77,7 @@ namespace Game.Server
                                         PlayerId = connection.PlayerId,
                                         Key = Convert.ToBase64String(connection.PacketEncryptionKey),
                                         WorldInstancId = connection.WorldInstanceId,
+                                        Endpoint = this._gameServer.UdpPacketEndpoint.ToString(),
                                     });
                             }
 
@@ -86,24 +87,13 @@ namespace Game.Server
                 }
             }
 
-            if (responseString == null)
-            {
-
-            }
-
-            response.ContentType = "application/json";
-
-            //string responseString = "<HTML><BODY> Hello world!</BODY></HTML>";
-
-
-            byte[] buffer = Encoding.UTF8.GetBytes(responseString);
-
-            // Get a response stream and write the response to it.
-            response.ContentLength64 = buffer.Length;
-            System.IO.Stream output = response.OutputStream;
-            output.Write(buffer, 0, buffer.Length);
-            // You must close the output stream.
-            output.Close();
+            response.CompleteJsonResponse(
+                404,
+                new FailureResponseBody
+                {
+                    Code = 0,
+                    Message = "Unknown HTTP request."
+                });
         }
     }
 }

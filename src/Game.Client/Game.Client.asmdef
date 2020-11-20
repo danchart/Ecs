@@ -1,0 +1,13 @@
+﻿{
+    "name": "Game.Client",
+    "references": [ "Common.Core", "Networking.Core", "Game.Simulation.Core", "Game.Simulation.Client", "Game.Networking" ],
+    "includePlatforms": [],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": true,
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": false
+}

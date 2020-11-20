@@ -15,5 +15,7 @@ namespace Game.Server.Contracts
         public int PlayerId { get; set; }
         public string Key { get; set; }
         public int WorldInstancId { get; set; }
+
+        public string Endpoint { get; set; }
     }
 }

@@ -59,7 +59,7 @@ namespace Game.Server
 
             this._players = new WorldPlayers(
                 config.Replication,
-                config.World,
+                config.PlayerInput,
                 config.PlayerConnection.Capacity.InitialConnectionsCapacity);
 
             this._replicationManager = new WorldReplicationManager(config.Replication, this._players, this._entityGridMap);
