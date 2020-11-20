@@ -37,11 +37,6 @@ namespace Game.Networking
     /// </summary>
     public class XorPacketEncryptor : IPacketEncryptor
     {
-        //private Dictionary<PlayerId, byte[]> PlayerIdToKey = new Dictionary<PlayerId, byte[]>(256);
-
-        //public void AddPlayer(PlayerId id, byte[] key) => this.PlayerIdToKey[id] = key;
-        //public void RemovePlayer(PlayerId id) => this.PlayerIdToKey.Remove(id);
-
         public PacketEncryptionResult Decrypt(
             byte[] key, 
             ulong salt, 

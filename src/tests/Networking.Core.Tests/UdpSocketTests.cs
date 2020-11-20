@@ -19,7 +19,7 @@ namespace Networking.Core.Tests
             server.Start(new IPEndPoint(IPAddress.Parse("127.0.0.1"), 27000));
 
             var clientBuffer = new ReceiveBuffer(maxPacketSize: 64, packetQueueCapacity: 4);
-            var client = new UdpSocketClient(logger, clientBuffer);
+            var client = new ClientUdpSocket(logger, clientBuffer);
             client.Start(new IPEndPoint(IPAddress.Parse("127.0.0.1"), 27000));
 
             // Simulate TCP style SYN > SYN-ACK > ACK handshake...

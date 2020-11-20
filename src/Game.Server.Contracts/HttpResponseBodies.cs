@@ -17,5 +17,6 @@ namespace Game.Server.Contracts
         public int WorldInstancId { get; set; }
 
         public string Endpoint { get; set; }
+        public int Port { get; set; }
     }
 }

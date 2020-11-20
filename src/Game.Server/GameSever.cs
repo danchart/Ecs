@@ -11,7 +11,7 @@ namespace Game.Server
     {
         public readonly GameServerCommander Commander;
 
-        private readonly UdpPacketServerTransport _udpTransport;
+        private readonly ServerUdpPacketTransport _udpTransport;
         private readonly ServerChannelOutgoing _channelOutgoing;
         private readonly ServerChannelIncoming _channelIncoming;
         private readonly PlayerConnectionManager _playerConnectionManager;
@@ -32,7 +32,7 @@ namespace Game.Server
 
             this.Commander = new GameServerCommander(this);
 
-            this._udpTransport = new UdpPacketServerTransport(
+            this._udpTransport = new ServerUdpPacketTransport(
                 this._logger,
                 serverConfig.NetworkTransport.PacketEncryptor,
                 serverConfig.NetworkTransport,
@@ -114,14 +114,13 @@ namespace Game.Server
         public PlayerConnectionRef ConnectPlayer(
             WorldInstanceId instanceId,
             PlayerId playerId,
-            byte[] encryptionKey,
-            IPEndPoint ipEndPoint)
+            byte[] encryptionKey)
         {
             // TODO: Error handling.
             var gameWorld = this._gameWorlds.Get(instanceId);
 
             // Create player connection.
-            this._playerConnectionManager.Add(instanceId, playerId, encryptionKey, ipEndPoint);
+            this._playerConnectionManager.Add(instanceId, playerId, encryptionKey);
 
             var playerConnectionRef = this._playerConnectionManager.GetRef(playerId);
 

@@ -5,38 +5,41 @@ using System;
 using System.IO;
 using System.Net;
 
-namespace Game.Server
+namespace Game.Client
 {
-    public class UdpPacketServerTransport
+    public class ClientUdpPacketTransport
     {
-        private readonly ServerUdpSocket _udpSocket;
+        private readonly ClientUdpSocket _socket;
         private readonly ReceiveBuffer _receiveBuffer;
 
-        private readonly IPEndPoint _endPoint;
+        private readonly IPEndPoint _remoteEndPoint;
         private readonly IPacketEncryptor _packetEncryption;
 
         private ByteArrayPool _packetSerializationBytePool;
 
-        public UdpPacketServerTransport(ILogger logger, IPacketEncryptor packetEncryption, NetworkTransportConfig transportConfig, UdpServerConfig udpServerConfig)
+        public ClientUdpPacketTransport(
+            ILogger logger,
+            IPacketEncryptor packetEncryption,
+            NetworkTransportConfig transportConfig,
+            IPEndPoint remoteEndPoint)
         {
             this._packetEncryption = packetEncryption ?? throw new ArgumentNullException(nameof(packetEncryption));
-            this._endPoint = udpServerConfig.HostIpEndPoint;
+            this._remoteEndPoint = remoteEndPoint;
 
-            this._receiveBuffer = new ReceiveBuffer(transportConfig.MaxPacketSize, udpServerConfig.ReceivePacketQueueCapacity);
-            this._udpSocket = new ServerUdpSocket(logger, this._receiveBuffer);
-            
+            this._receiveBuffer = new ReceiveBuffer(transportConfig.MaxPacketSize, transportConfig.ReceivePacketQueueCapacity);
+            this._socket = new ClientUdpSocket(logger, this._receiveBuffer);
 
-            this._packetSerializationBytePool = new ByteArrayPool(transportConfig.MaxPacketSize, udpServerConfig.SendPacketQueueCapacity);
+            this._packetSerializationBytePool = new ByteArrayPool(transportConfig.MaxPacketSize, transportConfig.SendPacketQueueCapacity);
         }
 
         public ReceiveBuffer ReceiveBuffer => this._receiveBuffer;
 
         public void Start()
         {
-            this._udpSocket.Start(this._endPoint);
+            this._socket.Start(this._remoteEndPoint);
         }
 
-        public void SendPacket(IPEndPoint endPoint, in ServerPacketEnvelope packet)
+        public void SendPacket(in ClientPacketEnvelope packet)
         {
             var bufferPoolIndex = this._packetSerializationBytePool.New();
             var data = this._packetSerializationBytePool.GetBuffer(bufferPoolIndex);
@@ -47,7 +50,7 @@ namespace Game.Server
                 size = packet.Serialize(stream, measureOnly: false, packetEncryption: this._packetEncryption);
             }
 
-            this._udpSocket.SendTo(data, endPoint);
+            this._socket.Send(data);
 
             this._packetSerializationBytePool.Free(bufferPoolIndex);
         }

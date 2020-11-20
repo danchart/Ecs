@@ -106,11 +106,11 @@ namespace Networking.Core
         }
     }
 
-    public class UdpSocketClient : UdpSocketBase
+    public class ClientUdpSocket : UdpSocketBase
     {
         private static readonly IPEndPoint IpAddressAny = new IPEndPoint(IPAddress.Any, 0);
 
-        public UdpSocketClient(ILogger logger, ReceiveBuffer receiveBuffer) 
+        public ClientUdpSocket(ILogger logger, ReceiveBuffer receiveBuffer) 
             : base(logger, receiveBuffer)
         {
         }

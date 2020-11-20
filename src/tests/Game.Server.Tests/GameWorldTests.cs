@@ -15,7 +15,7 @@ namespace Game.Server.Tests
             var config = new DefaultServerConfig();
 
             var playerConnections = new PlayerConnectionManager(logger, config.PlayerConnection);
-            var udpTransport = new UdpPacketServerTransport(
+            var udpTransport = new ServerUdpPacketTransport(
                 logger,
                 config.NetworkTransport.PacketEncryptor,
                 config.NetworkTransport,

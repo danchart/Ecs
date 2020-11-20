@@ -37,18 +37,16 @@ namespace Game.Simulation.Server
         public void Add(
             WorldInstanceId worldInstanceId, 
             PlayerId playerId, 
-            byte[] encryptionKey, 
-            IPEndPoint endPoint)
+            byte[] encryptionKey)
         {
             this._connections.Add(playerId);
 
             ref var connection = ref this._connections[playerId];
 
-            connection.State = PlayerConnection.ConnectionState.None;
+            connection.State = PlayerConnection.ConnectionState.PreConnected;
             connection.WorldInstanceId = worldInstanceId;
             connection.PlayerId = playerId;
             connection.PacketEncryptionKey = encryptionKey;
-            connection.EndPoint = endPoint;
         }
 
         public void Remove(PlayerId playerId)

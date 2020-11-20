@@ -23,8 +23,6 @@ namespace Game.Server
 
         protected override void HandleRequest(HttpListenerRequest request, HttpListenerResponse response)
         {
-            string responseString = null; ;
-
             // Paths:
             //  /player/<id>/connect
             if (request.HttpMethod == "POST")
@@ -52,8 +50,7 @@ namespace Game.Server
                                     new ConnectPlayerServerCommand(
                                         gameWorld.InstanceId, 
                                         playerId, 
-                                        this._encryptionKey, 
-                                        request.RemoteEndPoint))
+                                        this._encryptionKey))
                                 .Result;
 
                             if (playerConnectionRef.IsNull)
@@ -77,7 +74,8 @@ namespace Game.Server
                                         PlayerId = connection.PlayerId,
                                         Key = Convert.ToBase64String(connection.PacketEncryptionKey),
                                         WorldInstancId = connection.WorldInstanceId,
-                                        Endpoint = this._gameServer.UdpPacketEndpoint.ToString(),
+                                        Endpoint = this._gameServer.UdpPacketEndpoint.Address.ToString(),
+                                        Port = this._gameServer.UdpPacketEndpoint.Port,
                                     });
                             }
 

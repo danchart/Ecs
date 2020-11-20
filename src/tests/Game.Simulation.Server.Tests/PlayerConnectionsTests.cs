@@ -26,11 +26,10 @@ namespace Game.Simulation.Server.Tests
 
             var worldId = new WorldInstanceId(0);
             var encryptionKey = new byte[] { 0x1 };
-            var endPoint = new IPEndPoint(0, 0);
 
-            connections.Add(worldId, new PlayerId(0), encryptionKey, endPoint);
-            connections.Add(worldId, new PlayerId(1), encryptionKey, endPoint);
-            connections.Add(worldId, new PlayerId(2), encryptionKey, endPoint);
+            connections.Add(worldId, new PlayerId(0), encryptionKey);
+            connections.Add(worldId, new PlayerId(1), encryptionKey);
+            connections.Add(worldId, new PlayerId(2), encryptionKey);
 
             Assert.Equal(3, connections.Count);
 
@@ -45,7 +44,7 @@ namespace Game.Simulation.Server.Tests
             Assert.Equal(2, connections.Count);
             Assert.False(connections.HasPlayer(new PlayerId(1)));
 
-            connections.Add(worldId, new PlayerId(3), encryptionKey, endPoint);
+            connections.Add(worldId, new PlayerId(3), encryptionKey);
 
             Assert.Equal(3, connections.Count);
 

@@ -14,13 +14,13 @@ namespace Game.Server
         private ServerPacketEnvelope _serverPacketEnvelope;
 
         private readonly IPacketEncryptor _packetEncryption;
-        private readonly UdpPacketServerTransport _transport;
+        private readonly ServerUdpPacketTransport _transport;
         private readonly NetworkTransportConfig _config;
         private readonly ILogger _logger;
 
         public ServerChannelOutgoing(
             NetworkTransportConfig config,
-            UdpPacketServerTransport transport,
+            ServerUdpPacketTransport transport,
             IPacketEncryptor packetEncryption,
             ILogger logger)
         {

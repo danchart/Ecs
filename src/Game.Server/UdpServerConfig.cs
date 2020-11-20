@@ -4,9 +4,6 @@ namespace Game.Server
 {
     public class UdpServerConfig
     {
-        public int ReceivePacketQueueCapacity = 256;
-        public int SendPacketQueueCapacity = 128;
-
         /// <summary>
         /// UDP server host endpoint.
         /// </summary>

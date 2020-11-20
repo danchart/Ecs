@@ -1,35 +1,31 @@
 ﻿using Common.Core;
 using Game.Networking;
 using Game.Simulation.Server;
-using System.Net;
 using System.Threading.Tasks;
 
 namespace Game.Server
 {
     public sealed class ConnectPlayerServerCommand : IServerCommand<PlayerConnectionRef>
     {
-        WorldInstanceId _instanceId;
-        PlayerId _playerId;
-        byte[] _encryptionKey;
-        IPEndPoint _ipEndPoint;
+        readonly WorldInstanceId _instanceId;
+        readonly PlayerId _playerId;
+        readonly byte[] _encryptionKey;
 
         public ConnectPlayerServerCommand(
             WorldInstanceId instanceId,
             PlayerId playerId,
-            byte[] encryptionKey,
-            IPEndPoint ipEndPoint)
+            byte[] encryptionKey)
         {
             _instanceId = instanceId;
             _playerId = playerId;
             _encryptionKey = encryptionKey;
-            _ipEndPoint = ipEndPoint;
         }
 
         public bool CanExecute(GameServer server) => true;
 
         public async Task<PlayerConnectionRef> ExecuteAsync(GameServer gameServer)
         {
-            return gameServer.ConnectPlayer(_instanceId, _playerId, _encryptionKey, _ipEndPoint);
+            return gameServer.ConnectPlayer(_instanceId, _playerId, _encryptionKey);
         }
     }
 }
