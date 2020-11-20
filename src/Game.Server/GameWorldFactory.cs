@@ -12,7 +12,7 @@ namespace Game.Server
     public sealed class GameWorldFactory : IGameWorldFactory
     {
         private readonly WorldType _worldType;
-        private readonly ServerChannelOutgoing _channelManager;
+        private readonly OutgoingServerChannel _channelManager;
         private readonly IGameWorldLoader _worldLoader;
 
         private readonly IServerConfig _serverConfig;
@@ -22,7 +22,7 @@ namespace Game.Server
             WorldType worldType,
             ILogger logger,
             IServerConfig serverConfig,
-            ServerChannelOutgoing channelManager,
+            OutgoingServerChannel channelManager,
             IGameWorldLoader loader)
         {
             this._worldType = worldType;

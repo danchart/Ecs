@@ -29,7 +29,7 @@ namespace Game.Server
 
         private readonly IWorldReplicationManager _replicationManager;
 
-        private readonly ServerChannelOutgoing _channelManager;
+        private readonly OutgoingServerChannel _channelManager;
 
         private readonly ILogger _logger;
         private readonly float _fixedTick;
@@ -41,7 +41,7 @@ namespace Game.Server
             WorldInstanceId id, 
             ILogger logger,
             IServerConfig config,
-            ServerChannelOutgoing channelManager,
+            OutgoingServerChannel channelManager,
             IGameWorldLoader gameWorldLoader)
         {
             this.WorldType = worldType;

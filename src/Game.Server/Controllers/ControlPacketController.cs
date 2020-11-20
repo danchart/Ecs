@@ -10,7 +10,7 @@ namespace Game.Server
     {
         private ServerPacketEnvelope _serverPacket;
 
-        private readonly ServerChannelOutgoing _channelOutgoing;
+        private readonly OutgoingServerChannel _channelOutgoing;
         private readonly PlayerConnectionManager _playerConnections;
 
         private readonly GameWorlds _worlds;
@@ -20,7 +20,7 @@ namespace Game.Server
         public ControlPacketController(
             ILogger logger, 
             PlayerConnectionManager playerConnections,
-            ServerChannelOutgoing channelOutgoing,
+            OutgoingServerChannel channelOutgoing,
             GameWorlds worlds)
         {
             this._logger = logger ?? throw new ArgumentNullException(nameof(logger));

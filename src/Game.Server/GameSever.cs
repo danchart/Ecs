@@ -12,8 +12,8 @@ namespace Game.Server
         public readonly GameServerCommander Commander;
 
         private readonly ServerUdpPacketTransport _udpTransport;
-        private readonly ServerChannelOutgoing _channelOutgoing;
-        private readonly ServerChannelIncoming _channelIncoming;
+        private readonly OutgoingServerChannel _outgoingChannel;
+        private readonly IncomingServerChannel _incomingChannel;
         private readonly PlayerConnectionManager _playerConnectionManager;
 
         private readonly IGameWorldLoader _worldLoader;
@@ -37,7 +37,7 @@ namespace Game.Server
                 serverConfig.NetworkTransport.PacketEncryptor,
                 serverConfig.NetworkTransport,
                 serverConfig.UdpServer);
-            this._channelOutgoing = new ServerChannelOutgoing(
+            this._outgoingChannel = new OutgoingServerChannel(
                 serverConfig.NetworkTransport,
                 this._udpTransport,
                 serverConfig.NetworkTransport.PacketEncryptor,
@@ -50,16 +50,16 @@ namespace Game.Server
             this._gameWorlds = new GameWorlds(
                 this._logger,
                 this._serverConfig,
-                this._channelOutgoing,
+                this._outgoingChannel,
                 serverConfig.Server.WorldsCapacity);
 
-            this._channelIncoming = new ServerChannelIncoming(
+            this._incomingChannel = new IncomingServerChannel(
                 this._udpTransport,
                 serverConfig.NetworkTransport.PacketEncryptor,
                 new ControlPacketController(
                     this._logger,
                     this._playerConnectionManager,
-                    this._channelOutgoing,
+                    this._outgoingChannel,
                     this._gameWorlds),
                 new SimulationPacketController(
                     this._logger,
@@ -79,7 +79,7 @@ namespace Game.Server
 
         public void Start()
         {
-            this._channelIncoming.Start();
+            this._incomingChannel.Start();
         }
 
         public bool IsRunning()
@@ -89,7 +89,7 @@ namespace Game.Server
 
         public void StopAll()
         {
-            this._channelIncoming.Stop();
+            this._incomingChannel.Stop();
 
             this._gameWorlds.StopAll();
         }
@@ -100,7 +100,7 @@ namespace Game.Server
             worldType,
             this._logger,
             this._serverConfig,
-            this._channelOutgoing,
+            this._outgoingChannel,
             this._worldLoader);
 
             return this._gameWorlds.Spawn(factory);

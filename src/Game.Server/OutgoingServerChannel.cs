@@ -9,7 +9,7 @@ namespace Game.Server
     /// <summary>
     /// Handles queueing replication packets to clients in priority order.
     /// </summary>
-    public sealed class ServerChannelOutgoing
+    public sealed class OutgoingServerChannel
     {
         private ServerPacketEnvelope _serverPacketEnvelope;
 
@@ -18,7 +18,7 @@ namespace Game.Server
         private readonly NetworkTransportConfig _config;
         private readonly ILogger _logger;
 
-        public ServerChannelOutgoing(
+        public OutgoingServerChannel(
             NetworkTransportConfig config,
             ServerUdpPacketTransport transport,
             IPacketEncryptor packetEncryption,

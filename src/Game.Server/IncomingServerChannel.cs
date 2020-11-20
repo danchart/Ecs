@@ -7,7 +7,7 @@ using System.Threading;
 
 namespace Game.Server
 {
-    public class ServerChannelIncoming
+    public class IncomingServerChannel
     {
         private ClientPacketEnvelope _clientPacketEnvelope;
 
@@ -19,7 +19,7 @@ namespace Game.Server
         private readonly SimulationPacketController _simulationPacketController;
         private readonly ILogger _logger;
 
-        public ServerChannelIncoming(
+        public IncomingServerChannel(
             ServerUdpPacketTransport transport,
             IPacketEncryptor packetEncryption,
             ControlPacketController controlPacketController,
@@ -41,6 +41,8 @@ namespace Game.Server
         {
             var thread = new Thread(ProcessIncomingPackets);
             thread.Start();
+
+            this._isRunning = true;
 
             this._logger.Info($"Started receiving channel: managedThreadId={thread.ManagedThreadId}");
         }
@@ -100,7 +102,5 @@ namespace Game.Server
                 }
             }
         }
-
-
     }
 }

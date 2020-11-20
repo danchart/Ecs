@@ -7,6 +7,7 @@ using System.Net;
 using System.Net.Http;
 using System.Net.Http.Headers;
 using System.Text;
+using System.Threading;
 using Utf8Json;
 
 namespace Game.Client
@@ -18,16 +19,26 @@ namespace Game.Client
         PlayerId _playerId;
         WorldInstanceId _worldInstanceId;
 
+        private bool _isRunning;
+
+        private readonly IPacketEncryptor _packetEncryption;
+
         readonly NetworkTransportConfig _transportConfig;
         readonly ILogger _logger;
 
-        public GameServerClient(ILogger logger, NetworkTransportConfig transportConfig)
+        public GameServerClient(
+            ILogger logger,
+            IPacketEncryptor packetEncryption, 
+            NetworkTransportConfig transportConfig)
         {
             _logger = logger ?? throw new ArgumentNullException(nameof(logger));
+            this._packetEncryption = packetEncryption ?? throw new ArgumentNullException(nameof(packetEncryption));
             _transportConfig = transportConfig ?? throw new ArgumentNullException(nameof(transportConfig));
         }
 
-        public bool Connect(string connectionServerEndPoint)
+        public bool IsRunning => this._isRunning;
+
+        public bool Start(string connectionServerEndPoint)
         {
             using (var httpClient = new HttpClient())
             {
@@ -74,12 +85,77 @@ namespace Game.Client
 
                     _transport.Start();
 
+                    var thread = new Thread(ProcessIncomingPackets);
+                    thread.Start();
+
+                    this._isRunning = true;
+
+                    this._logger.Info($"Started receiving channel: managedThreadId={thread.ManagedThreadId}");
 
                     return true;
                 }
             }
 
             return false;
+        }
+
+
+        public void Stop()
+        {
+            this._isRunning = false;
+        }
+
+        private void ProcessIncomingPackets()
+        {
+            while (this._isRunning)
+            {
+                var packetCount = this._transport.ReceiveBuffer.Count;
+
+                while (packetCount-- > 0)
+                {
+                    if (this._transport.ReceiveBuffer.GetReadData(out byte[] data, out int offset, out int count))
+                    {
+                        using (var stream = new MemoryStream(data, offset, count))
+                        {
+                            ServerPacketEnvelope packetEnvelope = default;
+
+                            if (!packetEnvelope.Deserialize(stream, this._packetEncryption))
+                            {
+                                this._logger.Verbose("Failed to deserialize packet.");
+                            }
+
+                            // Process player packet / input
+
+                            switch (packetEnvelope.Type)
+                            {
+                                case ServerPacketType.Control:
+                                    {
+                                        this._transport.ReceiveBuffer.GetFromEndPoint(out IPEndPoint endPoint);
+
+                                        this._controlPacketController.Process(
+                                            packetEnvelope.PlayerId,
+                                            endPoint,
+                                            in _serverPacketEnvelope.ControlPacket);
+                                    }
+                                    break;
+                                case ServerPacketType.Replication:
+
+                                    // TODO: Replicate!
+
+                                    break;
+                                default:
+
+#pragma warning disable HAA0601 // Value type to reference type conversion causing boxing allocation
+                                    this._logger.Error($"Unknown packet type {_serverPacketEnvelope.Type}");
+#pragma warning restore HAA0601 // Value type to reference type conversion causing boxing allocation
+                                    break;
+                            }
+                        }
+
+                        this._transport.ReceiveBuffer.NextRead();
+                    }
+                }
+            }
         }
 
         public void BeginHandshakeSyn(uint sequenceKey)

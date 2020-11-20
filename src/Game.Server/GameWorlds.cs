@@ -18,7 +18,7 @@ namespace Game.Server
         public GameWorlds(
             ILogger logger, 
             IServerConfig serverConfig, 
-            ServerChannelOutgoing channelManager,
+            OutgoingServerChannel channelManager,
             int capacity)
         {
             this._logger = logger ?? throw new ArgumentNullException(nameof(logger));

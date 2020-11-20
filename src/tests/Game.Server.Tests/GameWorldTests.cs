@@ -21,7 +21,7 @@ namespace Game.Server.Tests
                 config.NetworkTransport,
                 config.UdpServer);
             IPacketEncryptor packetEncryption = new XorPacketEncryptor();
-            var channelManager = new ServerChannelOutgoing(
+            var channelManager = new OutgoingServerChannel(
                 config.NetworkTransport,
                 udpTransport,
                 packetEncryption,
