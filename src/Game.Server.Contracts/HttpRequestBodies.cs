@@ -1,5 +1,8 @@
-﻿namespace Game.Server
+﻿using System;
+
+namespace Game.Server.Contracts
 {
+    [Serializable]
     public class PostPlayerConnectRequestBody
     {
         /// <summary>

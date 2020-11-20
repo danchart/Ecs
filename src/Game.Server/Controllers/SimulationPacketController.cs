@@ -33,7 +33,7 @@ namespace Game.Server
 
             ref var connection = ref this._playerConnections[playerId];
 
-            var world = this._worlds.Get(connection.WorldId);
+            var world = this._worlds.Get(connection.WorldInstanceId);
 
             // TODO: Execute/queue inputs against connection.Entity in simulation
 

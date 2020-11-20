@@ -205,7 +205,7 @@ namespace Game.Server
                 return;
             }
 
-            connection.WorldId = this.InstanceId;
+            connection.WorldInstanceId = this.InstanceId;
             connection.LastAcknowledgedSimulationFrame = FrameIndex.Nil;
             connection.LastInputFrame = FrameIndex.Nil;
 
@@ -216,30 +216,7 @@ namespace Game.Server
                     this._physicsWorld, 
                     connectionRef));
 
-            //// TODO: Player will need more sophisticated construction, e.g. initial location
-            //var playerEntity = this._simulation.World.NewEntity();
-            //// Disable from simulation until initialized.
-            //playerEntity.GetComponent<IsDisabledComponent>();
-
-            //ref var playerComponent = ref playerEntity.GetComponent<PlayerComponent>();
-            //playerComponent.Id = connection.PlayerId;
-            //playerEntity.GetComponent<RigidBodyComponent>();
-            //ref var transform = ref playerEntity.GetComponent<TransformComponent>();
-            //playerEntity.GetComponent<MovementComponent>();
-
-            //this._physicsWorld.AddCircle(
-            //    playerEntity, 
-            //    isStatic: false, 
-            //    originWS: transform.position, 
-            //    rotation: 0, 
-            //    radius: 0.5f);
-
-            //this._players.Add(
-            //    in connectionRef,
-            //    playerEntity);
-
-            // Entity is ready for the simulation.
-            //playerEntity.RemoveComponent<IsDisabledComponent>();
+            this._logger.Info($"Connected player: id={connection.PlayerId}, instanceId={connection.WorldInstanceId}");
         }
 
         public void Disconnect(PlayerConnectionRef connectionRef)
@@ -254,6 +231,8 @@ namespace Game.Server
             }
 
             this._players.Remove(connection.PlayerId);
+
+            this._logger.Info($"Disonnected player: id={connection.PlayerId}, instanceId={connection.WorldInstanceId}");
         }
 
         private class FixedUpdateState

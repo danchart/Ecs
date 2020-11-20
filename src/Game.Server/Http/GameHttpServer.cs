@@ -1,4 +1,5 @@
 ﻿using Common.Core;
+using Game.Server.Contracts;
 using Networking.Server;
 using System;
 using System.Net;
@@ -22,6 +23,8 @@ namespace Game.Server
 
         protected override void HandleRequest(HttpListenerRequest request, HttpListenerResponse response)
         {
+            string responseString = null; ;
+
             // Paths:
             //  /player/<id>/connect
             if (request.HttpMethod == "POST")
@@ -33,7 +36,7 @@ namespace Game.Server
                     {
                         if (request.Url.Segments[3] == "connect")
                         {
-                            var content = HttpListenerRequestHelper.GetRequestContent<PostPlayerConnectRequestBody>(request);
+                            var content = request.GetJsonContent<PostPlayerConnectRequestBody>();
 
                             var worldType = new WorldType(content.WorldType);
 
@@ -44,7 +47,7 @@ namespace Game.Server
                                         createIfNeeded: true))
                                 .Result;
 
-                            var connected = this._gameServer.Commander
+                            var playerConnectionRef = this._gameServer.Commander
                                 .RunCommandAsync(
                                     new ConnectPlayerServerCommand(
                                         gameWorld.InstanceId, 
@@ -52,12 +55,47 @@ namespace Game.Server
                                         this._encryptionKey, 
                                         request.RemoteEndPoint))
                                 .Result;
+
+                            if (playerConnectionRef.IsNull)
+                            {
+                                response.CompleteJsonResponse(
+                                    400,
+                                    new FailureResponseBody
+                                    {
+                                        Code = 0,
+                                        Message = "Server failed to connect the player."
+                                    });
+                            }
+                            else
+                            {
+                                var connection = playerConnectionRef.Unref();
+
+                                response.CompleteJsonResponse(
+                                    200,
+                                    new PostPlayerConnectResponseBody
+                                    {
+                                        PlayerId = connection.PlayerId,
+                                        Key = Convert.ToBase64String(connection.PacketEncryptionKey),
+                                        WorldInstancId = connection.WorldInstanceId,
+                                    });
+                            }
+
+                            return;
                         }
                     }
                 }
             }
 
-            string responseString = "<HTML><BODY> Hello world!</BODY></HTML>";
+            if (responseString == null)
+            {
+
+            }
+
+            response.ContentType = "application/json";
+
+            //string responseString = "<HTML><BODY> Hello world!</BODY></HTML>";
+
+
             byte[] buffer = Encoding.UTF8.GetBytes(responseString);
 
             // Get a response stream and write the response to it.

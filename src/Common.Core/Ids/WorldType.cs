@@ -4,7 +4,7 @@ namespace Common.Core
 {
     public readonly struct WorldType : IEquatable<WorldType>
     {
-        internal readonly string  Name;
+        internal readonly string Name;
 
         public WorldType(string name)
         {
@@ -43,6 +43,11 @@ namespace Common.Core
         {
             return
                 Name == entity.Name;
+        }
+
+        public override string ToString()
+        {
+            return Name;
         }
     }
 }

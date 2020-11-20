@@ -10,11 +10,15 @@ namespace Game.Networking
         private readonly PlayerId _id;
         private readonly PlayerConnectionManager _connections;
 
+        public static readonly PlayerConnectionRef Null = new PlayerConnectionRef(new PlayerId(0), null);
+
         internal PlayerConnectionRef(PlayerId id, in PlayerConnectionManager connections)
         {
             this._id = id;
             this._connections = connections;
         }
+
+        public bool IsNull => this == Null;
 
         public ref PlayerConnection Unref()
         {

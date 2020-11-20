@@ -5,7 +5,7 @@ namespace Game.Networking
 {
     public struct PlayerConnection
     {
-        public WorldInstanceId WorldId;
+        public WorldInstanceId WorldInstanceId;
         public PlayerId PlayerId;
 
         public ConnectionState State;

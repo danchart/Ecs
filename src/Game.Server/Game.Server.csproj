@@ -82,9 +82,7 @@
     <Compile Include="GameWorldFactory.cs" />
     <Compile Include="GameWorldLoader.cs" />
     <Compile Include="GameWorlds.cs" />
-    <Compile Include="Http\HttpRequestBodies.cs" />
-    <Compile Include="Http\HttpListenerRequestHelper.cs" />
-    <Compile Include="Http\HttpResponseBodies.cs" />
+    <Compile Include="Http\HttpListenertHelper.cs" />
     <Compile Include="ServerChannelIncoming.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="ServerChannelOutgoing.cs" />
@@ -100,6 +98,10 @@
     <ProjectReference Include="..\Ecs.Core\Ecs.Core.csproj">
       <Project>{65beb14c-5414-4516-b566-e668e494c3eb}</Project>
       <Name>Ecs.Core</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\Game.Server.Contracts\Game.Server.Contracts.csproj">
+      <Project>{f92a9314-8593-411d-89ef-93d37aed54b2}</Project>
+      <Name>Game.Server.Contracts</Name>
     </ProjectReference>
     <ProjectReference Include="..\Networking.Core\Networking.Core.csproj">
       <Project>{b19a0428-3713-43b2-81a5-1f228ce19489}</Project>

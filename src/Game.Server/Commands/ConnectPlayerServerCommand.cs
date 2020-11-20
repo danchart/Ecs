@@ -5,7 +5,7 @@ using System.Threading.Tasks;
 
 namespace Game.Server
 {
-    public sealed class ConnectPlayerServerCommand : IServerCommand<bool>
+    public sealed class ConnectPlayerServerCommand : IServerCommand<PlayerConnectionRef>
     {
         WorldInstanceId _instanceId;
         PlayerId _playerId;
@@ -26,7 +26,7 @@ namespace Game.Server
 
         public bool CanExecute(GameServer server) => true;
 
-        public async Task<bool> ExecuteAsync(GameServer gameServer)
+        public async Task<PlayerConnectionRef> ExecuteAsync(GameServer gameServer)
         {
             return gameServer.ConnectPlayer(_instanceId, _playerId, _encryptionKey, _ipEndPoint);
         }

@@ -44,7 +44,7 @@ namespace Game.Networking
             ref var connection = ref this._connections[playerId];
 
             connection.State = PlayerConnection.ConnectionState.None;
-            connection.WorldId = worldInstanceId;
+            connection.WorldInstanceId = worldInstanceId;
             connection.PlayerId = playerId;
             connection.PacketEncryptionKey = encryptionKey;
             connection.EndPoint = endPoint;

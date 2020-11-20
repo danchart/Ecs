@@ -107,7 +107,7 @@ namespace Game.Server
             return this._gameWorlds.Kill(id);
         }
 
-        public bool ConnectPlayer(
+        public PlayerConnectionRef ConnectPlayer(
             WorldInstanceId instanceId,
             PlayerId playerId,
             byte[] encryptionKey,
@@ -124,7 +124,7 @@ namespace Game.Server
             // Connect player to the world.
             gameWorld.Connect(playerConnectionRef);
 
-            return true;
+            return playerConnectionRef;
         }
 
         public bool DisconnectPlayer(
