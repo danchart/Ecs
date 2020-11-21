@@ -26,11 +26,5 @@ namespace Game.Simulation.Server
             Connecting,     // awaiting ACK packet
             Connected       // ACK'd
         }
-
-        public struct ConnectionHandshakeKeys
-        {
-            public uint SequenceKey;
-            public uint AcknowledgementKey;
-        }
     }
 }

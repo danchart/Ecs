@@ -20,6 +20,7 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="ConnectionHandshakeKeys.cs" />
     <Compile Include="DataTypes\FrameIndex.cs" />
     <Compile Include="PacketData\PlayerData.cs" />
     <Compile Include="Ids\WorldInstanceId.cs" />

@@ -16,6 +16,8 @@ namespace Game.Client
         private readonly Systems _fixedSystems;
         private readonly ClientSimulation<InputComponent> _simulation;
 
+        private readonly GameServerClient _server;
+
         private readonly ILogger _logger;
 
         public GameClient(ILogger logger, IClientConfig config)
@@ -36,6 +38,18 @@ namespace Game.Client
                 this._world,
                 this._systems,
                 this._fixedSystems);
+
+            this._server = new GameServerClient(this._logger, config.NetworkTransport);
+        }
+
+        public void Start(string connectionServerEndPoint)
+        {
+            this._server.Start(connectionServerEndPoint);
+        }
+
+        public void Stop()
+        {
+            this._server.Stop();
         }
 
         public void FixedUpdate(float deltaTime)

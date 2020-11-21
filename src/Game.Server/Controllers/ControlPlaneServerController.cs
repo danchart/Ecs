@@ -63,14 +63,14 @@ namespace Game.Server
             if (connection.State != PlayerConnection.ConnectionState.PreConnected ||
                 connection.State != PlayerConnection.ConnectionState.Connecting)
             {
-                this._logger.VerboseError($"Invalid player state for client SYN request: state={connection.State}, expectedState={PlayerConnection.ConnectionState.PreConnected}, {PlayerConnection.ConnectionState.Connecting)}");
+                this._logger.VerboseError($"Invalid player state for client SYN request: state={connection.State}, expectedState={PlayerConnection.ConnectionState.PreConnected}, {PlayerConnection.ConnectionState.Connecting}");
 
                 return false;
             }
 
             // Send SYN-ACK
             
-            connection.Handshake.AcknowledgementKey = NewAcknowledgementKey();
+            connection.Handshake.AcknowledgementKey = ConnectionHandshakeKeys.NewAcknowledgementKey();
             connection.State = PlayerConnection.ConnectionState.Connecting;
 
             this._serverPacket.Type = ServerPacketType.Control;
@@ -114,11 +114,6 @@ namespace Game.Server
             connection.EndPoint = endPoint;
 
             return true;
-        }
-
-        private uint NewAcknowledgementKey()
-        {
-            return RandomHelper.NextUInt();
         }
     }
 }

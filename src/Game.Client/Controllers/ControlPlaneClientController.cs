@@ -7,10 +7,14 @@ namespace Game.Client
 {
     public class ControlPlaneClientController
     {
+        private readonly GameServerConnection _connection;
+        private readonly ClientUdpPacketTransport _transport;
         private readonly ILogger _logger;
 
-        public ControlPlaneClientController(ILogger logger)
+        public ControlPlaneClientController(ILogger logger, GameServerConnection connection, ClientUdpPacketTransport transport)
         {
+            this._connection = connection ?? throw new ArgumentNullException(nameof(connection));
+            this._transport = transport ?? throw new ArgumentNullException(nameof(transport));
             this._logger = logger ?? throw new ArgumentNullException(nameof(logger));
         }
 
@@ -26,69 +30,30 @@ namespace Game.Client
             return false;
         }
 
-        public bool SynAckHandshake(uint sequenceKey)
+        public bool SynAckHandshake(uint acknowledgementKey)
         {
-
-            ref var connection = ref this._playerConnections[playerId];
-
-            if (connection.State == PlayerConnection.ConnectionState.Connected)
+            if (this._connection.State == GameServerConnection.ConnectionState.Connected)
             {
-                this._logger.VerboseError($"Client SYN request for connected player: Id={playerId}");
+                this._logger.VerboseError($"SYN-ACK request for connected player.");
 
                 return false;
             }
 
-            // Send SYN-ACK
+            // Send ACK
 
-            connection.Handshake.AcknowledgementKey = NewAcknowledgementKey();
-            connection.State = PlayerConnection.ConnectionState.Connecting;
+            this._connection.Handshake.AcknowledgementKey = acknowledgementKey;
+            this._connection.State = GameServerConnection.ConnectionState.Connected;
 
-            this._serverPacket.Type = ServerPacketType.Control;
-            this._serverPacket.PlayerId = connection.PlayerId;
-            this._serverPacket.ControlPacket.ControlAckPacketData.SequenceKey = sequenceKey;
-            this._serverPacket.ControlPacket.ControlAckPacketData.AcknowledgementKey = connection.Handshake.AcknowledgementKey;
+            var packet = new ClientPacketEnvelope();
 
-            this._channelOutgoing.SendClientPacket(connection.EndPoint, in this._serverPacket);
+            packet.Type = ClientPacketType.ControlPlane;
+            packet.PlayerId = this._connection.PlayerId;
+            packet.ControlPacket.ControlAckPacketData.SequenceKey = this._connection.Handshake.SequenceKey;
+            packet.ControlPacket.ControlAckPacketData.AcknowledgementKey = this._connection.Handshake.AcknowledgementKey;
+
+            this._transport.SendPacket(packet);
 
             return true;
-        }
-
-        public bool AckHandshake(PlayerId playerId, uint sequenceKey, uint ackKey, IPEndPoint endPoint)
-        {
-            if (!this._playerConnections.HasPlayer(playerId))
-            {
-                this._logger.VerboseError($"Client SYN request for non-existent player: Id={playerId}");
-
-                return false;
-            }
-
-            ref var connection = ref this._playerConnections[playerId];
-
-            if (connection.State != PlayerConnection.ConnectionState.Connecting)
-            {
-                this._logger.VerboseError($"Invalid client SYN request for player: Id={playerId}: State={connection.State}");
-
-                return false;
-            }
-
-            if (connection.Handshake.AcknowledgementKey != this._serverPacket.ControlPacket.ControlAckPacketData.AcknowledgementKey)
-            {
-                this._logger.VerboseError($"Client ACK request incorrect ACK key: Id={playerId}, Key={this._serverPacket.ControlPacket.ControlAckPacketData.AcknowledgementKey}");
-
-                return false;
-            }
-
-            // Connected
-
-            connection.State = PlayerConnection.ConnectionState.Connected;
-            connection.EndPoint = endPoint;
-
-            return true;
-        }
-
-        private uint NewAcknowledgementKey()
-        {
-            return RandomHelper.NextUInt();
         }
     }
 }

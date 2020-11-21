@@ -1,7 +1,15 @@
-﻿namespace Game.Client
+﻿using Common.Core;
+using Game.Networking;
+
+namespace Game.Client
 {
     public class GameServerConnection
     {
+        public PlayerId PlayerId;
+        public WorldInstanceId WorldInstanceId;
+
+        public IPacketEncryptor PacketEncryptor;
+
         public ConnectionState State;
 
         public ConnectionHandshakeKeys Handshake;

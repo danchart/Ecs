@@ -5,7 +5,6 @@ using System;
 using System.IO;
 using System.Net;
 using System.Net.Http;
-using System.Net.Http.Headers;
 using System.Text;
 using System.Threading;
 using Utf8Json;
@@ -16,28 +15,24 @@ namespace Game.Client
     {
         private ClientUdpPacketTransport _transport;
 
-        private PlayerId _playerId;
-        private WorldInstanceId _worldInstanceId;
-
         private bool _isRunning;
-
-        private readonly IPacketEncryptor _packetEncryption;
 
         private readonly ControlPlaneClientController _controlPlaneController;
 
+        private readonly GameServerConnection _connection;
         private readonly NetworkTransportConfig _transportConfig;
         private readonly ILogger _logger;
 
         public GameServerClient(
             ILogger logger,
-            IPacketEncryptor packetEncryption, 
             NetworkTransportConfig transportConfig)
         {
             this._logger = logger ?? throw new ArgumentNullException(nameof(logger));
-            this._packetEncryption = packetEncryption ?? throw new ArgumentNullException(nameof(packetEncryption));
-            this._transportConfig = transportConfig ?? throw new ArgumentNullException(nameof(transportConfig));
 
-            this._controlPlaneController = new ControlPlaneClientController(this._logger);
+            this._connection.PacketEncryptor = new XorPacketEncryptor();
+
+            this._transportConfig = transportConfig ?? throw new ArgumentNullException(nameof(transportConfig));
+            this._controlPlaneController = new ControlPlaneClientController(this._logger, this._connection, this._transport);
         }
 
         public bool IsRunning => this._isRunning;
@@ -72,14 +67,17 @@ namespace Game.Client
 
                     var connectionData = JsonSerializer.Deserialize<PostPlayerConnectResponseBody>(jsonString);
 
-                    _playerId = new PlayerId(connectionData.PlayerId);
-                    _worldInstanceId = new WorldInstanceId(connectionData.WorldInstancId);
+                    _connection.PlayerId = new PlayerId(connectionData.PlayerId);
+                    _connection.WorldInstanceId = new WorldInstanceId(connectionData.WorldInstancId);
 
                     _transport = new ClientUdpPacketTransport(
                         this._logger,
                         this._transportConfig.PacketEncryptor,
                         this._transportConfig,
                         new IPEndPoint(IPAddress.Parse(connectionData.Endpoint), connectionData.Port));
+
+                    _connection.PacketEncryptionKey = System.Convert.FromBase64String(connectionData.Key);
+                    _connection.State = GameServerConnection.ConnectionState.PreConnected;
 
                     _transport.Start();
 
@@ -89,6 +87,8 @@ namespace Game.Client
                     this._isRunning = true;
 
                     this._logger.Info($"Started receiving channel: managedThreadId={thread.ManagedThreadId}");
+
+                    BeginHandshakeSyn(ConnectionHandshakeKeys.NewSequenceKey());
 
                     return true;
                 }
@@ -116,7 +116,7 @@ namespace Game.Client
                         {
                             ServerPacketEnvelope packetEnvelope = default;
 
-                            if (!packetEnvelope.Deserialize(stream, this._packetEncryption))
+                            if (!packetEnvelope.Deserialize(stream, this._connection.PacketEncryptor))
                             {
                                 this._logger.Verbose("Failed to deserialize packet.");
                             }
@@ -152,10 +152,12 @@ namespace Game.Client
 
         public void BeginHandshakeSyn(uint sequenceKey)
         {
+            this._connection.Handshake.SequenceKey = sequenceKey;
+
             var synPacket = new ClientPacketEnvelope
             {
                 Type = ClientPacketType.ControlPlane,
-                PlayerId = this._playerId,
+                PlayerId = this._connection.PlayerId,
 
                 ControlPacket = new ControlPacket
                 {
