@@ -6,7 +6,7 @@ using System.Net;
 
 namespace Game.Server
 {
-    public class ControlPacketController
+    public class ControlPlaneServerController
     {
         private ServerPacketEnvelope _serverPacket;
 
@@ -17,7 +17,7 @@ namespace Game.Server
 
         private readonly ILogger _logger;
 
-        public ControlPacketController(
+        public ControlPlaneServerController(
             ILogger logger, 
             PlayerConnectionManager playerConnections,
             OutgoingServerChannel channelOutgoing,
@@ -60,9 +60,10 @@ namespace Game.Server
 
             ref var connection = ref this._playerConnections[playerId];
 
-            if (connection.State == PlayerConnection.ConnectionState.Connected)
+            if (connection.State != PlayerConnection.ConnectionState.PreConnected ||
+                connection.State != PlayerConnection.ConnectionState.Connecting)
             {
-                this._logger.VerboseError($"Client SYN request for connected player: Id={playerId}");
+                this._logger.VerboseError($"Invalid player state for client SYN request: state={connection.State}, expectedState={PlayerConnection.ConnectionState.PreConnected}, {PlayerConnection.ConnectionState.Connecting)}");
 
                 return false;
             }

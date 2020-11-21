@@ -56,12 +56,12 @@ namespace Game.Server
             this._incomingChannel = new IncomingServerChannel(
                 this._udpTransport,
                 serverConfig.NetworkTransport.PacketEncryptor,
-                new ControlPacketController(
+                new ControlPlaneServerController(
                     this._logger,
                     this._playerConnectionManager,
                     this._outgoingChannel,
                     this._gameWorlds),
-                new SimulationPacketController(
+                new SimulationServerController(
                     this._logger,
                     this._playerConnectionManager,
                     this._gameWorlds),

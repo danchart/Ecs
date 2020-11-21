@@ -9,21 +9,19 @@ namespace Game.Server
 {
     public class IncomingServerChannel
     {
-        private ClientPacketEnvelope _clientPacketEnvelope;
-
         private bool _isRunning;
 
         private readonly IPacketEncryptor _packetEncryption;
         private readonly ServerUdpPacketTransport _transport;
-        private readonly ControlPacketController _controlPacketController;
-        private readonly SimulationPacketController _simulationPacketController;
+        private readonly ControlPlaneServerController _controlPacketController;
+        private readonly SimulationServerController _simulationPacketController;
         private readonly ILogger _logger;
 
         public IncomingServerChannel(
             ServerUdpPacketTransport transport,
             IPacketEncryptor packetEncryption,
-            ControlPacketController controlPacketController,
-            SimulationPacketController simulationPacketController,
+            ControlPlaneServerController controlPacketController,
+            SimulationServerController simulationPacketController,
             ILogger logger)
         {
             this._isRunning = false;
@@ -64,34 +62,40 @@ namespace Game.Server
                     {
                         using (var stream = new MemoryStream(data, offset, count))
                         {
-                            if (!_clientPacketEnvelope.Deserialize(stream, this._packetEncryption))
+                            ClientPacketEnvelope packetEnvelope = default;
+
+                            if (!packetEnvelope.Deserialize(stream, this._packetEncryption))
                             {
                                 this._logger.Verbose("Failed to deserialize packet.");
                             }
 
                             // Process player packet / input
 
-                            switch (_clientPacketEnvelope.Type)
+                            switch (packetEnvelope.Type)
                             {
                                 case ClientPacketType.ControlPlane:
+
+                                    if (this._transport.ReceiveBuffer.GetFromEndPoint(out IPEndPoint endPoint))
                                     {
-                                        this._transport.ReceiveBuffer.GetFromEndPoint(out IPEndPoint endPoint);
 
                                         this._controlPacketController.Process(
-                                            _clientPacketEnvelope.PlayerId,
+                                            packetEnvelope.PlayerId,
                                             endPoint,
-                                            in _clientPacketEnvelope.ControlPacket);
+                                            packetEnvelope.ControlPacket);
                                     }
+
                                     break;
                                 case ClientPacketType.PlayerInput:
 
-                                    this._simulationPacketController.Process(_clientPacketEnvelope.PlayerId, _clientPacketEnvelope.PlayerInputPacket);
+                                    this._simulationPacketController.Process(
+                                        packetEnvelope.PlayerId, 
+                                        packetEnvelope.PlayerInputPacket);
 
                                     break;
                                 default:
 
 #pragma warning disable HAA0601 // Value type to reference type conversion causing boxing allocation
-                                    this._logger.Error($"Unknown packet type {_clientPacketEnvelope.Type}");
+                                    this._logger.Error($"Unknown packet type {packetEnvelope.Type}");
 #pragma warning restore HAA0601 // Value type to reference type conversion causing boxing allocation
                                     break;
                             }

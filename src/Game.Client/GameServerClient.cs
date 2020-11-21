@@ -14,26 +14,30 @@ namespace Game.Client
 {
     public sealed class GameServerClient
     {
-        ClientUdpPacketTransport _transport;
+        private ClientUdpPacketTransport _transport;
 
-        PlayerId _playerId;
-        WorldInstanceId _worldInstanceId;
+        private PlayerId _playerId;
+        private WorldInstanceId _worldInstanceId;
 
         private bool _isRunning;
 
         private readonly IPacketEncryptor _packetEncryption;
 
-        readonly NetworkTransportConfig _transportConfig;
-        readonly ILogger _logger;
+        private readonly ControlPlaneClientController _controlPlaneController;
+
+        private readonly NetworkTransportConfig _transportConfig;
+        private readonly ILogger _logger;
 
         public GameServerClient(
             ILogger logger,
             IPacketEncryptor packetEncryption, 
             NetworkTransportConfig transportConfig)
         {
-            _logger = logger ?? throw new ArgumentNullException(nameof(logger));
+            this._logger = logger ?? throw new ArgumentNullException(nameof(logger));
             this._packetEncryption = packetEncryption ?? throw new ArgumentNullException(nameof(packetEncryption));
-            _transportConfig = transportConfig ?? throw new ArgumentNullException(nameof(transportConfig));
+            this._transportConfig = transportConfig ?? throw new ArgumentNullException(nameof(transportConfig));
+
+            this._controlPlaneController = new ControlPlaneClientController(this._logger);
         }
 
         public bool IsRunning => this._isRunning;
@@ -43,12 +47,6 @@ namespace Game.Client
             using (var httpClient = new HttpClient())
             {
                 //var connectionServerUrl = "http://localhost:8110";
-
-                var content = 
-                    new StreamContent(
-                        new MemoryStream(
-                            ));
-                content.Headers.ContentType = new MediaTypeHeaderValue("application/json");
 
                 var response = httpClient.SendAsync(
                     new HttpRequestMessage(
@@ -99,7 +97,6 @@ namespace Game.Client
             return false;
         }
 
-
         public void Stop()
         {
             this._isRunning = false;
@@ -124,18 +121,13 @@ namespace Game.Client
                                 this._logger.Verbose("Failed to deserialize packet.");
                             }
 
-                            // Process player packet / input
-
                             switch (packetEnvelope.Type)
                             {
                                 case ServerPacketType.Control:
                                     {
                                         this._transport.ReceiveBuffer.GetFromEndPoint(out IPEndPoint endPoint);
 
-                                        this._controlPacketController.Process(
-                                            packetEnvelope.PlayerId,
-                                            endPoint,
-                                            in _serverPacketEnvelope.ControlPacket);
+                                        this._controlPlaneController.Process(packetEnvelope.ControlPacket);
                                     }
                                     break;
                                 case ServerPacketType.Replication:
@@ -146,7 +138,7 @@ namespace Game.Client
                                 default:
 
 #pragma warning disable HAA0601 // Value type to reference type conversion causing boxing allocation
-                                    this._logger.Error($"Unknown packet type {_serverPacketEnvelope.Type}");
+                                    this._logger.Error($"Unknown packet type {packetEnvelope.Type}");
 #pragma warning restore HAA0601 // Value type to reference type conversion causing boxing allocation
                                     break;
                             }

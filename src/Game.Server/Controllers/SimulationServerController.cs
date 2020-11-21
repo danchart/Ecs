@@ -5,14 +5,14 @@ using System;
 
 namespace Game.Server
 {
-    public class SimulationPacketController
+    public class SimulationServerController
     {
         private readonly GameWorlds _worlds;
         private readonly PlayerConnectionManager _playerConnections;
 
         private readonly ILogger _logger;
 
-        public SimulationPacketController(
+        public SimulationServerController(
             ILogger logger,
             PlayerConnectionManager playerConnections,
             GameWorlds worlds)
