@@ -1,7 +1,6 @@
 ﻿using Common.Core;
 using Game.Networking;
 using System;
-using System.Net;
 
 namespace Game.Client
 {

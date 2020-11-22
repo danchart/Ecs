@@ -15,11 +15,13 @@ namespace Game.Simulation.Server
 
         public override void OnUpdate(float deltaTime)
         {
-            //foreach (ref var transform in Query.GetComponents2())
-            //{
-            //    transform.position.x += ((float)50 - this._random.Next(0, 100)) / 1000.0f;
-            //    transform.position.y += ((float)50 - this._random.Next(0, 100)) / 1000.0f;
-            //}
+            foreach (int index in Query)
+            {
+                ref var transform = ref Query.Get2(index);
+
+                transform.position.x += ((float)50 - this._random.Next(0, 100)) / 1000.0f;
+                transform.position.y += ((float)50 - this._random.Next(0, 100)) / 1000.0f;
+            }
         }
     }
 }
