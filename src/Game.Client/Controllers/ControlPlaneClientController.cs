@@ -24,7 +24,7 @@ namespace Game.Client
             {
                 case ControlMessageEnum.ConnectSynAck:
 
-                    return SynAckHandshake(controlPacket.ControlAckPacketData.SequenceKey);
+                    return SynAckHandshake(controlPacket.ControlAckPacketData.AcknowledgementKey);
             }
 
             this._logger.Error($"Unkown control packet received: message={controlPacket.ControlMessage}");

@@ -43,18 +43,6 @@ namespace Networking.Core
             public ILogger Logger;
         }
 
-        //public void Server(string address, int port)
-        //{
-        //    Server(new IPEndPoint(IPAddress.Parse(address), port));
-        //}
-
-        //public void Server(IPEndPoint ipEndPoint)
-        //{
-        //    this._socket.SetSocketOption(SocketOptionLevel.IP, SocketOptionName.ReuseAddress, true);
-        //    this._socket.Bind(ipEndPoint);
-        //    BeginReceive();
-        //}
-
         protected void BeginReceive()
         {
             var state = new ReceiveState

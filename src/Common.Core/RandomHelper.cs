@@ -4,7 +4,7 @@ namespace Common.Core
 {
     public static class RandomHelper
     {
-        private static readonly Random Random = new Random();
+        private static readonly Random Random = new Random(Guid.NewGuid().GetHashCode());
 
         public static uint NextUInt()
         {

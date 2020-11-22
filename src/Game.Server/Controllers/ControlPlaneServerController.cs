@@ -70,9 +70,12 @@ namespace Game.Server
 
             // Send SYN-ACK
 
-            // We now have the clients remote endpoint.
+            // Save remote endpoint and sequence key.
             connection.EndPoint = endPoint;
+            connection.Handshake.SequenceKey = sequenceKey;
+            // Generate the acknowledgement key.
             connection.Handshake.AcknowledgementKey = ConnectionHandshakeKeys.NewAcknowledgementKey();
+            // Now in Connecting state.
             connection.State = PlayerConnection.ConnectionState.Connecting;
 
             this._serverPacket.Type = ServerPacketType.Control;

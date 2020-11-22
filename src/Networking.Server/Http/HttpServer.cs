@@ -29,7 +29,7 @@ namespace Networking.Server
             }
 
             listener.Start();
-            this._logger.Info($"HTTP server started: prefixes={string.Join(", ", prefixes)}");
+            this._logger.Info($"Started HTTP listener: {string.Join(", ", prefixes)}");
 
             var state = new State
             { 

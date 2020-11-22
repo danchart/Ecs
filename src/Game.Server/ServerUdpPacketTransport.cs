@@ -15,6 +15,8 @@ namespace Game.Server
         private readonly IPEndPoint _endPoint;
         private readonly IPacketEncryptor _packetEncryption;
 
+        private readonly ILogger _logger;
+
         private ByteArrayPool _packetSerializationBytePool;
 
         public ServerUdpPacketTransport(
@@ -23,6 +25,7 @@ namespace Game.Server
             NetworkTransportConfig transportConfig,
             UdpServerConfig udpServerConfig)
         {
+            this._logger = logger ?? throw new ArgumentNullException(nameof(logger));
             this._packetEncryption = packetEncryption ?? throw new ArgumentNullException(nameof(packetEncryption));
             this._endPoint = udpServerConfig.HostIpEndPoint;
 
@@ -37,6 +40,8 @@ namespace Game.Server
         public void Start()
         {
             this._udpSocket.Start(this._endPoint);
+
+            this._logger.Verbose($"Started UDP listener: endPoint={this._endPoint}");
         }
 
         public void Stop()
