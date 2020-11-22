@@ -13,17 +13,17 @@ namespace Game.Server.Console
 
             GameServer gameServer = new GameServer(DefaultServerConfig.Instance, _logger);
 
+            gameServer.Start();
+
             HttpServer httpServer = new GameHttpServer(_logger, gameServer);
 
             httpServer.Start(new string[] { "http://localhost:8110/" });
 
-            //gameServer.SpawnWorld(new WorldType("eden"));
-
-            var id = gameServer
+            var spawnedWorld = gameServer
                 .Commander
                 .RunCommandAsync(
                     new SpawnWorldCommand(
-                            new WorldType("eden")))
+                        new WorldType("eden")))
                 .Result;
 
             _logger.Info("Running...");

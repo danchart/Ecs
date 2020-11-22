@@ -37,6 +37,8 @@ namespace Game.Server
 
         public void Start()
         {
+            this._transport.Start();
+
             var thread = new Thread(ProcessIncomingPackets);
             thread.Start();
 
@@ -47,6 +49,8 @@ namespace Game.Server
 
         public void Stop()
         {
+            this._transport.Stop();
+
             this._isRunning = false;
         }
 

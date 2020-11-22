@@ -7,7 +7,6 @@ using System.Net;
 using System.Net.Http;
 using System.Text;
 using System.Threading;
-using Utf8Json;
 
 namespace Game.Client
 {
@@ -17,22 +16,29 @@ namespace Game.Client
 
         private bool _isRunning;
 
-        private readonly ControlPlaneClientController _controlPlaneController;
+        private ControlPlaneClientController _controlPlaneController;
 
         private readonly GameServerConnection _connection;
         private readonly NetworkTransportConfig _transportConfig;
+
+        private readonly IJsonSerializer _jsonSerializer;
         private readonly ILogger _logger;
 
         public GameServerClient(
             ILogger logger,
+            IJsonSerializer jsonSerializer,
             NetworkTransportConfig transportConfig)
         {
             this._logger = logger ?? throw new ArgumentNullException(nameof(logger));
+            this._jsonSerializer = jsonSerializer ?? throw new ArgumentNullException(nameof(jsonSerializer));
 
-            this._connection.PacketEncryptor = new XorPacketEncryptor();
+            this._connection = new GameServerConnection
+            {
+                State = GameServerConnection.ConnectionState.None,
+                PacketEncryptor = new XorPacketEncryptor(),
+            };
 
             this._transportConfig = transportConfig ?? throw new ArgumentNullException(nameof(transportConfig));
-            this._controlPlaneController = new ControlPlaneClientController(this._logger, this._connection, this._transport);
         }
 
         public bool IsRunning => this._isRunning;
@@ -41,20 +47,17 @@ namespace Game.Client
         {
             using (var httpClient = new HttpClient())
             {
-                //var connectionServerUrl = "http://localhost:8110";
-
                 var response = httpClient.SendAsync(
                     new HttpRequestMessage(
                         HttpMethod.Post,
                         $"{connectionServerEndPoint}/player/123/connect")
                     {
                         Content = new StringContent(
-                            Encoding.UTF8.GetString(
-                                JsonSerializer.Serialize(
+                            _jsonSerializer.Serialize(
                                     new PostPlayerConnectRequestBody
                                     {
                                         WorldType = "eden",
-                                    })),
+                                    }),
                             Encoding.UTF8,
                             "application/json")
                     }).Result;
@@ -63,21 +66,24 @@ namespace Game.Client
                 {
                     var jsonString = response.Content.ReadAsStringAsync().Result;
 
-                    _logger.Info($"Received login response: {jsonString}");
+                    this._logger.Info($"Received login response: {jsonString}");
 
-                    var connectionData = JsonSerializer.Deserialize<PostPlayerConnectResponseBody>(jsonString);
+                    //var connectionData = _jsonSerializer.Deserialize<PostPlayerConnectResponseBody>(jsonString);
+                    var connectionData = _jsonSerializer.Deserialize_PostPlayerConnectResponseBody(jsonString);
 
-                    _connection.PlayerId = new PlayerId(connectionData.PlayerId);
-                    _connection.WorldInstanceId = new WorldInstanceId(connectionData.WorldInstancId);
+                    this._connection.PlayerId = new PlayerId(connectionData.PlayerId);
+                    this._connection.WorldInstanceId = new WorldInstanceId(connectionData.WorldInstancId);
 
-                    _transport = new ClientUdpPacketTransport(
+                    this._transport = new ClientUdpPacketTransport(
                         this._logger,
                         this._transportConfig.PacketEncryptor,
                         this._transportConfig,
                         new IPEndPoint(IPAddress.Parse(connectionData.Endpoint), connectionData.Port));
 
-                    _connection.PacketEncryptionKey = System.Convert.FromBase64String(connectionData.Key);
-                    _connection.State = GameServerConnection.ConnectionState.PreConnected;
+                    this._connection.PacketEncryptionKey = System.Convert.FromBase64String(connectionData.Key);
+                    this._connection.State = GameServerConnection.ConnectionState.PreConnected;
+
+                    this._controlPlaneController = new ControlPlaneClientController(this._logger, this._connection, this._transport);
 
                     _transport.Start();
 
@@ -170,7 +176,9 @@ namespace Game.Client
                 }
             };
 
-            _transport.SendPacket(synPacket);
+            this._transport.SendPacket(synPacket);
+
+            this._logger.Info($"Begin SYN handshake: sequenceKey={sequenceKey}");
         }
     }
 }

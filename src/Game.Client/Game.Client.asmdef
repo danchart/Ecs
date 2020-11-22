@@ -1,6 +1,6 @@
 ﻿{
     "name": "Game.Client",
-    "references": [ "Common.Core", "Networking.Core", "Game.Simulation.Core", "Game.Simulation.Client", "Game.Networking" ],
+    "references": [ "Common.Core", "Ecs.Core", "Game.Networking", "Game.Server.Contracts", "Game.Simulation.Client", "Game.Simulation.Core", "Networking.Core" ],
     "includePlatforms": [],
     "excludePlatforms": [],
     "allowUnsafeCode": false,

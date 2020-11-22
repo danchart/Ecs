@@ -7,7 +7,10 @@ namespace Game.Server
 {
     public static class HttpListenertHelper
     {
-        public static JsonSerializerOptions JsonSerializerOptions = new JsonSerializerOptions();
+        public static JsonSerializerOptions JsonSerializerOptions = new JsonSerializerOptions
+        {
+            IncludeFields = true, // We use fields to maintain contract class compatibilility with Unity's JsonUtility serializer.
+        };
 
         public static T GetJsonContent<T>(this HttpListenerRequest request) 
             where T : class, new()
@@ -19,7 +22,7 @@ namespace Game.Server
 
             using (var body = request.InputStream) // here we have data
             {
-                using (var reader = new System.IO.StreamReader(body, request.ContentEncoding))
+                using (var reader = new StreamReader(body, request.ContentEncoding))
                 {
                     var content = reader.ReadToEnd();
 
@@ -31,7 +34,7 @@ namespace Game.Server
         public static void CompleteJsonResponse<T>(this HttpListenerResponse response, int statusCode, T value) 
             where T : class, new()
         {
-            var responseString = JsonSerializer.Serialize<T>(value, JsonSerializerOptions);
+            var responseString = JsonSerializer.Serialize(value, JsonSerializerOptions);
 
             response.StatusCode = statusCode;
             response.ContentType = "application/json";

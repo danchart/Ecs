@@ -5,18 +5,18 @@ namespace Game.Server.Contracts
     [Serializable]
     public class FailureResponseBody
     {
-        public int Code { get; set; }
-        public string Message { get; set; }
+        public int Code;
+        public string Message;
     }
 
     [Serializable]
     public class PostPlayerConnectResponseBody
     {
-        public int PlayerId { get; set; }
-        public string Key { get; set; }
-        public int WorldInstancId { get; set; }
+        public int PlayerId;
+        public string Key;
+        public int WorldInstancId;
 
-        public string Endpoint { get; set; }
-        public int Port { get; set; }
+        public string Endpoint;
+        public int Port;
     }
 }

@@ -1,5 +1,6 @@
 ﻿using Common.Core;
 using Ecs.Core;
+using Game.Server.Contracts;
 using Game.Simulation.Client;
 using Game.Simulation.Core;
 using Simulation.Core;
@@ -20,7 +21,10 @@ namespace Game.Client
 
         private readonly ILogger _logger;
 
-        public GameClient(ILogger logger, IClientConfig config)
+        public GameClient(
+            ILogger logger,
+            IJsonSerializer jsonSerializer,
+            IClientConfig config)
         {
             this._logger = logger ?? throw new ArgumentNullException(nameof(logger));
 
@@ -39,7 +43,7 @@ namespace Game.Client
                 this._systems,
                 this._fixedSystems);
 
-            this._server = new GameServerClient(this._logger, config.NetworkTransport);
+            this._server = new GameServerClient(this._logger, jsonSerializer, config.NetworkTransport);
         }
 
         public void Start(string connectionServerEndPoint)
@@ -52,7 +56,7 @@ namespace Game.Client
             this._server.Stop();
         }
 
-        public void FixedUpdate(float deltaTime)
+        public void FixedUpdate(float deltaTime, InputComponent input)
         {
             this._simulation.FixedUpdate(deltaTime);
         }

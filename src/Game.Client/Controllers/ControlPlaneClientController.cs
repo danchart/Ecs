@@ -27,6 +27,8 @@ namespace Game.Client
                     return SynAckHandshake(controlPacket.ControlAckPacketData.SequenceKey);
             }
 
+            this._logger.Error($"Unkown control packet received: message={controlPacket.ControlMessage}");
+
             return false;
         }
 
@@ -48,10 +50,13 @@ namespace Game.Client
 
             packet.Type = ClientPacketType.ControlPlane;
             packet.PlayerId = this._connection.PlayerId;
+            packet.ControlPacket.ControlMessage = ControlMessageEnum.ConnectAck;
             packet.ControlPacket.ControlAckPacketData.SequenceKey = this._connection.Handshake.SequenceKey;
             packet.ControlPacket.ControlAckPacketData.AcknowledgementKey = this._connection.Handshake.AcknowledgementKey;
 
             this._transport.SendPacket(packet);
+
+            this._logger.Info($"Sent ACK handshake: sequenceKey={this._connection.Handshake.SequenceKey}, ackKey={this._connection.Handshake.AcknowledgementKey}");
 
             return true;
         }

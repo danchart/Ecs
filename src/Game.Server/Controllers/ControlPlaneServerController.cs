@@ -35,7 +35,7 @@ namespace Game.Server
             {
                 case ControlMessageEnum.ConnectSyn:
 
-                    return SynHandshake(playerId, controlPacket.ControlSynPacketData.SequenceKey);
+                    return SynHandshake(playerId, endPoint, controlPacket.ControlSynPacketData.SequenceKey);
 
                 case ControlMessageEnum.ConnectAck:
 
@@ -49,7 +49,7 @@ namespace Game.Server
             return false;
         }
 
-        public bool SynHandshake(PlayerId playerId, uint sequenceKey)
+        public bool SynHandshake(PlayerId playerId, IPEndPoint endPoint, uint sequenceKey)
         {
             if (!this._playerConnections.HasPlayer(playerId))
             {
@@ -60,7 +60,7 @@ namespace Game.Server
 
             ref var connection = ref this._playerConnections[playerId];
 
-            if (connection.State != PlayerConnection.ConnectionState.PreConnected ||
+            if (connection.State != PlayerConnection.ConnectionState.PreConnected &&
                 connection.State != PlayerConnection.ConnectionState.Connecting)
             {
                 this._logger.VerboseError($"Invalid player state for client SYN request: state={connection.State}, expectedState={PlayerConnection.ConnectionState.PreConnected}, {PlayerConnection.ConnectionState.Connecting}");
@@ -69,16 +69,21 @@ namespace Game.Server
             }
 
             // Send SYN-ACK
-            
+
+            // We now have the clients remote endpoint.
+            connection.EndPoint = endPoint;
             connection.Handshake.AcknowledgementKey = ConnectionHandshakeKeys.NewAcknowledgementKey();
             connection.State = PlayerConnection.ConnectionState.Connecting;
 
             this._serverPacket.Type = ServerPacketType.Control;
             this._serverPacket.PlayerId = connection.PlayerId;
+            this._serverPacket.ControlPacket.ControlMessage = ControlMessageEnum.ConnectSynAck;
             this._serverPacket.ControlPacket.ControlAckPacketData.SequenceKey = sequenceKey;
             this._serverPacket.ControlPacket.ControlAckPacketData.AcknowledgementKey = connection.Handshake.AcknowledgementKey;
 
             this._channelOutgoing.SendClientPacket(connection.EndPoint, in this._serverPacket);
+
+            this._logger.Verbose($"Successful SYN handshake: state={connection.State}, playerId={playerId}, endPoint={endPoint}, sequenceKey={sequenceKey}");
 
             return true;
         }
@@ -101,17 +106,24 @@ namespace Game.Server
                 return false;
             }
 
-            if (connection.Handshake.AcknowledgementKey != this._serverPacket.ControlPacket.ControlAckPacketData.AcknowledgementKey)
+            if (!connection.EndPoint.Equals(endPoint))
             {
-                this._logger.VerboseError($"Client ACK request incorrect ACK key: Id={playerId}, Key={this._serverPacket.ControlPacket.ControlAckPacketData.AcknowledgementKey}");
+                this._logger.VerboseError($"Client ACK request with different remote endpoint: endPoint={endPoint}, connection.Endpoint={connection.EndPoint}");
+
+                return false;
+            }
+
+            if (connection.Handshake.AcknowledgementKey != ackKey)
+            {
+                this._logger.VerboseError($"Client ACK request incorrect ACK key: Id={playerId}, Key={ackKey}, expectedKey={connection.Handshake.AcknowledgementKey}");
 
                 return false;
             }
 
             // Connected
-
             connection.State = PlayerConnection.ConnectionState.Connected;
-            connection.EndPoint = endPoint;
+
+            this._logger.Verbose($"Successful ACK handshake: state={connection.State}, playerId={playerId}, endPoint={endPoint}, sequenceKey={sequenceKey}, ackKey={ackKey}");
 
             return true;
         }

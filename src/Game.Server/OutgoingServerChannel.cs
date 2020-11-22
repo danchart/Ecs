@@ -51,6 +51,11 @@ namespace Game.Server
             {
                 ref readonly var playerConnection = ref player.ConnectionRef.Unref();
 
+                if (playerConnection.State != PlayerConnection.ConnectionState.Connected)
+                {
+                    continue;
+                }
+
                 packet.PlayerId = playerConnection.PlayerId;
                 packet.SimulationPacket.Frame = frame;
                 packet.SimulationPacket.EntityCount = 0;

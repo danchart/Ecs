@@ -8,67 +8,80 @@ namespace Networking.Core
 {
     public abstract class UdpSocketBase
     {
-        protected readonly State _state;
+        protected readonly Socket _socket;
 
-        protected UdpSocketBase(ILogger logger, ReceiveBuffer receiveBuffer)
+        protected ILogger _logger;
+        protected ReceiveBuffer _receiveBuffer;
+
+        // Save delegate reference to avoid allocation.
+        protected static readonly AsyncCallback ReceiveAsyncCallback = new AsyncCallback(ReceiveAsync);
+        protected static readonly AsyncCallback SendAsyncCallback = new AsyncCallback(SendAsync);
+
+        private readonly int _closeTimeout;
+
+        protected UdpSocketBase(ILogger logger, ReceiveBuffer receiveBuffer, int closeTimeout = 0)
         {
-            this._state = new State
-            {
-                //Socket = new Socket(AddressFamily.InterNetwork, SocketType.Dgram, ProtocolType.Udp),
-                Socket = new Socket(AddressFamily.InterNetworkV6, SocketType.Dgram, ProtocolType.Udp),
-                ReceiveBuffer = receiveBuffer ?? throw new ArgumentNullException(nameof(receiveBuffer)),
-                EndPointFrom = new IPEndPoint(IPAddress.Any, 0),
-                Logger = logger ?? throw new ArgumentNullException(nameof(logger)),
-                ReceiveAsync = ReceiveAsync,
-                SendAsync = SendAsync,
-            };
+            this._logger = logger ?? throw new ArgumentNullException(nameof(logger));
+            this._receiveBuffer = receiveBuffer ?? throw new ArgumentNullException(nameof(receiveBuffer));
+            this._closeTimeout = closeTimeout;
 
-            this._state.Socket.SetSocketOption(SocketOptionLevel.IPv6, SocketOptionName.IPv6Only, false);
+            //this._socket = new Socket(AddressFamily.InterNetwork, SocketType.Dgram, ProtocolType.Udp);
+            this._socket = new Socket(AddressFamily.InterNetworkV6, SocketType.Dgram, ProtocolType.Udp);
+            this._socket.SetSocketOption(SocketOptionLevel.IPv6, SocketOptionName.IPv6Only, false);
         }
 
-        protected class State
+        public void Stop()
+        {
+            this._socket.Close(this._closeTimeout);
+        }
+
+        protected class ReceiveState
         {
             public Socket Socket;
             public ReceiveBuffer ReceiveBuffer;
             public EndPoint EndPointFrom;
             public ILogger Logger;
-
-            // Save delegate reference to avoid allocation.
-            public AsyncCallback ReceiveAsync; 
-            public AsyncCallback SendAsync;
         }
 
-        public void Server(string address, int port)
-        {
-            Server(new IPEndPoint(IPAddress.Parse(address), port));
-        }
+        //public void Server(string address, int port)
+        //{
+        //    Server(new IPEndPoint(IPAddress.Parse(address), port));
+        //}
 
-        public void Server(IPEndPoint ipEndPoint)
-        {
-            this._state.Socket.SetSocketOption(SocketOptionLevel.IP, SocketOptionName.ReuseAddress, true);
-            this._state.Socket.Bind(ipEndPoint);
-            BeginReceive();
-        }
+        //public void Server(IPEndPoint ipEndPoint)
+        //{
+        //    this._socket.SetSocketOption(SocketOptionLevel.IP, SocketOptionName.ReuseAddress, true);
+        //    this._socket.Bind(ipEndPoint);
+        //    BeginReceive();
+        //}
 
         protected void BeginReceive()
         {
+            var state = new ReceiveState
+            {
+                Socket = this._socket,
+                ReceiveBuffer = this._receiveBuffer,
+                EndPointFrom = new IPEndPoint(IPAddress.Any, 0),
+                Logger = this._logger,
+            };
+
             byte[] data;
             int offset, size;
-            this._state.ReceiveBuffer.GetWriteData(out data, out offset, out size);
+            this._receiveBuffer.GetWriteData(out data, out offset, out size);
 
-            this._state.Socket.BeginReceiveFrom(
+            this._socket.BeginReceiveFrom(
                 data,
                 offset,
                 size,
                 SocketFlags.None,
-                ref this._state.EndPointFrom,
-                this._state.ReceiveAsync,
-                this._state);
+                ref state.EndPointFrom,
+                ReceiveAsyncCallback,
+                state);
         }
 
         private static void ReceiveAsync(IAsyncResult ar)
         {
-            State state = (State)ar.AsyncState;
+            ReceiveState state = (ReceiveState)ar.AsyncState;
             int bytesReceived = state.Socket.EndReceiveFrom(ar, ref state.EndPointFrom);
 
             state.ReceiveBuffer.NextWrite(bytesReceived, (IPEndPoint)state.EndPointFrom);
@@ -95,21 +108,19 @@ namespace Networking.Core
                 size,
                 SocketFlags.None,
                 ref state.EndPointFrom,
-                state.ReceiveAsync,
+                ReceiveAsyncCallback,
                 state);
         }
 
         private static void SendAsync(IAsyncResult ar)
         {
-            State state = (State)ar.AsyncState;
-            int bytesSent = state.Socket.EndSend(ar);
+            Socket socket = (Socket)ar.AsyncState;
+            int bytesSent = socket.EndSend(ar);
         }
     }
 
     public class ClientUdpSocket : UdpSocketBase
     {
-        private static readonly IPEndPoint IpAddressAny = new IPEndPoint(IPAddress.Any, 0);
-
         public ClientUdpSocket(ILogger logger, ReceiveBuffer receiveBuffer) 
             : base(logger, receiveBuffer)
         {
@@ -117,20 +128,20 @@ namespace Networking.Core
 
         public void Start(IPEndPoint ipEndPoint)
         {
-            this._state.Socket.Connect(ipEndPoint);
+            this._socket.Connect(ipEndPoint);
             BeginReceive();
         }
 
         public SocketError Send(byte[] data)
         {
-            this._state.Socket.BeginSend(
+            this._socket.BeginSend(
                 data,
                 0,
                 data.Length,
                 SocketFlags.None,
                 out SocketError errorCode,
-                this._state.SendAsync,
-                _state);
+                SendAsyncCallback,
+                this._socket);
 
             return errorCode;
         }
@@ -145,8 +156,8 @@ namespace Networking.Core
 
         public void Start(IPEndPoint ipEndPoint)
         {
-            this._state.Socket.SetSocketOption(SocketOptionLevel.IP, SocketOptionName.ReuseAddress, true);
-            this._state.Socket.Bind(ipEndPoint);
+            this._socket.SetSocketOption(SocketOptionLevel.IP, SocketOptionName.ReuseAddress, true);
+            this._socket.Bind(ipEndPoint);
 
             BeginReceive();
         }
@@ -158,14 +169,14 @@ namespace Networking.Core
 
         public void SendTo(byte[] data, int offset, int length, IPEndPoint ipEndPoint)
         {
-            this._state.Socket.BeginSendTo(
+            this._socket.BeginSendTo(
                 data,
                 offset,
                 length,
                 SocketFlags.None,
                 ipEndPoint,
-                this._state.SendAsync,
-                this._state);
+                SendAsyncCallback,
+                this._socket);
         }
     }
 
