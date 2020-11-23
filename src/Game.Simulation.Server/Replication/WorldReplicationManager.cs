@@ -42,7 +42,10 @@ namespace Game.Simulation.Server
             {
                 if (player.TryGetEntity(out Entity playerEntity))
                 {
-                    this._entityGridMap.GetEntitiesOfInterest(playerEntity, ref this._entityBuffer, out int entityCount);
+                    this._entityGridMap.GetEntitiesOfInterest(
+                        playerEntity, 
+                        ref this._entityBuffer, 
+                        out int entityCount);
 
                     AddPacketPrioritizedEntityChangesToPlayer(
                         playerEntity,

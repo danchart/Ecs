@@ -41,6 +41,10 @@
       <Project>{83de9636-9348-4678-b986-02987685b57d}</Project>
       <Name>Common.Core</Name>
     </ProjectReference>
+    <ProjectReference Include="..\Ecs.Core\Ecs.Core.csproj">
+      <Project>{65BEB14C-5414-4516-B566-E668E494C3EB}</Project>
+      <Name>Ecs.Core</Name>
+    </ProjectReference>
     <ProjectReference Include="..\Networking.Core\Networking.Core.csproj">
       <Project>{B19A0428-3713-43B2-81A5-1F228CE19489}</Project>
       <Name>Networking.Core</Name>

@@ -95,6 +95,8 @@ namespace Game.Simulation.Server
                     this._replicatedEntities[index].Components = new FixedIndexDictionary<EntityReplicationData.Component>(this._componentCapacity);
                     this._replicatedEntities[index].LastReplicatedComponentFields = new Dictionary<ComponentId, BitField>(this._componentCapacity);
                 }
+
+                this._replicatedEntities[index].Entity = entity;
             }
             else
             {
@@ -183,6 +185,7 @@ namespace Game.Simulation.Server
         public struct EntityReplicationData
         {
             public NetPriorityData NetPriority;
+            public Entity Entity;
 
             public Dictionary<ComponentId, BitField> LastReplicatedComponentFields;
             public FixedIndexDictionary<Component> Components;

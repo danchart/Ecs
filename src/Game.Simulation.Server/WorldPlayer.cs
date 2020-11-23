@@ -1,5 +1,4 @@
 ﻿using Ecs.Core;
-using Game.Networking;
 using System;
 
 namespace Game.Simulation.Server

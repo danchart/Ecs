@@ -4,6 +4,7 @@ using Game.Networking.PacketData;
 using System;
 using System.IO;
 using System.Runtime.InteropServices;
+using Ecs.Core;
 
 namespace Game.Networking
 {
@@ -48,14 +49,16 @@ namespace Game.Networking
 
     public struct EntityPacketData
     {
-        public uint EntityId;
+        public int EntityId;
+        public uint EntityGeneration;
         public byte ItemCount;
         public ComponentPacketData[] Components;
 
         public int Serialize(Stream stream, bool measureOnly)
         {
-            // entity id
-            int size = stream.PacketWriteUInt(EntityId, measureOnly);
+            // entity
+            int size = stream.PacketWriteInt(EntityId, measureOnly);
+            size += stream.PacketWriteUInt(EntityGeneration, measureOnly);
             // item count
             size += stream.PacketWriteByte(ItemCount, measureOnly);
 
@@ -70,7 +73,8 @@ namespace Game.Networking
         public bool Deserialize(Stream stream)
         {
             // entity id
-            stream.PacketReadUInt(out EntityId);
+            stream.PacketReadInt(out EntityId);
+            stream.PacketReadUInt(out EntityGeneration);
             // item count
             stream.PacketReadByte(out ItemCount);
 

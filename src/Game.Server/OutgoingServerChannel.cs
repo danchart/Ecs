@@ -1,4 +1,5 @@
 ﻿using Common.Core;
+using Ecs.Core;
 using Game.Networking;
 using Game.Simulation.Server;
 using System;
@@ -92,11 +93,16 @@ namespace Game.Server
                             }
 
                             packet.SimulationPacket.Entities[packet.SimulationPacket.EntityCount].ItemCount = 0;
+                            replicatedEntity.Entity.GetPacketSerializationData(
+                                out packet.SimulationPacket.Entities[packet.SimulationPacket.EntityCount].EntityId,
+                                out packet.SimulationPacket.Entities[packet.SimulationPacket.EntityCount].EntityGeneration);
 
                             replicatedEntity.ToEntityComponentPackets(
                                 ref packet.SimulationPacket.Entities[packet.SimulationPacket.EntityCount].Components,
                                 ref packet.SimulationPacket.Entities[packet.SimulationPacket.EntityCount].ItemCount);
                         }
+
+                        player.ReplicationData.Remove(replicatedEntity.Entity);
                     }
                 }
 
