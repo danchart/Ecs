@@ -5,12 +5,14 @@ namespace Game.Networking
 {
     public readonly struct FrameIndex : IEquatable<FrameIndex>
     {
-        private readonly ushort _index;
-
-        private FrameIndex(ushort id) => this._index = id;
-
         public static readonly FrameIndex Zero = new FrameIndex(0);
         public static readonly FrameIndex MaxValue = new FrameIndex(ushort.MaxValue);
+
+        private readonly ushort _index;
+
+        private const ushort HalfUshortMaxValue = (ushort.MaxValue / 2) - 1;
+
+        public FrameIndex(ushort index) => this._index = index;
 
         public FrameIndex GetNext() => new FrameIndex((this._index == ushort.MaxValue) ? (ushort)1 : (ushort)(this._index + 1));
 
@@ -20,12 +22,36 @@ namespace Game.Networking
 
             // First, get the unchecked unsigned difference of this index with the start index. 
             //
-            // IThe difference continues to work for overflows, e.g.:
+            // The difference continues to work for overflow, e.g.:
             //
             //  10 - 65535 = 11
             var uncheckedDiff = (ushort)unchecked(this._index - startIndex);
 
             return uncheckedDiff <= length;
+        }
+
+        /// <summary>
+        /// Compares two FrameIndex values even with rollover. Fails if difference is greater than window which itself
+        /// can be no more than 0.5 * ushort.MaxValue - 1.
+        /// </summary>
+        public static int Compare(in ushort left, in ushort right, int window = HalfUshortMaxValue - 1)
+        {
+            var uncheckedDiff = (ushort)unchecked(right - left);
+
+            if (uncheckedDiff == 0)
+            {
+                // left == right
+                return 0;
+            }
+
+            if (uncheckedDiff <= window)
+            {
+                // left < right
+                return 1;
+            }
+
+            // left > right
+            return -1;
         }
 
         public static FrameIndex New(ushort index = 1) => new FrameIndex(index);

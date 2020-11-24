@@ -2,7 +2,7 @@
 using Game.Networking;
 using System;
 
-namespace Game.Client.Controllers
+namespace Game.Client
 {
     public class ClientSimulationController
     {
@@ -19,21 +19,23 @@ namespace Game.Client.Controllers
 
         public bool Process(in ReplicationPacket packet)
         {
-            for (int i = 0; i <  packet.EntityCount; i++)
-            {
-                ref var entity = ref packet.Entities[i];
+            // TODO: Add packet to the jitter buffer
 
-                entity.
-            }
+            //for (int i = 0; i <  packet.EntityCount; i++)
+            //{
+            //    ref var entity = ref packet.Entities[i];
 
-            switch ()
-            {
-                case ControlMessageEnum.ConnectSynAck:
+            //    entity.
+            //}
 
-                    return SynAckHandshake(controlPacket.ControlAckPacketData.AcknowledgementKey);
-            }
+            //switch ()
+            //{
+            //    case ControlMessageEnum.ConnectSynAck:
 
-            this._logger.Error($"Unkown control packet received: message={controlPacket.ControlMessage}");
+            //        return SynAckHandshake(controlPacket.ControlAckPacketData.AcknowledgementKey);
+            //}
+
+            //this._logger.Error($"Unkown control packet received: message={controlPacket.ControlMessage}");
 
             return false;
         }

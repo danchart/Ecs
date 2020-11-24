@@ -63,12 +63,12 @@ namespace Game.Server
                 }
 
                 packet.PlayerId = playerConnection.PlayerId;
-                packet.SimulationPacket.FrameNumber = frame;
-                packet.SimulationPacket.EntityCount = 0;
+                packet.ReplicationPacket.FrameNumber = frame;
+                packet.ReplicationPacket.EntityCount = 0;
 
-                if (packet.SimulationPacket.Entities == null)
+                if (packet.ReplicationPacket.Entities == null)
                 {
-                    packet.SimulationPacket.Entities = new EntityPacketData[64];
+                    packet.ReplicationPacket.Entities = new EntityPacketData[64];
                 }
 
                 // HACK: This is SUPER fragile!!
@@ -84,7 +84,7 @@ namespace Game.Server
 
                     if (replicatedEntity.NetPriority.RemainingQueueTime <= 0)
                     {
-                        ref var packetData = ref packet.SimulationPacket.Entities[packet.SimulationPacket.EntityCount];
+                        ref var packetData = ref packet.ReplicationPacket.Entities[packet.ReplicationPacket.EntityCount];
 
                         replicatedEntity.ToEntityPacketData(ref packetData);
 
@@ -97,7 +97,7 @@ namespace Game.Server
                         }
 
                         size += entitySize;
-                        packet.SimulationPacket.EntityCount++;
+                        packet.ReplicationPacket.EntityCount++;
 
                         this._clientEntitiesToRemove.Add(replicatedEntity.Entity);
                     }

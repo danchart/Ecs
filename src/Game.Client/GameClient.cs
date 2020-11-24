@@ -16,6 +16,7 @@ namespace Game.Client
         private readonly Systems _systems;
         private readonly Systems _fixedSystems;
         private readonly ClientSimulation<InputComponent> _simulation;
+        private readonly PacketJitterBuffer _jitterBuffer;
 
         private readonly GameServerClient _server;
 
@@ -43,7 +44,13 @@ namespace Game.Client
                 this._systems,
                 this._fixedSystems);
 
-            this._server = new GameServerClient(this._logger, jsonSerializer, config.NetworkTransport);
+            this._jitterBuffer = new PacketJitterBuffer(this._logger, config.Jitter.Capacity);
+
+            this._server = new GameServerClient(
+                this._logger, 
+                jsonSerializer, 
+                this._jitterBuffer, 
+                config.NetworkTransport);
         }
 
         public void Start(string connectionServerEndPoint)

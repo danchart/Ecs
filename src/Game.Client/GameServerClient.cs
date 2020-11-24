@@ -17,9 +17,11 @@ namespace Game.Client
         private bool _isRunning;
 
         private ClientControlPlaneController _controlPlaneController;
+        private ClientSimulationController _simulationController;
 
         private readonly GameServerConnection _connection;
         private readonly NetworkTransportConfig _transportConfig;
+        private readonly PacketJitterBuffer _jitterBuffer;
 
         private readonly IJsonSerializer _jsonSerializer;
         private readonly ILogger _logger;
@@ -27,6 +29,7 @@ namespace Game.Client
         public GameServerClient(
             ILogger logger,
             IJsonSerializer jsonSerializer,
+            PacketJitterBuffer jitterBuffer,
             NetworkTransportConfig transportConfig)
         {
             this._logger = logger ?? throw new ArgumentNullException(nameof(logger));
@@ -37,6 +40,8 @@ namespace Game.Client
                 State = GameServerConnection.ConnectionState.None,
                 PacketEncryptor = new XorPacketEncryptor(),
             };
+
+            this._jitterBuffer = jitterBuffer ?? throw new ArgumentNullException(nameof(jitterBuffer));
 
             this._transportConfig = transportConfig ?? throw new ArgumentNullException(nameof(transportConfig));
         }
@@ -83,7 +88,8 @@ namespace Game.Client
                     this._connection.PacketEncryptionKey = System.Convert.FromBase64String(connectionData.Key);
                     this._connection.State = GameServerConnection.ConnectionState.PreConnected;
 
-                    this._controlPlaneController = new ClientControlPlaneController(this._logger, this._connection, this._transport);
+                    // Creates the controllers now that the transport layer has been created.
+                    CreateControllers();
 
                     _transport.Start();
 
@@ -130,15 +136,13 @@ namespace Game.Client
                             switch (packetEnvelope.Type)
                             {
                                 case ServerPacketType.Control:
-                                    {
-                                        this._transport.ReceiveBuffer.GetEndPoint(out IPEndPoint endPoint);
 
-                                        this._controlPlaneController.Process(packetEnvelope.ControlPacket);
-                                    }
+                                    this._controlPlaneController.Process(packetEnvelope.ControlPacket);
+
                                     break;
                                 case ServerPacketType.Replication:
 
-                                    // TODO: Replicate!
+                                    this._simulationController.Process(packetEnvelope.ReplicationPacket);
 
                                     break;
                                 default:
@@ -179,6 +183,12 @@ namespace Game.Client
             this._transport.SendPacket(synPacket);
 
             this._logger.Info($"Begin SYN handshake: sequenceKey={sequenceKey}");
+        }
+
+        private void CreateControllers()
+        {
+            this._controlPlaneController = new ClientControlPlaneController(this._logger, this._connection, this._transport);
+            this._simulationController = new ClientSimulationController(this._logger, this._connection, this._transport);
         }
     }
 }

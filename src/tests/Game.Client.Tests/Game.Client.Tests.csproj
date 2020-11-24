@@ -5,11 +5,11 @@
   <Import Project="$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props" Condition="Exists('$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props')" />
   <Import Project="..\tests.props" />
   <PropertyGroup>
-    <ProjectGuid>{63A75549-3F66-4DD9-AEE8-8E49D0186560}</ProjectGuid>
+    <ProjectGuid>{062D23FA-9BA0-4F08-B99D-8515D8845801}</ProjectGuid>
     <OutputType>Library</OutputType>
     <AppDesignerFolder>Properties</AppDesignerFolder>
-    <RootNamespace>Common.Core.Tests</RootNamespace>
-    <AssemblyName>Common.Core.Tests</AssemblyName>
+    <RootNamespace>Game.Client.Tests</RootNamespace>
+    <AssemblyName>Game.Client.Tests</AssemblyName>
     <NuGetPackageImportStamp>
     </NuGetPackageImportStamp>
   </PropertyGroup>
@@ -36,17 +36,25 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="BitFieldTests.cs" />
-    <Compile Include="ByteArrayPoolTests.cs" />
-    <Compile Include="CircularBufferIndexTests.cs" />
-    <Compile Include="FixedIndexDictionaryTests.cs" />
+    <Compile Include="JitterBufferTests.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="RefDictionaryTests.cs" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\..\Common.Core\Common.Core.csproj">
       <Project>{83de9636-9348-4678-b986-02987685b57d}</Project>
       <Name>Common.Core</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\..\Game.Client\Game.Client.csproj">
+      <Project>{28282334-d8f9-4a63-a9ff-444aeeca8d3d}</Project>
+      <Name>Game.Client</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\..\Game.Networking\Game.Networking.csproj">
+      <Project>{769CE99B-F28D-4C73-9E98-E7D46EB17B42}</Project>
+      <Name>Game.Networking</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\Test.Common\Test.Common.csproj">
+      <Project>{C3F2CC20-4D19-4D07-BDE2-63D92DF2746B}</Project>
+      <Name>Test.Common</Name>
     </ProjectReference>
   </ItemGroup>
   <ItemGroup>

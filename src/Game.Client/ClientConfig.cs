@@ -9,7 +9,18 @@ namespace Game.Client
         EcsConfig Ecs { get; }
         PlayerInputConfig PlayerInput { get; }
         SimulationConfig Simulation { get;  }
-        NetworkTransportConfig NetworkTransport { get; } 
+        NetworkTransportConfig NetworkTransport { get; }
+        JitterConfig Jitter { get; }
+    }
+
+    public class JitterConfig
+    {
+        public int Capacity;
+
+        public static readonly JitterConfig Default = new JitterConfig
+        {
+            Capacity = 256,
+        };
     }
 
     public class DefaultClientConfig : IClientConfig
@@ -21,5 +32,7 @@ namespace Game.Client
         public SimulationConfig Simulation => SimulationConfig.Default;
 
         public NetworkTransportConfig NetworkTransport => NetworkTransportConfig.Default;
+
+        public JitterConfig Jitter => JitterConfig.Default;
     }
 }

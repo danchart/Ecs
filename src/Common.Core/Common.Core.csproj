@@ -22,6 +22,7 @@
   <ItemGroup>
     <Compile Include="BitField.cs" />
     <Compile Include="ByteArrayPool.cs" />
+    <Compile Include="CircularBufferIndex.cs" />
     <Compile Include="FixedIndexDictionary.cs" />
     <Compile Include="Hashing\HashCodeHelper.cs" />
     <Compile Include="IClock.cs" />

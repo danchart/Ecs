@@ -16,7 +16,7 @@ namespace Game.Networking
         public ServerPacketType Type;
         public PlayerId PlayerId;
 
-        public ReplicationPacket SimulationPacket;
+        public ReplicationPacket ReplicationPacket;
         public ControlPacket ControlPacket;
 
         public int Serialize(Stream stream, bool measureOnly, IPacketEncryptor packetEncryption)
@@ -27,7 +27,7 @@ namespace Game.Networking
             switch (this.Type)
             {
                 case ServerPacketType.Replication:
-                    return size + this.SimulationPacket.Serialize(stream, measureOnly);
+                    return size + this.ReplicationPacket.Serialize(stream, measureOnly);
                 case ServerPacketType.Control:
                     return size + this.ControlPacket.Serialize(stream, measureOnly);
             }
@@ -47,7 +47,7 @@ namespace Game.Networking
             switch (this.Type)
             {
                 case ServerPacketType.Replication:
-                    return this.SimulationPacket.Deserialize(stream);
+                    return this.ReplicationPacket.Deserialize(stream);
                 case ServerPacketType.Control:
                     return this.ControlPacket.Deserialize(stream);
             }
