@@ -34,7 +34,7 @@ namespace Networking.Core
 
         public int Count => _count;
 
-        public bool GetWriteData(out byte[] data, out int offset, out int size)
+        public bool BeginWrite(out byte[] data, out int offset, out int size)
         {
             if (this._count == this.PacketCapacity)
             {
@@ -54,17 +54,17 @@ namespace Networking.Core
             }
         }
 
-        public void NextWrite(int bytesReceived, IPEndPoint ipEndPoint)
+        public void EndWrite(int bytesReceived, IPEndPoint ipEndPoint)
         {
             this._bytedReceived[this._writeQueueIndex] = bytesReceived;
             this._fromEndPoints[this._writeQueueIndex] = ipEndPoint;
 
-            this._writeQueueIndex = (this._writeQueueIndex + 1) % this.PacketCapacity;            
+            this._writeQueueIndex = (this._writeQueueIndex + 1) % this.PacketCapacity;
 
             Interlocked.Increment(ref this._count);
         }
 
-        public bool GetFromEndPoint(out IPEndPoint ipEndPoint)
+        public bool GetEndPoint(out IPEndPoint ipEndPoint)
         {
             if (this._count == 0)
             {
@@ -74,15 +74,13 @@ namespace Networking.Core
             }
             else
             {
-                var readIndex = GetReadIndex();
-
-                ipEndPoint = this._fromEndPoints[readIndex];
+                ipEndPoint = this._fromEndPoints[ReadIndex];
 
                 return true;
             }
         }
 
-        public bool GetReadData(out byte[] data, out int offset, out int count)
+        public bool BeginRead(out byte[] data, out int offset, out int count)
         {
             if (this._count == 0)
             {
@@ -94,7 +92,7 @@ namespace Networking.Core
             }
             else
             {
-                var readIndex = GetReadIndex();
+                var readIndex = ReadIndex;
 
                 data = this._data;
                 offset = readIndex * this.MaxPacketSize;
@@ -104,11 +102,11 @@ namespace Networking.Core
             }
         }
 
-        public void NextRead()
+        public void EndRead()
         {
             Interlocked.Decrement(ref this._count);
         }
 
-        private int GetReadIndex() => ((this._writeQueueIndex - this._count + this.PacketCapacity) % this.PacketCapacity);
+        private int ReadIndex => ((this._writeQueueIndex - this._count + this.PacketCapacity) % this.PacketCapacity);
     }
 }

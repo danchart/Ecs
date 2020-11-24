@@ -55,7 +55,7 @@ namespace Networking.Core
 
             byte[] data;
             int offset, size;
-            this._receiveBuffer.GetWriteData(out data, out offset, out size);
+            this._receiveBuffer.BeginWrite(out data, out offset, out size);
 
             this._socket.BeginReceiveFrom(
                 data,
@@ -72,12 +72,12 @@ namespace Networking.Core
             ReceiveState state = (ReceiveState)ar.AsyncState;
             int bytesReceived = state.Socket.EndReceiveFrom(ar, ref state.EndPointFrom);
 
-            state.ReceiveBuffer.NextWrite(bytesReceived, (IPEndPoint)state.EndPointFrom);
+            state.ReceiveBuffer.EndWrite(bytesReceived, (IPEndPoint)state.EndPointFrom);
 
             byte[] data;
             int offset, size;
             bool isWriteBufferWait = false;
-            while (!state.ReceiveBuffer.GetWriteData(out data, out offset, out size))
+            while (!state.ReceiveBuffer.BeginWrite(out data, out offset, out size))
             {
                 if (!isWriteBufferWait)
                 {

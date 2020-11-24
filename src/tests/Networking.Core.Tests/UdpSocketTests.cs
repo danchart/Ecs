@@ -37,13 +37,13 @@ namespace Networking.Core.Tests
             int offset;
             int size;
             IPEndPoint clientIpEndPoint;
-            serverBuffer.GetReadData(out data, out offset, out size);
-            serverBuffer.GetFromEndPoint(out clientIpEndPoint);
-            serverBuffer.NextRead();
+            serverBuffer.BeginRead(out data, out offset, out size);
+            serverBuffer.GetEndPoint(out clientIpEndPoint);
+            serverBuffer.EndRead();
             var text0 = Encoding.ASCII.GetString(data, offset, size);
 
-            serverBuffer.GetReadData(out data, out offset, out size);
-            serverBuffer.NextRead();
+            serverBuffer.BeginRead(out data, out offset, out size);
+            serverBuffer.EndRead();
             var text1 = Encoding.ASCII.GetString(data, offset, size);
 
             Assert.Equal(0, serverBuffer.Count);
@@ -57,8 +57,8 @@ namespace Networking.Core.Tests
 
             WaitForReceive(clientBuffer, 1);
 
-            clientBuffer.GetReadData(out data, out offset, out size);
-            clientBuffer.NextRead();
+            clientBuffer.BeginRead(out data, out offset, out size);
+            clientBuffer.EndRead();
             var syncAckText = Encoding.ASCII.GetString(data, offset, size);
 
             Assert.Equal("SYN-ACK", syncAckText);
@@ -69,8 +69,8 @@ namespace Networking.Core.Tests
 
             WaitForReceive(serverBuffer, 1);
 
-            serverBuffer.GetReadData(out data, out offset, out size);
-            serverBuffer.NextRead();
+            serverBuffer.BeginRead(out data, out offset, out size);
+            serverBuffer.EndRead();
             var ackText = Encoding.ASCII.GetString(data, offset, size);
 
             Assert.Equal("ACK", ackText);

@@ -142,7 +142,10 @@ namespace Game.Server
                 this._simulation.FixedUpdate(this._fixedTick);
 
                 // Update clients
-                this._channelManager.ReplicateToClients(state.FrameIndex, this._players);
+                this._channelManager.ReplicateToClients(
+                    state.FrameIndex, 
+                    this._fixedTick, 
+                    this._players);
 
                 // Increment frame index
                 state.FrameIndex = state.FrameIndex.GetNext();

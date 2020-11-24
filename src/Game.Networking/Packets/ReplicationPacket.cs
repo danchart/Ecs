@@ -1,23 +1,22 @@
 ﻿using Common.Core;
-using Networking.Core;
 using Game.Networking.PacketData;
+using Networking.Core;
 using System;
 using System.IO;
 using System.Runtime.InteropServices;
-using Ecs.Core;
 
 namespace Game.Networking
 {
     public struct ReplicationPacket
     {
-        public uint Frame;
+        public ushort FrameNumber; // FUTURE: make ushort
         public byte EntityCount;
         public EntityPacketData[] Entities;
 
         public int Serialize(Stream stream, bool measureOnly)
         {
             // frame #
-            int size = stream.PacketWriteUInt(Frame, measureOnly);
+            int size = stream.PacketWriteUShort(FrameNumber, measureOnly);
             // entity count
             size += stream.PacketWriteByte(EntityCount, measureOnly);
 
@@ -32,7 +31,7 @@ namespace Game.Networking
         public bool Deserialize(Stream stream)
         {
             // frame #
-            stream.PacketReadUInt(out Frame);
+            stream.PacketReadUShort(out FrameNumber);
             // packet count
             stream.PacketReadByte(out EntityCount);
 
@@ -56,7 +55,7 @@ namespace Game.Networking
 
         public int Serialize(Stream stream, bool measureOnly)
         {
-            // entity
+            // entity id + generation
             int size = stream.PacketWriteInt(EntityId, measureOnly);
             size += stream.PacketWriteUInt(EntityGeneration, measureOnly);
             // item count

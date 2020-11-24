@@ -2,24 +2,31 @@
 using Game.Networking;
 using System;
 
-namespace Game.Client
+namespace Game.Client.Controllers
 {
-    public class ControlPlaneClientController
+    public class ClientSimulationController
     {
         private readonly GameServerConnection _connection;
         private readonly ClientUdpPacketTransport _transport;
         private readonly ILogger _logger;
 
-        public ControlPlaneClientController(ILogger logger, GameServerConnection connection, ClientUdpPacketTransport transport)
+        public ClientSimulationController(ILogger logger, GameServerConnection connection, ClientUdpPacketTransport transport)
         {
             this._connection = connection ?? throw new ArgumentNullException(nameof(connection));
             this._transport = transport ?? throw new ArgumentNullException(nameof(transport));
             this._logger = logger ?? throw new ArgumentNullException(nameof(logger));
         }
 
-        public bool Process(in ControlPacket controlPacket)
+        public bool Process(in ReplicationPacket packet)
         {
-            switch (controlPacket.ControlMessage)
+            for (int i = 0; i <  packet.EntityCount; i++)
+            {
+                ref var entity = ref packet.Entities[i];
+
+                entity.
+            }
+
+            switch ()
             {
                 case ControlMessageEnum.ConnectSynAck:
 

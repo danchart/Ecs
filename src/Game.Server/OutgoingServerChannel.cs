@@ -3,6 +3,7 @@ using Ecs.Core;
 using Game.Networking;
 using Game.Simulation.Server;
 using System;
+using System.IO;
 using System.Net;
 
 namespace Game.Server
@@ -12,12 +13,12 @@ namespace Game.Server
     /// </summary>
     public sealed class OutgoingServerChannel
     {
-        private ServerPacketEnvelope _serverPacketEnvelope;
-
         private readonly IPacketEncryptor _packetEncryption;
         private readonly ServerUdpPacketTransport _transport;
         private readonly NetworkTransportConfig _config;
         private readonly ILogger _logger;
+
+        private readonly AppendOnlyList<Entity> _clientEntitiesToRemove;
 
         public OutgoingServerChannel(
             NetworkTransportConfig config,
@@ -29,6 +30,8 @@ namespace Game.Server
             this._transport = transport ?? throw new ArgumentNullException(nameof(transport));
             this._packetEncryption = packetEncryption ?? throw new ArgumentNullException(nameof(packetEncryption));
             this._logger = logger ?? throw new ArgumentNullException(nameof(logger));
+
+            this._clientEntitiesToRemove = new AppendOnlyList<Entity>(64);
         }
 
         public void SendClientPacket(IPEndPoint endPoint, in ServerPacketEnvelope serverPacket)
@@ -41,10 +44,12 @@ namespace Game.Server
         // 1) Queue replication packets to transport
         // 2) Sort client input to worlds 
 
-        public void ReplicateToClients(ushort frame, WorldPlayers players)
+        public void ReplicateToClients(
+            ushort frame, 
+            float deltaTime,
+            WorldPlayers players)
         {
-            // TODO: Do we need a packet pool? A singleton works single threaded only.
-            ref var packet = ref this._serverPacketEnvelope;
+            ServerPacketEnvelope packet = default;
 
             packet.Type = ServerPacketType.Replication;
 
@@ -58,7 +63,7 @@ namespace Game.Server
                 }
 
                 packet.PlayerId = playerConnection.PlayerId;
-                packet.SimulationPacket.Frame = frame;
+                packet.SimulationPacket.FrameNumber = frame;
                 packet.SimulationPacket.EntityCount = 0;
 
                 if (packet.SimulationPacket.Entities == null)
@@ -71,39 +76,40 @@ namespace Game.Server
 
                 int size = 0;
 
-                foreach (var replicatedEntity in player.ReplicationData)
+                this._clientEntitiesToRemove.Clear();
+
+                foreach (int index in player.ReplicationData)
                 {
+                    ref var replicatedEntity = ref player.ReplicationData[index];
+
                     if (replicatedEntity.NetPriority.RemainingQueueTime <= 0)
                     {
-                        var entitySize = replicatedEntity.MeasurePacketSize();
+                        ref var packetData = ref packet.SimulationPacket.Entities[packet.SimulationPacket.EntityCount];
+
+                        replicatedEntity.ToEntityPacketData(ref packetData);
+
+                        var entitySize = packetData.Serialize(Stream.Null, measureOnly: true);
 
                         if (size + entitySize > this._config.MaxPacketSize - ServerPacketHeaderSize)
                         {
-                            // Reached packet size 
+                            // Packet size limit reached.
                             break;
                         }
-                        else
-                        {
-                            packet.SimulationPacket.EntityCount++;
-                            size += entitySize;
 
-                            if (packet.SimulationPacket.Entities[packet.SimulationPacket.EntityCount].Components == null)
-                            {
-                                packet.SimulationPacket.Entities[packet.SimulationPacket.EntityCount].Components = new ComponentPacketData[128];
-                            }
+                        size += entitySize;
+                        packet.SimulationPacket.EntityCount++;
 
-                            packet.SimulationPacket.Entities[packet.SimulationPacket.EntityCount].ItemCount = 0;
-                            replicatedEntity.Entity.GetPacketSerializationData(
-                                out packet.SimulationPacket.Entities[packet.SimulationPacket.EntityCount].EntityId,
-                                out packet.SimulationPacket.Entities[packet.SimulationPacket.EntityCount].EntityGeneration);
-
-                            replicatedEntity.ToEntityComponentPackets(
-                                ref packet.SimulationPacket.Entities[packet.SimulationPacket.EntityCount].Components,
-                                ref packet.SimulationPacket.Entities[packet.SimulationPacket.EntityCount].ItemCount);
-                        }
-
-                        player.ReplicationData.Remove(replicatedEntity.Entity);
+                        this._clientEntitiesToRemove.Add(replicatedEntity.Entity);
                     }
+                    else
+                    {
+                        replicatedEntity.NetPriority.RemainingQueueTime -= deltaTime;
+                    }
+                }
+
+                for (int i = 0; i < this._clientEntitiesToRemove.Count; i++)
+                {
+                    player.ReplicationData.Remove(_clientEntitiesToRemove.Items[i]);
                 }
 
                 this._transport.SendPacket(playerConnection.EndPoint, in packet);

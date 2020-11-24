@@ -39,7 +39,7 @@ namespace Game.Simulation.Server
                     break;
                 default:
                     // You forgot to update Merge()
-                    throw new InvalidOperationException($"Unknown ComponentId: {data.ComponentId}");
+                    throw new Exception($"Unknown ComponentId: {data.ComponentId}");
             }
         }
     }

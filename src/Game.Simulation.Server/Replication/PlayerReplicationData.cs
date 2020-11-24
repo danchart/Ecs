@@ -5,7 +5,6 @@ using Game.Networking;
 using Game.Simulation.Core;
 using System;
 using System.Collections.Generic;
-using System.IO;
 using System.Runtime.CompilerServices;
 
 namespace Game.Simulation.Server
@@ -13,7 +12,7 @@ namespace Game.Simulation.Server
     public sealed class PlayerReplicationData
     {
         private EntityReplicationData[] _replicatedEntities;
-        private Dictionary<Entity, int> _entityToIndex;
+        private readonly Dictionary<Entity, int> _entityToIndex;
 
         private int[] _freeIndices;
 
@@ -39,7 +38,7 @@ namespace Game.Simulation.Server
         }
 
         public int Count => this._count;
-        public ref readonly EntityReplicationData this[int index] => ref this._replicatedEntities[index];
+        public ref EntityReplicationData this[int index] => ref this._replicatedEntities[index];
 
         public void Clear()
         {
@@ -122,10 +121,9 @@ namespace Game.Simulation.Server
                 if (entityReplicationData.Components.ContainsKey(modifiedComponent.ComponentIdAsIndex))
                 {
                     // Merge component changes into the replication data.
-
-                    ref var replicationComponentData = ref entityReplicationData.Components[modifiedComponent.ComponentIdAsIndex];
-
-                    replicationComponentData.Merge(modifiedComponent);
+                    entityReplicationData
+                        .Components[modifiedComponent.ComponentIdAsIndex]
+                        .Merge(modifiedComponent);
                 }
                 else
                 {
@@ -163,20 +161,14 @@ namespace Game.Simulation.Server
 
         public struct Enumerator
         {
-            private readonly EntityReplicationData[] _replicatedEntities;
             private Dictionary<Entity, int>.Enumerator _enumerator;
 
             internal Enumerator(PlayerReplicationData replicationData)
             {
-                this._replicatedEntities = replicationData._replicatedEntities;
                 this._enumerator = replicationData._entityToIndex.GetEnumerator();
             }
 
-            public ref EntityReplicationData Current
-            {
-                [MethodImpl(MethodImplOptions.AggressiveInlining)]
-                get => ref this._replicatedEntities[this._enumerator.Current.Value];
-            }
+            public int Current => this._enumerator.Current.Value;
 
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
             public bool MoveNext() => this._enumerator.MoveNext();
@@ -235,72 +227,50 @@ namespace Game.Simulation.Server
 
     public static class PlayerReplicationDataExtensions
     {
-        public static int MeasurePacketSize(this PlayerReplicationData.EntityReplicationData replicationData)
+        public static bool ToEntityPacketData(
+            this in PlayerReplicationData.EntityReplicationData entityReplicationData, 
+            ref EntityPacketData entityPacketData)
         {
-            int size = 0;
+            entityReplicationData.Entity.GetPacketSerializationData(
+                out entityPacketData.EntityId,
+                out entityPacketData.EntityGeneration);
 
-            for (int i = 0; i < (int)ComponentId.MaxValue; i++)
+            if (entityPacketData.Components == null)
             {
-                if (replicationData.Components.ContainsKey(i))
-                {
-                    ref var component = ref replicationData.Components[i];
-
-                    switch (component.Data.ComponentId)
-                    {
-                        case ComponentId.Transform:
-
-                            size += component.Data.Transform.Serialize(component.HasFields, Stream.Null, measureOnly: true);
-                            break;
-
-                        case ComponentId.Movement:
-
-                            size += component.Data.Movement.Serialize(component.HasFields, Stream.Null, measureOnly: true);
-                            break;
-
-                        default:
-
-                            throw new InvalidOperationException($"Unknown {nameof(ComponentId)}, value={component.Data.ComponentId}");
-                    }
-                }
+                entityPacketData.Components = new ComponentPacketData[128];
             }
 
-            return size;
-        }
+            entityPacketData.ItemCount = 0;
 
-        public static bool ToEntityComponentPackets(
-            this PlayerReplicationData.EntityReplicationData replicationData, 
-            ref ComponentPacketData[] items, 
-            ref byte index)
-        {
             for (int i = 0; i < (int)ComponentId.MaxValue; i++)
             {
-                if (replicationData.Components.ContainsKey(i))
+                if (entityReplicationData.Components.ContainsKey(i))
                 {
-                    if (index == items.Length)
+                    if (entityPacketData.ItemCount == entityPacketData.Components.Length)
                     {
-                        Array.Resize(ref items, 2 * index);
+                        Array.Resize(ref entityPacketData.Components, 2 * entityPacketData.ItemCount);
                     }
 
-                    ref var component = ref replicationData.Components[i];
+                    ref var component = ref entityReplicationData.Components[i];
 
                     switch (component.Data.ComponentId)
                     {
                         case ComponentId.Transform:
 
-                            items[index].Type = ComponentPacketData.TypeEnum.Transform;
-                            items[index].Transform = component.Data.Transform;
+                            entityPacketData.Components[entityPacketData.ItemCount].Type = ComponentPacketData.TypeEnum.Transform;
+                            entityPacketData.Components[entityPacketData.ItemCount].Transform = component.Data.Transform;
                             break;
 
                         case ComponentId.Movement:
 
-                            items[index].Type = ComponentPacketData.TypeEnum.Movement;
-                            items[index].Movement = component.Data.Movement;
+                            entityPacketData.Components[entityPacketData.ItemCount].Type = ComponentPacketData.TypeEnum.Movement;
+                            entityPacketData.Components[entityPacketData.ItemCount].Movement = component.Data.Movement;
                             break;
 
                         case ComponentId.Player:
 
-                            items[index].Type = ComponentPacketData.TypeEnum.Player;
-                            items[index].Player = component.Data.Player;
+                            entityPacketData.Components[entityPacketData.ItemCount].Type = ComponentPacketData.TypeEnum.Player;
+                            entityPacketData.Components[entityPacketData.ItemCount].Player = component.Data.Player;
                             break;
 
                         default:
@@ -308,9 +278,9 @@ namespace Game.Simulation.Server
                             throw new InvalidOperationException($"Unknown {nameof(ComponentId)}, value={component.Data.ComponentId}");
                     }
 
-                    items[index].HasFields = component.HasFields;
+                    entityPacketData.Components[entityPacketData.ItemCount].HasFields = component.HasFields;
 
-                    index++;
+                    entityPacketData.ItemCount++;
                 }
             }
 

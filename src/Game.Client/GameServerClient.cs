@@ -16,7 +16,7 @@ namespace Game.Client
 
         private bool _isRunning;
 
-        private ControlPlaneClientController _controlPlaneController;
+        private ClientControlPlaneController _controlPlaneController;
 
         private readonly GameServerConnection _connection;
         private readonly NetworkTransportConfig _transportConfig;
@@ -83,7 +83,7 @@ namespace Game.Client
                     this._connection.PacketEncryptionKey = System.Convert.FromBase64String(connectionData.Key);
                     this._connection.State = GameServerConnection.ConnectionState.PreConnected;
 
-                    this._controlPlaneController = new ControlPlaneClientController(this._logger, this._connection, this._transport);
+                    this._controlPlaneController = new ClientControlPlaneController(this._logger, this._connection, this._transport);
 
                     _transport.Start();
 
@@ -116,7 +116,7 @@ namespace Game.Client
 
                 while (packetCount-- > 0)
                 {
-                    if (this._transport.ReceiveBuffer.GetReadData(out byte[] data, out int offset, out int count))
+                    if (this._transport.ReceiveBuffer.BeginRead(out byte[] data, out int offset, out int count))
                     {
                         using (var stream = new MemoryStream(data, offset, count))
                         {
@@ -131,7 +131,7 @@ namespace Game.Client
                             {
                                 case ServerPacketType.Control:
                                     {
-                                        this._transport.ReceiveBuffer.GetFromEndPoint(out IPEndPoint endPoint);
+                                        this._transport.ReceiveBuffer.GetEndPoint(out IPEndPoint endPoint);
 
                                         this._controlPlaneController.Process(packetEnvelope.ControlPacket);
                                     }
@@ -150,7 +150,7 @@ namespace Game.Client
                             }
                         }
 
-                        this._transport.ReceiveBuffer.NextRead();
+                        this._transport.ReceiveBuffer.EndRead();
                     }
                 }
             }

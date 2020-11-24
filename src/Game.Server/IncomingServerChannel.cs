@@ -62,7 +62,7 @@ namespace Game.Server
 
                 while (packetCount-- > 0)
                 {
-                    if (this._transport.ReceiveBuffer.GetReadData(out byte[] data, out int offset, out int count))
+                    if (this._transport.ReceiveBuffer.BeginRead(out byte[] data, out int offset, out int count))
                     {
                         using (var stream = new MemoryStream(data, offset, count))
                         {
@@ -79,7 +79,7 @@ namespace Game.Server
                             {
                                 case ClientPacketType.ControlPlane:
 
-                                    if (this._transport.ReceiveBuffer.GetFromEndPoint(out IPEndPoint endPoint))
+                                    if (this._transport.ReceiveBuffer.GetEndPoint(out IPEndPoint endPoint))
                                     {
 
                                         this._controlPacketController.Process(
@@ -105,7 +105,7 @@ namespace Game.Server
                             }
                         }
 
-                        this._transport.ReceiveBuffer.NextRead();
+                        this._transport.ReceiveBuffer.EndRead();
                     }
                 }
             }

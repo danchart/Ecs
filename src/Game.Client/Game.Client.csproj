@@ -21,10 +21,12 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="ClientConfig.cs" />
-    <Compile Include="Controllers\ControlPlaneClientController.cs" />
+    <Compile Include="Controllers\ClientSimulationController.cs" />
+    <Compile Include="Controllers\ClientControlPlaneController.cs" />
     <Compile Include="GameClient.cs" />
     <Compile Include="GameServerClient.cs" />
     <Compile Include="GameServerConnection.cs" />
+    <Compile Include="SimulationPacketJitterBuffer.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="ClientUdpPacketTransport.cs" />
   </ItemGroup>

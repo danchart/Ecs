@@ -28,7 +28,7 @@ namespace Ecs.Core
         internal protected Entity[] _entities = new Entity[EcsConstants.InitialEntityQueryEntityCapacity];
         internal protected int _entityCount = 0;
 
-        protected Dictionary<int, int> _entityIndexToQueryIndex = new Dictionary<int, int>(EcsConstants.InitialEntityQueryEntityCapacity);
+        protected Dictionary<int, int> _entityIdToQueryIndex = new Dictionary<int, int>(EcsConstants.InitialEntityQueryEntityCapacity);
 
         internal protected int[] _componentIds1 = null;
         internal protected int[] _componentIds2 = null;
@@ -190,7 +190,7 @@ namespace Ecs.Core
             destQuery._entityCount = this._entityCount;
 
             // ### HEAP ALLOCATION
-            destQuery._entityIndexToQueryIndex = new Dictionary<int, int>(this._entityIndexToQueryIndex);
+            destQuery._entityIdToQueryIndex = new Dictionary<int, int>(this._entityIdToQueryIndex);
 
             this._componentIds1.CopyToResize(destQuery._componentIds1);
 
@@ -241,7 +241,7 @@ namespace Ecs.Core
             in World.EntityData entityData,
             int componentTypeIndex)
         {
-            if (this._entityIndexToQueryIndex.ContainsKey(entity.Id))
+            if (this._entityIdToQueryIndex.ContainsKey(entity.Id))
             {
                 return;
             }
@@ -288,7 +288,7 @@ namespace Ecs.Core
             in World.EntityData entityData,
             int componentTypeIndex)
         {
-            if (!this._entityIndexToQueryIndex.ContainsKey(entity.Id))
+            if (!this._entityIdToQueryIndex.ContainsKey(entity.Id))
             {
                 return;
             }
@@ -330,7 +330,7 @@ namespace Ecs.Core
             in World.EntityData entityData,
             int componentTypeIndex)
         {
-            if (!this._entityIndexToQueryIndex.ContainsKey(entity.Id))
+            if (!this._entityIdToQueryIndex.ContainsKey(entity.Id))
             {
                 return;
             }
@@ -353,7 +353,7 @@ namespace Ecs.Core
             in World.EntityData entityData,
             int componentTypeIndex)
         {
-            Debug.Assert(!this._entityIndexToQueryIndex.ContainsKey(entity.Id));
+            Debug.Assert(!this._entityIdToQueryIndex.ContainsKey(entity.Id));
 
             for (int i = 0; i < this.ExcludedComponentTypeIndices.Length; i++)
             {
@@ -419,7 +419,7 @@ namespace Ecs.Core
                 }
             }
 
-            this._entityIndexToQueryIndex[entity.Id] = this._entityCount;
+            this._entityIdToQueryIndex[entity.Id] = this._entityCount;
             this._entities[this._entityCount] = entity;
 
             AddComponentsToResult(entity, this._entityCount);
@@ -431,7 +431,7 @@ namespace Ecs.Core
 
         private void RemoveEntityFromQueryResults(in Entity entity)
         {
-            var queryEntityIndex = this._entityIndexToQueryIndex[entity.Id];
+            var queryEntityIndex = this._entityIdToQueryIndex[entity.Id];
 
             // Move the last item to removed position.
             if (queryEntityIndex < this._entityCount - 1)
@@ -446,7 +446,7 @@ namespace Ecs.Core
                 }
             }
 
-            this._entityIndexToQueryIndex.Remove(entity.Id);
+            this._entityIdToQueryIndex.Remove(entity.Id);
 
             this._entityCount--;
 
