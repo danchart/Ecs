@@ -19,7 +19,7 @@ namespace Game.Client
 
         public static readonly JitterConfig Default = new JitterConfig
         {
-            Capacity = 256,
+            Capacity = 64,
         };
     }
 

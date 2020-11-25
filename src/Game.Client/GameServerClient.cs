@@ -187,8 +187,15 @@ namespace Game.Client
 
         private void CreateControllers()
         {
-            this._controlPlaneController = new ClientControlPlaneController(this._logger, this._connection, this._transport);
-            this._simulationController = new ClientSimulationController(this._logger, this._connection, this._transport);
+            this._controlPlaneController = new ClientControlPlaneController(
+                this._logger, 
+                this._connection, 
+                this._transport);
+            this._simulationController = new ClientSimulationController(
+                this._logger, 
+                this._connection, 
+                this._transport, 
+                this._jitterBuffer);
         }
     }
 }

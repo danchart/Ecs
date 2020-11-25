@@ -51,7 +51,7 @@ namespace Game.Client
         public bool AddPacket(in ReplicationPacket packet)
         {
             // Add packet to jitter buffer:
-            //  - Resorts buffer in frame index order
+            //  - Re-sorts buffer in frame index order
             //  - Keeps last N frames
             //  - Removes any frames 
 

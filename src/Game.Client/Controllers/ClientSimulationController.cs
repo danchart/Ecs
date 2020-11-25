@@ -8,36 +8,25 @@ namespace Game.Client
     {
         private readonly GameServerConnection _connection;
         private readonly ClientUdpPacketTransport _transport;
+        private readonly PacketJitterBuffer _jitterBuffer;
         private readonly ILogger _logger;
 
-        public ClientSimulationController(ILogger logger, GameServerConnection connection, ClientUdpPacketTransport transport)
+        public ClientSimulationController(
+            ILogger logger, 
+            GameServerConnection connection, 
+            ClientUdpPacketTransport transport,
+            PacketJitterBuffer jitterBuffer)
         {
             this._connection = connection ?? throw new ArgumentNullException(nameof(connection));
             this._transport = transport ?? throw new ArgumentNullException(nameof(transport));
+            this._jitterBuffer = jitterBuffer ?? throw new ArgumentNullException(nameof(jitterBuffer));
             this._logger = logger ?? throw new ArgumentNullException(nameof(logger));
         }
 
         public bool Process(in ReplicationPacket packet)
         {
-            // TODO: Add packet to the jitter buffer
-
-            //for (int i = 0; i <  packet.EntityCount; i++)
-            //{
-            //    ref var entity = ref packet.Entities[i];
-
-            //    entity.
-            //}
-
-            //switch ()
-            //{
-            //    case ControlMessageEnum.ConnectSynAck:
-
-            //        return SynAckHandshake(controlPacket.ControlAckPacketData.AcknowledgementKey);
-            //}
-
-            //this._logger.Error($"Unkown control packet received: message={controlPacket.ControlMessage}");
-
-            return false;
+            // Add packet to the jitter buffer
+            return this._jitterBuffer.AddPacket(packet);
         }
 
         public bool SynAckHandshake(uint acknowledgementKey)
