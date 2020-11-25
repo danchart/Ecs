@@ -1,7 +1,6 @@
 ﻿using Common.Core;
-using Game.Networking;
 
-namespace Game.Client
+namespace Game.Networking
 {
     /// <summary>
     /// The packet jitter buffer.
@@ -57,9 +56,9 @@ namespace Game.Client
 
             lock (_lock)
             {
-                if (FrameIndex.Compare(this._lastFrameIndex, packet.FrameNumber) < 0)
+                if (!new FrameIndex(packet.FrameNumber).IsInRange(startIndex: this._lastFrameIndex, length: this._packets.Length))
                 {
-                    // Discard packet. The frame # is less than the last read frame #.
+                    // Discard packet. The frame # is outside the expected range.
                     return false;
                 }
 
@@ -124,7 +123,7 @@ namespace Game.Client
             return true;
         }
 
-        public bool TryRead(FrameIndex lastFrameIndex, ref ReplicationPacket packet)
+        public bool TryRead(FrameIndex frameIndex, ref ReplicationPacket packet)
         {
             lock (_lock)
             {
@@ -144,25 +143,33 @@ namespace Game.Client
                 {
                     var packetIndex = this._indices[loopIndex];
 
-                    // Increment loop index.
-                    loopIndex += 1;
-
-                    // Remove the ring buffer entry (just an index update).
-                    this._freeIndices[this._freeCount++] = packetIndex;
-                    //this._count--;
-
-                    var compare = FrameIndex.Compare(this._packets[packetIndex].FrameNumber, lastFrameIndex);
-
-                    if (compare < 0) 
+                    if (this._packets[packetIndex].FrameNumber == frameIndex)
                     {
-                        // This frame # > last frame #, copy it.
+                        // Found packet with this frame index.
                         packet = this._packets[packetIndex];
 
                         // Save last frame #
-                        this._lastFrameIndex = lastFrameIndex;
+                        this._lastFrameIndex = frameIndex;
+
+                        // Remove the ring buffer entry (just an index update) before returning.
+                        this._freeIndices[this._freeCount++] = packetIndex;
 
                         return true;
                     }
+
+                    var compare = FrameIndex.Compare(this._packets[packetIndex].FrameNumber, frameIndex);
+
+                    if (compare < 0) 
+                    {
+                        // Frame # > requested frame #, it is not in the jitter buffer.
+                        return false;
+                    }
+
+                    // Remove the ring buffer entry (just an index update).
+                    this._freeIndices[this._freeCount++] = packetIndex;
+
+                    // Increment loop index.
+                    loopIndex += 1;
                 }
             }
 

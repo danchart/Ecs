@@ -9,7 +9,7 @@ namespace Game.Networking
 {
     public struct ReplicationPacket
     {
-        public ushort FrameNumber; // FUTURE: make ushort
+        public ushort FrameNumber;
         public byte EntityCount;
         public EntityPacketData[] Entities;
 

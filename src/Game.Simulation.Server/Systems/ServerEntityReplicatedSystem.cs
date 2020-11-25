@@ -9,18 +9,18 @@ namespace Game.Simulation.Server
     /// Gathers all the replicated components for this tick. This is later converted into delta, prioritized, 
     /// per-entity changes per-player updates.
     /// </summary>
-    public class GatherReplicatedDataSystem : SystemBase
+    public class ServerEntityReplicatedSystem : SystemBase
     {
-        public EntityQuery<ReplicatedComponent, TransformComponent>.Exclude<IsDisabledComponent> ChangedTransformQuery = null;
-        public EntityQuery<ReplicatedComponent, MovementComponent>.Exclude<IsDisabledComponent> ChangedMovementQuery = null;
-        public EntityQuery<ReplicatedComponent, PlayerComponent>.Exclude<IsDisabledComponent> ChangedPlayerQuery = null;
+        public EntityQuery<ReplicatedComponent, TransformComponent>.Exclude<IsDisabledComponent> TransformQuery = null;
+        public EntityQuery<ReplicatedComponent, MovementComponent>.Exclude<IsDisabledComponent> MovementQuery = null;
+        public EntityQuery<ReplicatedComponent, PlayerComponent>.Exclude<IsDisabledComponent> PlayerQuery = null;
 
         public IReplicationDataBroker ReplicationDataBroker = null;
         public IEntityGridMap EntityGridMap = null;
 
         public override void OnCreate()
         {
-            ChangedTransformQuery.AddEntityRemovedListener(new OnEntityRemovedCallback(RemoveEntityFromGridMap));
+            TransformQuery.AddEntityRemovedListener(new OnEntityRemovedCallback(RemoveEntityFromGridMap));
         }
 
         public override void OnUpdate(float deltaTime)
@@ -33,10 +33,10 @@ namespace Game.Simulation.Server
 
             // TransformComponent
 
-            foreach (int index in ChangedTransformQuery.GetChangedEnumerator<TransformComponent>(this.LastSystemVersion))
+            foreach (int index in TransformQuery.GetChangedEnumerator<TransformComponent>(this.LastSystemVersion))
             {
-                var entity = ChangedTransformQuery.GetEntity(index);
-                ref readonly var transform = ref ChangedTransformQuery.Get2Readonly(index);
+                var entity = TransformQuery.GetEntity(index);
+                ref readonly var transform = ref TransformQuery.Get2Readonly(index);
 
                 ref var component = ref modifiedEntityComponents[entity].New();
                 transform.ToPacket(ref component.Transform);
@@ -47,24 +47,24 @@ namespace Game.Simulation.Server
 
             // MovementComponent
 
-            foreach (int index in ChangedMovementQuery.GetChangedEnumerator<MovementComponent>(this.LastSystemVersion))
+            foreach (int index in MovementQuery.GetChangedEnumerator<MovementComponent>(this.LastSystemVersion))
             {
-                var entity = ChangedMovementQuery.GetEntity(index);
+                var entity = MovementQuery.GetEntity(index);
 
                 ref var component = ref modifiedEntityComponents[entity].New();
-                ChangedMovementQuery
+                MovementQuery
                     .Get2Readonly(index)
                     .ToPacket(ref component.Movement);
             }
 
             // PlayerComponent
 
-            foreach (int index in ChangedPlayerQuery.GetChangedEnumerator<PlayerComponent>(this.LastSystemVersion))
+            foreach (int index in PlayerQuery.GetChangedEnumerator<PlayerComponent>(this.LastSystemVersion))
             {
-                var entity = ChangedPlayerQuery.GetEntity(index);
+                var entity = PlayerQuery.GetEntity(index);
 
                 ref var component = ref modifiedEntityComponents[entity].New();
-                ChangedPlayerQuery
+                PlayerQuery
                     .Get2Readonly(index)
                     .ToPacket(ref component.Player);
             }

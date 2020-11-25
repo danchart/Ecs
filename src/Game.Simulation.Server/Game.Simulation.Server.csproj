@@ -42,7 +42,7 @@
     <Compile Include="ServerConnections\PlayerConnectionRefs.cs" />
     <Compile Include="ServerSimulation.cs" />
     <Compile Include="Systems\JiggleSystem.cs" />
-    <Compile Include="Systems\GatherReplicatedDataSystem.cs" />
+    <Compile Include="Systems\ServerEntityReplicatedSystem.cs" />
     <Compile Include="WorldPlayer.cs" />
     <Compile Include="WorldPlayers.cs" />
   </ItemGroup>

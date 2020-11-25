@@ -1,8 +1,7 @@
-﻿using Game.Networking;
-using Test.Common;
+﻿using Test.Common;
 using Xunit;
 
-namespace Game.Client.Tests
+namespace Game.Networking.Tests
 {
     public class JitterBufferTests
     {
@@ -34,13 +33,14 @@ namespace Game.Client.Tests
 
             ReplicationPacket packet = default;
 
-            Assert.True(jitterBuffer.TryRead(FrameIndex.Zero, ref packet));
+            Assert.False(jitterBuffer.TryRead(FrameIndex.Zero, ref packet));
+            Assert.True(jitterBuffer.TryRead(FrameIndex.Zero + 1, ref packet));
             Assert.Equal(1, packet.FrameNumber);
-            Assert.True(jitterBuffer.TryRead(new FrameIndex(packet.FrameNumber), ref packet));
+            Assert.True(jitterBuffer.TryRead(new FrameIndex(packet.FrameNumber) + 1, ref packet));
             Assert.Equal(2, packet.FrameNumber);
-            Assert.True(jitterBuffer.TryRead(new FrameIndex(packet.FrameNumber), ref packet));
+            Assert.True(jitterBuffer.TryRead(new FrameIndex(packet.FrameNumber) + 1, ref packet));
             Assert.Equal(3, packet.FrameNumber);
-            Assert.False(jitterBuffer.TryRead(new FrameIndex(packet.FrameNumber), ref packet));
+            Assert.False(jitterBuffer.TryRead(new FrameIndex(packet.FrameNumber) + 1, ref packet));
 
             //
             // Test: Add packets out of order
@@ -64,13 +64,14 @@ namespace Game.Client.Tests
 
             Assert.Equal(3, jitterBuffer.Count);
 
-            Assert.True(jitterBuffer.TryRead(FrameIndex.Zero, ref packet));
+            Assert.False(jitterBuffer.TryRead(FrameIndex.Zero, ref packet));
+            Assert.True(jitterBuffer.TryRead(FrameIndex.Zero + 1, ref packet));
             Assert.Equal(1, packet.FrameNumber);
-            Assert.True(jitterBuffer.TryRead(new FrameIndex(packet.FrameNumber), ref packet));
+            Assert.True(jitterBuffer.TryRead(new FrameIndex(packet.FrameNumber) + 1, ref packet));
             Assert.Equal(2, packet.FrameNumber);
-            Assert.True(jitterBuffer.TryRead(new FrameIndex(packet.FrameNumber), ref packet));
+            Assert.True(jitterBuffer.TryRead(new FrameIndex(packet.FrameNumber) + 1, ref packet));
             Assert.Equal(3, packet.FrameNumber);
-            Assert.False(jitterBuffer.TryRead(new FrameIndex(packet.FrameNumber), ref packet));
+            Assert.False(jitterBuffer.TryRead(new FrameIndex(packet.FrameNumber) + 1, ref packet));
 
             //
             // Test: Add packets out of order with an interleaved read.
@@ -94,7 +95,8 @@ namespace Game.Client.Tests
 
             Assert.Equal(3, jitterBuffer.Count);
 
-            Assert.True(jitterBuffer.TryRead(FrameIndex.Zero, ref packet));
+            Assert.False(jitterBuffer.TryRead(FrameIndex.Zero, ref packet));
+            Assert.True(jitterBuffer.TryRead(FrameIndex.Zero + 1, ref packet));
             Assert.Equal(1, packet.FrameNumber);
 
             jitterBuffer.AddPacket(new ReplicationPacket
@@ -102,13 +104,13 @@ namespace Game.Client.Tests
                 FrameNumber = 2,
             });
 
-            Assert.True(jitterBuffer.TryRead(new FrameIndex(packet.FrameNumber), ref packet));
+            Assert.True(jitterBuffer.TryRead(new FrameIndex(packet.FrameNumber) + 1, ref packet));
             Assert.Equal(2, packet.FrameNumber);
-            Assert.True(jitterBuffer.TryRead(new FrameIndex(packet.FrameNumber), ref packet));
+            Assert.True(jitterBuffer.TryRead(new FrameIndex(packet.FrameNumber) + 1, ref packet));
             Assert.Equal(3, packet.FrameNumber);
-            Assert.True(jitterBuffer.TryRead(new FrameIndex(packet.FrameNumber), ref packet));
+            Assert.True(jitterBuffer.TryRead(new FrameIndex(packet.FrameNumber) + 1, ref packet));
             Assert.Equal(4, packet.FrameNumber);
-            Assert.False(jitterBuffer.TryRead(new FrameIndex(packet.FrameNumber), ref packet));
+            Assert.False(jitterBuffer.TryRead(new FrameIndex(packet.FrameNumber) + 1, ref packet));
         }
     }
 }

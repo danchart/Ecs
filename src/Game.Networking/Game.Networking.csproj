@@ -25,6 +25,7 @@
     <Compile Include="PacketData\PlayerData.cs" />
     <Compile Include="Ids\WorldInstanceId.cs" />
     <Compile Include="PacketEncryptor.cs" />
+    <Compile Include="PacketJitterBuffer.cs" />
     <Compile Include="Packets\ClientPacketEnvelope.cs" />
     <Compile Include="Packets\ServerPacketEnvelope.cs" />
     <Compile Include="PacketData\MovementData.cs" />

@@ -40,14 +40,7 @@ namespace Game.Networking.Tests
 
         private static FrameIndex GetFrameIndexValue(ushort value)
         {
-            FrameIndex index = FrameIndex.Zero;
-
-            for (int i = 0; i < value; i++)
-            {
-                index = index.GetNext();
-            }
-
-            return index;
+            return FrameIndex.Zero + value;
         }
     }
 }

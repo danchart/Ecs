@@ -35,6 +35,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="FrameIndexTests.cs" />
+    <Compile Include="JitterBufferTests.cs" />
     <Compile Include="PacketEncryptionTests.cs" />
     <Compile Include="PacketTests.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />

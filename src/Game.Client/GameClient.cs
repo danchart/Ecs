@@ -1,5 +1,6 @@
 ﻿using Common.Core;
 using Ecs.Core;
+using Game.Networking;
 using Game.Server.Contracts;
 using Game.Simulation.Client;
 using Game.Simulation.Core;
@@ -17,6 +18,7 @@ namespace Game.Client
         private readonly Systems _fixedSystems;
         private readonly ClientSimulation<InputComponent> _simulation;
         private readonly PacketJitterBuffer _jitterBuffer;
+        private readonly EntityServerToClientMap _entityServerToClientMap;
 
         private readonly GameServerClient _server;
 
@@ -29,6 +31,9 @@ namespace Game.Client
         {
             this._logger = logger ?? throw new ArgumentNullException(nameof(logger));
 
+            this._jitterBuffer = new PacketJitterBuffer(this._logger, config.Jitter.Capacity);
+            this._entityServerToClientMap = new EntityServerToClientMap(config.Ecs.InitialEntityPoolCapacity);
+
             this._world = new World(config.Ecs);
             this._physicsWorld = new VolatilePhysicsWorld(historyLength: config.Simulation.SnapShotCount);
 
@@ -36,15 +41,15 @@ namespace Game.Client
             this._fixedSystems =
                 new Systems(this._world)
                 .Add(new PhysicsSystem())
-                .Inject(this._physicsWorld);
+                .Inject(this._physicsWorld)
+                .Inject(this._jitterBuffer)
+                .Inject(this._entityServerToClientMap);
 
             this._simulation = new ClientSimulation<InputComponent>(
                 config.Simulation,
                 this._world,
                 this._systems,
                 this._fixedSystems);
-
-            this._jitterBuffer = new PacketJitterBuffer(this._logger, config.Jitter.Capacity);
 
             this._server = new GameServerClient(
                 this._logger, 

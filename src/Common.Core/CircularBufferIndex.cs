@@ -3,7 +3,7 @@ using System.Diagnostics;
 
 namespace Common.Core
 {
-    public struct CircularBufferIndex
+    public struct CircularBufferIndex : IEquatable<CircularBufferIndex>
     {
         private readonly int Index;
         private readonly int Size;
@@ -52,7 +52,6 @@ namespace Common.Core
             return
                 this.Index == entity.Index;
         }
-
 
         private CircularBufferIndex Add(int offset)
         {

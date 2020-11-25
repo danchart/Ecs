@@ -69,7 +69,7 @@ namespace Game.Server
             this._systems =
                 new Systems(this._world)
                 .Add(new PhysicsSystem())
-                .Add(new GatherReplicatedDataSystem())
+                .Add(new ServerEntityReplicatedSystem())
                 .Add(new JiggleSystem())
                 .Inject(this._physicsWorld)
                 .Inject(new ReplicationDataBroker(config.Replication.Capacity, this._replicationManager))
@@ -148,7 +148,7 @@ namespace Game.Server
                     this._players);
 
                 // Increment frame index
-                state.FrameIndex = state.FrameIndex.GetNext();
+                state.FrameIndex = state.FrameIndex + 1;
 
                 if (this._isStopped)
                 {

@@ -231,7 +231,7 @@ namespace Game.Simulation.Server
             this in PlayerReplicationData.EntityReplicationData entityReplicationData, 
             ref EntityPacketData entityPacketData)
         {
-            entityReplicationData.Entity.GetPacketSerializationData(
+            entityReplicationData.Entity.SerializeToPacketData(
                 out entityPacketData.EntityId,
                 out entityPacketData.EntityGeneration);
 

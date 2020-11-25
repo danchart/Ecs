@@ -241,7 +241,6 @@ namespace Ecs.Core
 
             ref var componentItem = ref pool.GetItem(index);
             componentItem.Version = entity.World.State.GlobalVersion;
-
  
             return ref componentItem;
         }
@@ -249,10 +248,15 @@ namespace Ecs.Core
         /// <summary>
         /// Returns data needed for entity packet serialization.
         /// </summary>
-        public static void GetPacketSerializationData(this in Entity entity, out int id, out uint generation)
+        public static void SerializeToPacketData(this in Entity entity, out int id, out uint generation)
         {
             id = entity.Id;
             generation = entity.Generation;
+        }
+
+        public static Entity DeserializeFromPacketData(int id, uint generation, World world)
+        {
+            return new Entity(world, id, generation);
         }
 
         [Conditional("DEBUG")]

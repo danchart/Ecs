@@ -26,7 +26,6 @@
     <Compile Include="GameClient.cs" />
     <Compile Include="GameServerClient.cs" />
     <Compile Include="GameServerConnection.cs" />
-    <Compile Include="PacketJitterBuffer.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="ClientUdpPacketTransport.cs" />
   </ItemGroup>

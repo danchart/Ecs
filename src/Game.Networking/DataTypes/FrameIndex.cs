@@ -14,7 +14,11 @@ namespace Game.Networking
 
         public FrameIndex(ushort index) => this._index = index;
 
-        public FrameIndex GetNext() => new FrameIndex((this._index == ushort.MaxValue) ? (ushort)1 : (ushort)(this._index + 1));
+        public static FrameIndex operator +(in FrameIndex lhs, ushort offset) => 
+            new FrameIndex((ushort)unchecked(lhs._index + offset));
+
+        public static FrameIndex operator -(in FrameIndex lhs, ushort offset) =>
+            new FrameIndex((ushort)unchecked(lhs._index - offset));
 
         public bool IsInRange(in FrameIndex startIndex, int length)
         {
