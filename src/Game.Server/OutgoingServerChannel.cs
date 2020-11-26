@@ -45,7 +45,6 @@ namespace Game.Server
         // 2) Sort client input to worlds 
 
         public void ReplicateToClients(
-            ushort frame, 
             float deltaTime,
             WorldPlayers players)
         {
@@ -62,8 +61,10 @@ namespace Game.Server
                     continue;
                 }
 
+                playerConnection.Frame = playerConnection.Frame + 1;
+
                 packet.PlayerId = playerConnection.PlayerId;
-                packet.ReplicationPacket.FrameNumber = frame;
+                packet.ReplicationPacket.FrameNumber = playerConnection.Frame;
                 packet.ReplicationPacket.EntityCount = 0;
 
                 if (packet.ReplicationPacket.Entities == null)

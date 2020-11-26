@@ -93,8 +93,6 @@ namespace Game.Server
             {
                 WaitHandle = new AutoResetEvent(initialState: false),
 
-                FrameIndex = FrameIndex.New(),
-
                 Diagnostics = new FixedUpdateState.DiagnosticsState
                 {
                     ExceedTickCountReportingCountdown = FixedUpdateState.DiagnosticsState.GetCountdownFromFixedTick(this._fixedTick),
@@ -143,12 +141,8 @@ namespace Game.Server
 
                 // Update clients
                 this._channelManager.ReplicateToClients(
-                    state.FrameIndex, 
                     this._fixedTick, 
                     this._players);
-
-                // Increment frame index
-                state.FrameIndex = state.FrameIndex + 1;
 
                 if (this._isStopped)
                 {
@@ -209,6 +203,7 @@ namespace Game.Server
             }
 
             connection.WorldInstanceId = this.InstanceId;
+            connection.Frame = FrameIndex.Zero;
             connection.LastAcknowledgedSimulationFrame = FrameIndex.Zero;
             connection.LastInputFrame = FrameIndex.Zero;
 
@@ -224,7 +219,7 @@ namespace Game.Server
 
         public void Disconnect(PlayerConnectionRef connectionRef)
         {
-            ref var connection = ref connectionRef.Unref();
+            ref readonly var connection = ref connectionRef.Unref();
 
             if (!this._players.Contains(connection.PlayerId))
             {
@@ -241,8 +236,6 @@ namespace Game.Server
         private class FixedUpdateState
         {
             public AutoResetEvent WaitHandle;
-
-            public FrameIndex FrameIndex;
 
             public DiagnosticsState Diagnostics;
 

@@ -65,7 +65,7 @@ namespace Game.Server
                             }
                             else
                             {
-                                var connection = playerConnectionRef.Unref();
+                                ref readonly var connection = ref playerConnectionRef.Unref();
 
                                 response.CompleteJsonResponse(
                                     200,
