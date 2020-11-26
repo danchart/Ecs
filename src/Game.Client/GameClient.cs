@@ -6,6 +6,7 @@ using Game.Simulation.Client;
 using Game.Simulation.Core;
 using Simulation.Core;
 using System;
+using System.Threading;
 
 namespace Game.Client
 {
@@ -52,6 +53,8 @@ namespace Game.Client
                 this._world,
                 this._systems,
                 this._fixedSystems);
+
+            this._simulation.Create();
 
             this._server = new GameServerClient(
                 this._logger, 

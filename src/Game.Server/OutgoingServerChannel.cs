@@ -20,6 +20,9 @@ namespace Game.Server
 
         private readonly AppendOnlyList<Entity> _clientEntitiesToRemove;
 
+        // Single, shared struct used for each serial outgoing packet.
+        private ServerPacketEnvelope _outgoingPacket = default;
+
         public OutgoingServerChannel(
             NetworkTransportConfig config,
             ServerUdpPacketTransport transport,
@@ -48,9 +51,7 @@ namespace Game.Server
             float deltaTime,
             WorldPlayers players)
         {
-            ServerPacketEnvelope packet = default;
-
-            packet.Type = ServerPacketType.Replication;
+            _outgoingPacket.Type = ServerPacketType.Replication;
 
             foreach (ref var player in players)
             {
@@ -64,13 +65,14 @@ namespace Game.Server
                 // Increment frame.
                 player.Frame += 1;
 
-                packet.PlayerId = playerConnection.PlayerId;
-                packet.ReplicationPacket.FrameNumber = player.Frame;
-                packet.ReplicationPacket.EntityCount = 0;
+                // Reset/init replication packet.
+                _outgoingPacket.PlayerId = playerConnection.PlayerId;
+                _outgoingPacket.ReplicationPacket.FrameNumber = player.Frame;
+                _outgoingPacket.ReplicationPacket.EntityCount = 0;
 
-                if (packet.ReplicationPacket.Entities == null)
+                if (_outgoingPacket.ReplicationPacket.Entities == null)
                 {
-                    packet.ReplicationPacket.Entities = new EntityPacketData[64];
+                    _outgoingPacket.ReplicationPacket.Entities = new EntityPacketData[64];
                 }
 
                 int size = ServerPacketEnvelope.EnvelopeSize;
@@ -83,7 +85,7 @@ namespace Game.Server
 
                     if (replicatedEntity.NetPriority.RemainingQueueTime <= 0)
                     {
-                        ref var entityPacketData = ref packet.ReplicationPacket.Entities[packet.ReplicationPacket.EntityCount];
+                        ref var entityPacketData = ref _outgoingPacket.ReplicationPacket.Entities[_outgoingPacket.ReplicationPacket.EntityCount];
 
                         replicatedEntity.ToEntityPacketData(ref entityPacketData);
 
@@ -96,7 +98,7 @@ namespace Game.Server
                         }
 
                         size += entitySize;
-                        packet.ReplicationPacket.EntityCount++;
+                        _outgoingPacket.ReplicationPacket.EntityCount++;
 
                         this._clientEntitiesToRemove.Add(replicatedEntity.Entity);
                     }
@@ -113,7 +115,7 @@ namespace Game.Server
                     player.ReplicationData.Remove(_clientEntitiesToRemove.Items[i]);
                 }
 
-                this._transport.SendPacket(playerConnection.EndPoint, in packet);
+                this._transport.SendPacket(playerConnection.EndPoint, in _outgoingPacket);
             }
         }
     }

@@ -10,7 +10,7 @@ namespace Ecs.Core.Helpers
         public static void CopyToResize<T>(this T[] source, T[] dest)
             where T : unmanaged
         {
-            if (source.Length < dest.Length)
+            if (source.Length > dest.Length)
             {
                 Array.Resize(ref dest, source.Length);
             }

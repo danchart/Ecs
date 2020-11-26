@@ -778,7 +778,7 @@ namespace Ecs.Core
 
         internal override EntityQueryBase Clone()
         {
-            var query = new EntityQuery<IncType1>(this.World);
+            var query = new EntityQuery<IncType1, IncType2>(this.World);
 
             CopyTo(query);
 
