@@ -36,7 +36,6 @@ namespace Game.Server
 
                     ref var replicated = ref entity.GetComponent<ReplicatedComponent>();
                     ref var rigidBody = ref entity.GetComponent<RigidBodyComponent>();
-
                     ref var transform = ref entity.GetComponent<TransformComponent>();
 
                     float x = unitSize * ((float)row - ((float)rows / 2));

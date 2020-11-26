@@ -9,7 +9,7 @@ namespace Game.Simulation.Server
     /// Gathers all the replicated components for this tick. This is later converted into delta, prioritized, 
     /// per-entity changes per-player updates.
     /// </summary>
-    public class ServerEntityReplicatedSystem : SystemBase
+    public class ServerEntityReplicationSystem : SystemBase
     {
         public EntityQuery<ReplicatedComponent, TransformComponent>.Exclude<IsDisabledComponent> TransformQuery = null;
         public EntityQuery<ReplicatedComponent, MovementComponent>.Exclude<IsDisabledComponent> MovementQuery = null;

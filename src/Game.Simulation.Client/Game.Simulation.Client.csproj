@@ -22,13 +22,17 @@
   <ItemGroup>
     <Compile Include="ClientSimulation.cs" />
     <Compile Include="Components\ClientReplicationStateComponent.cs" />
-    <Compile Include="EntityServerToClientMap.cs" />
+    <Compile Include="NetworkEntityMap.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="SnapShot.cs" />
     <Compile Include="SnapShots.cs" />
     <Compile Include="Systems\ClientEntityReplicationSystem.cs" />
   </ItemGroup>
   <ItemGroup>
+    <ProjectReference Include="..\Common.Core\Common.Core.csproj">
+      <Project>{83de9636-9348-4678-b986-02987685b57d}</Project>
+      <Name>Common.Core</Name>
+    </ProjectReference>
     <ProjectReference Include="..\Ecs.Core\Ecs.Core.csproj">
       <Project>{65beb14c-5414-4516-b566-e668e494c3eb}</Project>
       <Name>Ecs.Core</Name>

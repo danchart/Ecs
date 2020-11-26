@@ -1,6 +1,7 @@
 ﻿using Common.Core;
 using Networking.Core;
 using System.IO;
+using System.Runtime.InteropServices;
 
 namespace Game.Networking
 {
@@ -18,6 +19,14 @@ namespace Game.Networking
 
         public ReplicationPacket ReplicationPacket;
         public ControlPacket ControlPacket;
+
+        /// <summary>
+        /// Size of the envelope, in bytes. Excludes the inner packet size.
+        /// </summary>
+        public static readonly int EnvelopeSize = 
+            Marshal.SizeOf<ServerPacketEnvelope>() 
+            - Marshal.SizeOf<ReplicationPacket>() 
+            - Marshal.SizeOf<ControlPacket>();
 
         public int Serialize(Stream stream, bool measureOnly, IPacketEncryptor packetEncryption)
         {

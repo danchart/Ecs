@@ -71,10 +71,7 @@ namespace Game.Server
                     packet.ReplicationPacket.Entities = new EntityPacketData[64];
                 }
 
-                // HACK: This is SUPER fragile!!
-                const int ServerPacketHeaderSize = 16;
-
-                int size = 0;
+                int size = ServerPacketEnvelope.EnvelopeSize;
 
                 this._clientEntitiesToRemove.Clear();
 
@@ -84,13 +81,13 @@ namespace Game.Server
 
                     if (replicatedEntity.NetPriority.RemainingQueueTime <= 0)
                     {
-                        ref var packetData = ref packet.ReplicationPacket.Entities[packet.ReplicationPacket.EntityCount];
+                        ref var entityPacketData = ref packet.ReplicationPacket.Entities[packet.ReplicationPacket.EntityCount];
 
-                        replicatedEntity.ToEntityPacketData(ref packetData);
+                        replicatedEntity.ToEntityPacketData(ref entityPacketData);
 
-                        var entitySize = packetData.Serialize(Stream.Null, measureOnly: true);
+                        var entitySize = entityPacketData.Serialize(Stream.Null, measureOnly: true);
 
-                        if (size + entitySize > this._config.MaxPacketSize - ServerPacketHeaderSize)
+                        if (size + entitySize > this._config.MaxPacketSize)
                         {
                             // Packet size limit reached.
                             break;
@@ -107,6 +104,8 @@ namespace Game.Server
                     }
                 }
 
+                // TODO: Instead of removing we must mark these as pending-sent until we get ack from
+                // client for this frame number.
                 for (int i = 0; i < this._clientEntitiesToRemove.Count; i++)
                 {
                     player.ReplicationData.Remove(_clientEntitiesToRemove.Items[i]);

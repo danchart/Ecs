@@ -10,6 +10,9 @@ namespace Game.Networking
     /// </summary>
     public sealed class PacketJitterBuffer
     {
+        // FUTURE: Write adds to a snapshot ring of index ring buffers which the read can use without any
+        // synchronization requirements.
+
         private CircularBufferIndex _nextWriteIndex;
         private int _count;
         private int _freeCount;

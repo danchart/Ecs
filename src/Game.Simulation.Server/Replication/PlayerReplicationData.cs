@@ -231,9 +231,7 @@ namespace Game.Simulation.Server
             this in PlayerReplicationData.EntityReplicationData entityReplicationData, 
             ref EntityPacketData entityPacketData)
         {
-            entityReplicationData.Entity.SerializeToPacketData(
-                out entityPacketData.EntityId,
-                out entityPacketData.EntityGeneration);
+            entityPacketData.NetworkEntity = NetworkEntity.FromEntity(entityReplicationData.Entity);
 
             if (entityPacketData.Components == null)
             {

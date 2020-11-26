@@ -69,7 +69,7 @@ namespace Game.Server
             this._systems =
                 new Systems(this._world)
                 .Add(new PhysicsSystem())
-                .Add(new ServerEntityReplicatedSystem())
+                .Add(new ServerEntityReplicationSystem())
                 .Add(new JiggleSystem())
                 .Inject(this._physicsWorld)
                 .Inject(new ReplicationDataBroker(config.Replication.Capacity, this._replicationManager))

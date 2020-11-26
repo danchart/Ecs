@@ -58,6 +58,7 @@
     <Compile Include="EcsConstants.cs" />
     <Compile Include="Entity.cs" />
     <Compile Include="EntityExtensions.cs" />
+    <Compile Include="Networking\NetworkEntity.cs" />
     <Compile Include="EntityQuery.cs" />
     <Compile Include="EntityQueryExtensions.cs" />
     <Compile Include="Helpers\ArrayExtensions.cs" />

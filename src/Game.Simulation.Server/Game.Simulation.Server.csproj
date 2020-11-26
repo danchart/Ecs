@@ -42,7 +42,7 @@
     <Compile Include="ServerConnections\PlayerConnectionRefs.cs" />
     <Compile Include="ServerSimulation.cs" />
     <Compile Include="Systems\JiggleSystem.cs" />
-    <Compile Include="Systems\ServerEntityReplicatedSystem.cs" />
+    <Compile Include="Systems\ServerEntityReplicationSystem.cs" />
     <Compile Include="WorldPlayer.cs" />
     <Compile Include="WorldPlayers.cs" />
   </ItemGroup>
@@ -62,6 +62,10 @@
     <ProjectReference Include="..\Game.Simulation.Core\Game.Simulation.Core.csproj">
       <Project>{03c4608e-69a7-4f46-8231-749dd5cb5ed2}</Project>
       <Name>Game.Simulation.Core</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\VolatilePhysics\VolatilePhysics.csproj">
+      <Project>{b12397de-261a-4d27-adfc-14b0d6841a56}</Project>
+      <Name>VolatilePhysics</Name>
     </ProjectReference>
   </ItemGroup>
   <ItemGroup />

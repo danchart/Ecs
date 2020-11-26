@@ -36,7 +36,7 @@ namespace Ecs.Core
                 HashCodeHelper.CombineHashCodes(
                     Id,
                     HashCodeHelper.CombineHashCodes(
-                        (int) Generation,
+                        unchecked((int)Generation),
                         World.GetHashCode()));
         }
 

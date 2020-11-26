@@ -245,20 +245,6 @@ namespace Ecs.Core
             return ref componentItem;
         }
 
-        /// <summary>
-        /// Returns data needed for entity packet serialization.
-        /// </summary>
-        public static void SerializeToPacketData(this in Entity entity, out int id, out uint generation)
-        {
-            id = entity.Id;
-            generation = entity.Generation;
-        }
-
-        public static Entity DeserializeFromPacketData(int id, uint generation, World world)
-        {
-            return new Entity(world, id, generation);
-        }
-
         [Conditional("DEBUG")]
         private static void ValidateEntity(in this Entity entity, in World.EntityData data)
         {

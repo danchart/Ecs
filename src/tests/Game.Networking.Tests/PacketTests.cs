@@ -1,5 +1,5 @@
 ﻿using Common.Core;
-using Networking.Core;
+using Ecs.Core;
 using Game.Networking.PacketData;
 using System.IO;
 using Xunit;
@@ -18,7 +18,7 @@ namespace Game.Networking.Tests
                 {
                     new EntityPacketData
                     {
-                        EntityId = 31,
+                        NetworkEntity = new NetworkEntity(31, 0),
                         ItemCount = 1,
                         Components = new ComponentPacketData[]
                         {
@@ -55,7 +55,7 @@ namespace Game.Networking.Tests
             }
 
             Assert.Equal(packet.EntityCount, resultPacket.EntityCount);
-            Assert.Equal(packet.Entities[0].EntityId, resultPacket.Entities[0].EntityId);
+            Assert.Equal(packet.Entities[0].NetworkEntity, resultPacket.Entities[0].NetworkEntity);
             Assert.Equal(packet.Entities[0].ItemCount, resultPacket.Entities[0].ItemCount);
             Assert.Equal(packet.Entities[0].Components[0].Transform.x, resultPacket.Entities[0].Components[0].Transform.x);
             Assert.Equal(packet.Entities[0].Components[0].Transform.y, resultPacket.Entities[0].Components[0].Transform.y);
