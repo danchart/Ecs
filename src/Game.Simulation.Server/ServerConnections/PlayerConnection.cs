@@ -13,10 +13,6 @@ namespace Game.Simulation.Server
 
         public ConnectionHandshakeKeys Handshake;
 
-        public FrameIndex Frame;
-        public FrameIndex LastInputFrame;
-        public FrameIndex LastAcknowledgedSimulationFrame;
-
         public byte[] PacketEncryptionKey;
         public IPEndPoint EndPoint;
 

@@ -1,13 +1,18 @@
 ﻿using Ecs.Core;
+using Game.Networking;
 using System;
 
 namespace Game.Simulation.Server
 {
     public struct WorldPlayer
     {
+        public FrameIndex Frame;
+        public FrameIndex LastInputFrame;
+        public FrameIndex LastAcknowledgedSimulationFrame;
+
         public readonly PlayerConnectionRef ConnectionRef;
 
-        private bool _isReadyForReplication;
+        private bool _isReplicating;
 
         private Entity _entity;
         private int _playerReplicationDataPoolIndex;
@@ -30,7 +35,7 @@ namespace Game.Simulation.Server
 
             this.ConnectionRef = connectionRef;
 
-            this._isReadyForReplication = false;
+            this._isReplicating = false;
         }
 
         public PlayerInputs PlayerInputs
@@ -43,17 +48,22 @@ namespace Game.Simulation.Server
             get => this._replicationDataPool.GetItem(_playerReplicationDataPoolIndex);
         }
 
-        public void SetEntity(in Entity entity)
+        public void StartReplication(in Entity entity)
         {
             this._entity = entity;
-            this._isReadyForReplication = true;
+
+            this.Frame = FrameIndex.Zero;
+            this.LastAcknowledgedSimulationFrame = FrameIndex.Zero;
+            this.LastInputFrame = FrameIndex.Zero;
+
+            this._isReplicating = true;
         }
 
         public bool TryGetEntity(out Entity entity)
         {
             entity = this._entity;
 
-            return this._isReadyForReplication;
+            return this._isReplicating;
         }
 
         public void Free()
@@ -61,6 +71,8 @@ namespace Game.Simulation.Server
             this._replicationDataPool.Free(this._playerReplicationDataPoolIndex);
             this._playerInputsPool.Free(this._playerInputsPoolIndex);
             this._entity.Free();
+
+            this._isReplicating = false;
         }
     }
 }

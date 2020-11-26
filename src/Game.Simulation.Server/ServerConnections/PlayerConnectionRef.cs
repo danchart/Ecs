@@ -9,7 +9,7 @@ namespace Game.Simulation.Server
     {
         private readonly PlayerId _id;
         private readonly PlayerConnectionManager _connections;
-
+           
         public static readonly PlayerConnectionRef Null = new PlayerConnectionRef(new PlayerId(0), null);
 
         internal PlayerConnectionRef(PlayerId id, in PlayerConnectionManager connections)
@@ -22,27 +22,32 @@ namespace Game.Simulation.Server
 
         public ref PlayerConnection Unref()
         {
-            return ref this._connections[this._id];
+            return ref this._connections.Get(this._id);
         }
 
         public static bool operator ==(in PlayerConnectionRef lhs, in PlayerConnectionRef rhs)
         {
-            return lhs._id == rhs._id;
+            return 
+                lhs._id == rhs._id;
         }
 
         public static bool operator !=(in PlayerConnectionRef lhs, in PlayerConnectionRef rhs)
         {
-            return lhs._id != rhs._id;
+            return 
+                lhs._id != rhs._id;
         }
 
         public override bool Equals(object obj)
         {
-            return obj is PlayerConnectionRef other && Equals(other);
+            return 
+                obj is PlayerConnectionRef other && 
+                Equals(other);
         }
 
         public override int GetHashCode()
         {
-            return this._id.GetHashCode();
+            return 
+                this._id.GetHashCode();
         }
     }
 }

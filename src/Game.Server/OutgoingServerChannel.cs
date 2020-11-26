@@ -61,10 +61,11 @@ namespace Game.Server
                     continue;
                 }
 
-                playerConnection.Frame = playerConnection.Frame + 1;
+                // Increment frame.
+                player.Frame += 1;
 
                 packet.PlayerId = playerConnection.PlayerId;
-                packet.ReplicationPacket.FrameNumber = playerConnection.Frame;
+                packet.ReplicationPacket.FrameNumber = player.Frame;
                 packet.ReplicationPacket.EntityCount = 0;
 
                 if (packet.ReplicationPacket.Entities == null)

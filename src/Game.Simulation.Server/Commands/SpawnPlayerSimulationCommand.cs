@@ -48,7 +48,7 @@ namespace Game.Simulation.Server
                 rotation: 0,
                 radius: 0.5f);
 
-            this._players[this._playerId].SetEntity(playerEntity);
+            this._players[this._playerId].StartReplication(playerEntity);
         }
     }
 }

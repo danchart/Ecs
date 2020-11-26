@@ -31,7 +31,7 @@ namespace Game.Server
                 return false;
             }
 
-            ref var connection = ref this._playerConnections[playerId];
+            ref var connection = ref this._playerConnections.Get(playerId);
 
             var world = this._worlds.Get(connection.WorldInstanceId);
 

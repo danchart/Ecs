@@ -1,7 +1,6 @@
 ﻿using Common.Core;
 using Game.Networking;
 using System;
-using System.Net;
 
 namespace Game.Simulation.Server
 {
@@ -22,10 +21,7 @@ namespace Game.Simulation.Server
             get => this._connections.Count;
         }
 
-        public ref PlayerConnection this[PlayerId playerId]
-        {
-            get => ref this._connections[playerId];
-        }
+        public ref PlayerConnection Get(PlayerId playerId) => ref this._connections[playerId];
 
         public bool HasPlayer(PlayerId playerId) => this._connections.ContainsKey(playerId);
 

@@ -203,9 +203,6 @@ namespace Game.Server
             }
 
             connection.WorldInstanceId = this.InstanceId;
-            connection.Frame = FrameIndex.Zero;
-            connection.LastAcknowledgedSimulationFrame = FrameIndex.Zero;
-            connection.LastInputFrame = FrameIndex.Zero;
 
             this._simulationSynchronizer.Add(
                 new SpawnPlayerSimulationCommand(

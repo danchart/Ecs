@@ -58,7 +58,7 @@ namespace Game.Server
                 return false;
             }
 
-            ref var connection = ref this._playerConnections[playerId];
+            ref var connection = ref this._playerConnections.Get(playerId);
 
             if (connection.State != PlayerConnection.ConnectionState.PreConnected &&
                 connection.State != PlayerConnection.ConnectionState.Connecting)
@@ -100,7 +100,7 @@ namespace Game.Server
                 return false;
             }
 
-            ref var connection = ref this._playerConnections[playerId];
+            ref var connection = ref this._playerConnections.Get(playerId);
 
             if (connection.State != PlayerConnection.ConnectionState.Connecting)
             {
