@@ -608,10 +608,7 @@ namespace Ecs.Core
 
         public ref IncType1 GetSingleton()
         {
-            ref var item = ref this._componentPool.Items[_componentIds1[0]];
-            item.Version = this.World.State.GlobalVersion;
-
-            return ref item.Item;
+            return ref Get(0);
         }
 
         public ref readonly IncType1 GetSingletonReadonly()
@@ -621,6 +618,8 @@ namespace Ecs.Core
 
         public ref IncType1 Get(int index)
         {
+            Debug.Assert(index < this._entityCount);
+
             ref var item = ref this._componentPool.Items[_componentIds1[index]];
             item.Version = this.World.State.GlobalVersion;
 
@@ -629,6 +628,8 @@ namespace Ecs.Core
 
         public ref readonly IncType1 GetReadonly(int index)
         {
+            Debug.Assert(index < this._entityCount);
+
             return ref this._componentPool.Items[this._componentIds1[index]].Item;
         }
 
@@ -712,21 +713,30 @@ namespace Ecs.Core
             this._componentIds2 = new int[EcsConstants.InitialEntityQueryEntityCapacity];
         }
 
-        public ref IncType1 GetSingleton()
+        public ref IncType1 GetSingleton1()
         {
-            ref var item = ref this._componentPool1.Items[this._componentIds1[0]];
-            item.Version = this.World.State.GlobalVersion;
-
-            return ref item.Item;
+            return ref Get1(0);
         }
 
-        public ref readonly IncType1 GetSingletonReadonly()
+        public ref readonly IncType1 GetSingleton1Readonly()
         {
-            return ref this._componentPool1.Items[_componentIds1[0]].Item;
+            return ref Get1Readonly(0);
+        }
+
+        public ref IncType2 GetSingleton2()
+        {
+            return ref Get2(0);
+        }
+
+        public ref readonly IncType2 GetSingleton2Readonly()
+        {
+            return ref Get2Readonly(0);
         }
 
         public ref IncType1 Get1(int index)
         {
+            Debug.Assert(index < this._entityCount);
+
             ref var item = ref this._componentPool1.Items[_componentIds1[index]];
             item.Version = this.World.State.GlobalVersion;
 
@@ -735,11 +745,15 @@ namespace Ecs.Core
 
         public ref readonly IncType1 Get1Readonly(int index)
         {
+            Debug.Assert(index < this._entityCount);
+
             return ref this._componentPool1.Items[this._componentIds1[index]].Item;
         }
 
         public ref IncType2 Get2(int index)
         {
+            Debug.Assert(index < this._entityCount);
+
             ref var item = ref this._componentPool2.Items[_componentIds1[index]];
             item.Version = this.World.State.GlobalVersion;
 
@@ -748,6 +762,8 @@ namespace Ecs.Core
 
         public ref readonly IncType2 Get2Readonly(int index)
         {
+            Debug.Assert(index < this._entityCount);
+
             return ref this._componentPool2.Items[this._componentIds2[index]].Item;
         }
 

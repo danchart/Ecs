@@ -15,6 +15,16 @@ namespace Game.Simulation.Client
 
         public override void OnUpdate(float deltaTime)
         {
+            if (ReplicationStateQuery.GetEntityCount() == 0)
+            {
+                // First tick.
+
+                var entity = this._world.NewEntity();
+                ref var newReplicationState = ref entity.GetComponent<ClientReplicationStateComponent>();
+
+                newReplicationState.FrameIndex = FrameIndex.Zero;
+            }
+
             ref var replicationState = ref ReplicationStateQuery.GetSingleton();
 
             ReplicationPacket packet = default;
