@@ -28,17 +28,17 @@ namespace Game.Networking
             - Marshal.SizeOf<ReplicationPacket>() 
             - Marshal.SizeOf<ControlPacket>();
 
-        public int Serialize(Stream stream, bool measureOnly, IPacketEncryptor packetEncryption)
+        public int Serialize(Stream stream, IPacketEncryptor packetEncryption)
         {
-            int size = stream.PacketWriteByte((byte) this.Type, measureOnly);
-            size += stream.PacketWriteInt(this.PlayerId, measureOnly);
+            int size = stream.PacketWriteByte((byte) this.Type);
+            size += stream.PacketWriteInt(this.PlayerId);
 
             switch (this.Type)
             {
                 case ServerPacketType.Replication:
-                    return size + this.ReplicationPacket.Serialize(stream, measureOnly);
+                    return size + this.ReplicationPacket.Serialize(stream);
                 case ServerPacketType.Control:
-                    return size + this.ControlPacket.Serialize(stream, measureOnly);
+                    return size + this.ControlPacket.Serialize(stream);
             }
 
             return -1;

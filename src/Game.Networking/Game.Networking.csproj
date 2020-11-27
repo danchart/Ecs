@@ -22,11 +22,14 @@
   <ItemGroup>
     <Compile Include="ConnectionHandshakeKeys.cs" />
     <Compile Include="DataTypes\FrameIndex.cs" />
+    <Compile Include="MeasureStream.cs" />
+    <Compile Include="NoopPacketEncryptor.cs" />
     <Compile Include="PacketData\PlayerData.cs" />
     <Compile Include="Ids\WorldInstanceId.cs" />
     <Compile Include="PacketEncryptor.cs" />
     <Compile Include="PacketJitterBuffer.cs" />
     <Compile Include="Packets\ClientPacketEnvelope.cs" />
+    <Compile Include="Packets\PacketHeader.cs" />
     <Compile Include="Packets\ServerPacketEnvelope.cs" />
     <Compile Include="PacketData\MovementData.cs" />
     <Compile Include="PacketData\InputData.cs" />

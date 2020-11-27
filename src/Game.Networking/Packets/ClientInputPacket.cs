@@ -7,15 +7,7 @@ namespace Game.Networking
 {
     public struct ClientInputPacket
     {
-        /// <summary>
-        /// Clients frame index for this input.
-        /// </summary>
-        public FrameIndex Frame;
-
-        /// <summary>
-        /// Last fully received server frame index.
-        /// </summary>
-        public FrameIndex LastServerFrame;
+        public PacketHeader Header;
 
         /// <summary>
         /// Count of inputs.
@@ -27,16 +19,16 @@ namespace Game.Networking
         /// </summary>
         public InputPacketData[] Inputs;
 
-        public int Serialize(Stream stream, bool measureOnly)
+        public int Serialize(Stream stream)
         {
-            // frame index
-            int size = stream.PacketWriteUShort(Frame, measureOnly);
+            // last frame ack 
+            int size = Header.Serialize(stream);
             // entity count
-            size += stream.PacketWriteByte(InputCount, measureOnly);
+            size += stream.PacketWriteByte(InputCount);
 
             for (int i = 0; i < InputCount; i++)
             {
-                size += Inputs[i].Serialize(stream, measureOnly);
+                size += Inputs[i].Serialize(stream);
             }
 
             return size;
@@ -44,10 +36,9 @@ namespace Game.Networking
 
         public bool Deserialize(Stream stream)
         {
-            // frame index
-            ushort frameIndexAsUshort;
-            stream.PacketReadUShort(out frameIndexAsUshort);
-            this.Frame = FrameIndex.New(frameIndexAsUshort);
+            // header
+            Header.Deserialize(stream);
+
             // input count
             stream.PacketReadByte(out InputCount);
 
@@ -68,11 +59,11 @@ namespace Game.Networking
 
         public InputData Input;
 
-        public int Serialize(Stream stream, bool measureOnly)
+        public int Serialize(Stream stream)
         {
             byte fieldCount = (byte)HasFields.Count();
-            int size = stream.PacketWriteByte(fieldCount, measureOnly);
-            size += Input.Serialize(HasFields, stream, measureOnly);
+            int size = stream.PacketWriteByte(fieldCount);
+            size += Input.Serialize(HasFields, stream);
 
             return size;
         }

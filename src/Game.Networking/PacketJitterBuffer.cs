@@ -149,6 +149,14 @@ namespace Game.Networking
                     if (this._packets[packetIndex].FrameNumber == frameIndex)
                     {
                         // Found packet with this frame index.
+
+                        // Verify we meet the minimum buffer count
+                        //if (count - i < minBufferCount)
+                        //{
+                        //    // Wait for more buffering.
+                        //    return false;
+                        //}
+
                         packet = this._packets[packetIndex];
 
                         // Save last frame #

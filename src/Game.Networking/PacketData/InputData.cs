@@ -16,26 +16,26 @@ namespace Game.Networking.PacketData
         // 2
         public bool fire_down;
 
-        public int Serialize(in BitField hasFields, Stream stream, bool measureOnly)
+        public int Serialize(in BitField hasFields, Stream stream)
         {
             int size = 0;
 
             if (hasFields.IsSet(0))
             {
-                size += stream.PacketWriteByte(0, measureOnly);
-                size += stream.PacketWriteFloat(this.x_axis, measureOnly);
+                size += stream.PacketWriteByte(0);
+                size += stream.PacketWriteFloat(this.x_axis);
             }
 
             if (hasFields.IsSet(1))
             {
-                size += stream.PacketWriteByte(1, measureOnly);
-                size += stream.PacketWriteFloat(this.y_axis, measureOnly);
+                size += stream.PacketWriteByte(1);
+                size += stream.PacketWriteFloat(this.y_axis);
             }
 
             if (hasFields.IsSet(2))
             {
-                size += stream.PacketWriteByte(2, measureOnly);
-                size += stream.PacketWriteByte((byte)(this.fire_down ? 1 : 0), measureOnly);
+                size += stream.PacketWriteByte(2);
+                size += stream.PacketWriteByte((byte)(this.fire_down ? 1 : 0));
             }
 
             return size;

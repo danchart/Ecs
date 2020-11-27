@@ -19,17 +19,17 @@ namespace Game.Networking
         public ClientInputPacket PlayerInputPacket;
         public ControlPacket ControlPacket;
 
-        public int Serialize(Stream stream, bool measureOnly, IPacketEncryptor packetEncryption)
+        public int Serialize(Stream stream, IPacketEncryptor packetEncryption)
         {
-            int size = stream.PacketWriteByte((byte)this.Type, measureOnly);
-            size += stream.PacketWriteInt(this.PlayerId, measureOnly);
+            int size = stream.PacketWriteByte((byte)this.Type);
+            size += stream.PacketWriteInt(this.PlayerId);
 
             switch (this.Type)
             {
                 case ClientPacketType.PlayerInput:
-                    return size + this.PlayerInputPacket.Serialize(stream, measureOnly);
+                    return size + this.PlayerInputPacket.Serialize(stream);
                 case ClientPacketType.ControlPlane:
-                    return size + this.ControlPacket.Serialize(stream, measureOnly);
+                    return size + this.ControlPacket.Serialize(stream);
             }
 
             return -1;

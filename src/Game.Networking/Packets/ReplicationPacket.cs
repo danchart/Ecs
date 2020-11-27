@@ -14,16 +14,16 @@ namespace Game.Networking
         public byte EntityCount;
         public EntityPacketData[] Entities;
 
-        public int Serialize(Stream stream, bool measureOnly)
+        public int Serialize(Stream stream)
         {
             // frame #
-            int size = stream.PacketWriteUShort(FrameNumber, measureOnly);
+            int size = stream.PacketWriteUShort(FrameNumber);
             // entity count
-            size += stream.PacketWriteByte(EntityCount, measureOnly);
+            size += stream.PacketWriteByte(EntityCount);
 
             for (int i = 0; i < EntityCount; i++)
             {
-                size += Entities[i].Serialize(stream, measureOnly);
+                size += Entities[i].Serialize(stream);
             }
 
             return size;
@@ -53,16 +53,16 @@ namespace Game.Networking
         public byte ItemCount;
         public ComponentPacketData[] Components;
 
-        public int Serialize(Stream stream, bool measureOnly)
+        public int Serialize(Stream stream)
         {
             // network entity
-            int size = stream.PacketWriteNetworkEntity(NetworkEntity, measureOnly);
+            int size = stream.PacketWriteNetworkEntity(NetworkEntity);
             // item count
-            size += stream.PacketWriteByte(ItemCount, measureOnly);
+            size += stream.PacketWriteByte(ItemCount);
 
             for (int i = 0; i < ItemCount; i++)
             {
-                size += Components[i].Serialize(stream, measureOnly);
+                size += Components[i].Serialize(stream);
             }
 
             return size;
@@ -108,27 +108,27 @@ namespace Game.Networking
         [FieldOffset(6)]
         public PlayerData Player;
 
-        public int Serialize(Stream stream, bool measureOnly)
+        public int Serialize(Stream stream)
         {
-            int size = stream.PacketWriteUShort((ushort) Type, measureOnly);
+            int size = stream.PacketWriteUShort((ushort) Type);
             byte fieldCount = (byte)HasFields.Count();
-            size += stream.PacketWriteByte(fieldCount, measureOnly);
+            size += stream.PacketWriteByte(fieldCount);
 
             switch ((TypeEnum)Type)
             {
                 case TypeEnum.Transform:
 
-                    size += Transform.Serialize(HasFields, stream, measureOnly);
+                    size += Transform.Serialize(HasFields, stream);
                     break;
 
                 case TypeEnum.Movement:
 
-                    size += Movement.Serialize(HasFields, stream, measureOnly);
+                    size += Movement.Serialize(HasFields, stream);
                     break;
 
                 case TypeEnum.Player:
 
-                    size += Player.Serialize(HasFields, stream, measureOnly);
+                    size += Player.Serialize(HasFields, stream);
                     break;
 
                 default:

@@ -47,7 +47,7 @@ namespace Game.Client
             int size;
             using (var stream = new MemoryStream(data))
             {
-                size = packet.Serialize(stream, measureOnly: false, packetEncryption: this._packetEncryption);
+                size = packet.Serialize(stream, this._packetEncryption);
             }
 
             this._socket.Send(data);

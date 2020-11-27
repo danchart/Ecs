@@ -28,11 +28,11 @@ namespace Networking.Core.Tests
 
             using (var writeStream = new MemoryStream())
             {
-                int size = writeStream.PacketWriteByte(byteValue, measureOnly: false);
-                size += writeStream.PacketWriteUShort(ushortValue, measureOnly: false);
-                size += writeStream.PacketWriteInt(intValue, measureOnly: false);
-                size += writeStream.PacketWriteUInt(uintValue, measureOnly: false);
-                size += writeStream.PacketWriteFloat(floatValue, measureOnly: false);
+                int size = writeStream.PacketWriteByte(byteValue);
+                size += writeStream.PacketWriteUShort(ushortValue);
+                size += writeStream.PacketWriteInt(intValue);
+                size += writeStream.PacketWriteUInt(uintValue);
+                size += writeStream.PacketWriteFloat(floatValue);
 
                 var bytes = writeStream.ToArray();
 

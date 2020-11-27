@@ -15,8 +15,6 @@ namespace Ecs.Core
         internal readonly int Id;
         internal readonly uint Generation;
 
-        public static readonly int SizeBytes = Marshal.SizeOf<NetworkEntity>();
-
         public NetworkEntity(int id, uint generation)
         {
             this.Id = id;
@@ -66,18 +64,19 @@ namespace Ecs.Core
 
     public static class EntityPacketHandleExtensions
     {
-        public static int PacketWriteNetworkEntity(this Stream stream, NetworkEntity value, bool measureOnly)
+        public static int PacketWriteNetworkEntity(this Stream stream, NetworkEntity value)
         {
-            if (!measureOnly)
-            {
-                var bytes = BitConverter.GetBytes(value.Id);
-                stream.Write(bytes, 0, bytes.Length);
+            var bytes = BitConverter.GetBytes(value.Id);
+            stream.Write(bytes, 0, bytes.Length);
 
-                bytes = BitConverter.GetBytes(value.Generation);
-                stream.Write(bytes, 0, bytes.Length);
-            }
+            int size = bytes.Length;
 
-            return NetworkEntity.SizeBytes;
+            bytes = BitConverter.GetBytes(value.Generation);
+            stream.Write(bytes, 0, bytes.Length);
+
+            size += bytes.Length;
+
+            return size;
         }
 
         public static bool PacketReadNetworkEntity(this Stream stream, out NetworkEntity value)

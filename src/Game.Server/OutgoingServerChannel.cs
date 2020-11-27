@@ -53,6 +53,9 @@ namespace Game.Server
         {
             _outgoingPacket.Type = ServerPacketType.Replication;
 
+            var measureStream = new MeasureStream();
+            var noopEncryptor = new NoopPacketEncryptor();
+
             foreach (ref var player in players)
             {
                 ref readonly var playerConnection = ref player.ConnectionRef.Unref();
@@ -70,12 +73,14 @@ namespace Game.Server
                 _outgoingPacket.ReplicationPacket.FrameNumber = player.Frame;
                 _outgoingPacket.ReplicationPacket.EntityCount = 0;
 
+                measureStream.SetLength(0);
+
                 if (_outgoingPacket.ReplicationPacket.Entities == null)
                 {
                     _outgoingPacket.ReplicationPacket.Entities = new EntityPacketData[64];
                 }
 
-                int size = ServerPacketEnvelope.EnvelopeSize;
+                int size = _outgoingPacket.Serialize(measureStream, noopEncryptor);
 
                 this._clientEntitiesToRemove.Clear();
 
@@ -89,7 +94,7 @@ namespace Game.Server
 
                         replicatedEntity.ToEntityPacketData(ref entityPacketData);
 
-                        var entitySize = entityPacketData.Serialize(Stream.Null, measureOnly: true);
+                        var entitySize = entityPacketData.Serialize(measureStream);
 
                         if (size + entitySize > this._config.MaxPacketSize)
                         {

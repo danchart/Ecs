@@ -5,12 +5,9 @@ namespace Networking.Core
 {
     public static class PacketStreamExtensions
     {
-        public static int PacketWriteByte(this Stream stream, byte value, bool measureOnly)
+        public static int PacketWriteByte(this Stream stream, byte value)
         {
-            if (!measureOnly)
-            {
-                stream.WriteByte(value);
-            }
+            stream.WriteByte(value);
 
             return sizeof(byte);
         }
@@ -22,16 +19,13 @@ namespace Networking.Core
             return true;
         }
 
-        public static int PacketWriteUShort(this Stream stream, ushort value, bool measureOnly)
+        public static int PacketWriteUShort(this Stream stream, ushort value)
         {
-            if (!measureOnly)
-            {
-                var bytes = BitConverter.GetBytes(value);
+            var bytes = BitConverter.GetBytes(value);
 
-                stream.Write(bytes, 0, bytes.Length);
-            }
+            stream.Write(bytes, 0, bytes.Length);
 
-            return sizeof(ushort);
+            return bytes.Length;
         }
 
         public static bool PacketReadUShort(this Stream stream, out ushort value)
@@ -45,16 +39,13 @@ namespace Networking.Core
             return true;
         }
 
-        public static int PacketWriteUInt(this Stream stream, uint value, bool measureOnly)
+        public static int PacketWriteUInt(this Stream stream, uint value)
         {
-            if (!measureOnly)
-            {
-                var bytes = BitConverter.GetBytes(value);
+            var bytes = BitConverter.GetBytes(value);
 
-                stream.Write(bytes, 0, bytes.Length);
-            }
+            stream.Write(bytes, 0, bytes.Length);
 
-            return sizeof(uint);
+            return bytes.Length;
         }
 
         public static bool PacketReadUInt(this Stream stream, out uint value)
@@ -68,16 +59,13 @@ namespace Networking.Core
             return true;
         }
 
-        public static int PacketWriteInt(this Stream stream, int value, bool measureOnly)
+        public static int PacketWriteInt(this Stream stream, int value)
         {
-            if (!measureOnly)
-            {
-                var bytes = BitConverter.GetBytes(value);
+            var bytes = BitConverter.GetBytes(value);
 
-                stream.Write(bytes, 0, bytes.Length);
-            }
+            stream.Write(bytes, 0, bytes.Length);
 
-            return sizeof(int);
+            return bytes.Length;
         }
 
         public static bool PacketReadInt(this Stream stream, out int value)
@@ -91,16 +79,13 @@ namespace Networking.Core
             return true;
         }
 
-        public static int PacketWriteFloat(this Stream stream, float value, bool measureOnly)
+        public static int PacketWriteFloat(this Stream stream, float value)
         {
-            if (!measureOnly)
-            {
-                var bytes = BitConverter.GetBytes(value);
+            var bytes = BitConverter.GetBytes(value);
 
-                stream.Write(bytes, 0, bytes.Length);
-            }
+            stream.Write(bytes, 0, bytes.Length);
 
-            return sizeof(float);
+            return bytes.Length;
         }
 
         public static bool PacketReadFloat(this Stream stream, out float value)

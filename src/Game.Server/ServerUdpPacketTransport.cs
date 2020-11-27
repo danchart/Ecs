@@ -57,7 +57,7 @@ namespace Game.Server
             int size;
             using (var stream = new MemoryStream(data))
             {
-                size = packet.Serialize(stream, measureOnly: false, packetEncryption: this._packetEncryption);
+                size = packet.Serialize(stream, packetEncryption: this._packetEncryption);
             }
 
             this._udpSocket.SendTo(data, endPoint);

@@ -12,14 +12,14 @@ namespace Game.Networking.PacketData
         // 0
         public PlayerId Id;
 
-        public int Serialize(BitField hasFields, Stream stream, bool measureOnly)
+        public int Serialize(BitField hasFields, Stream stream)
         {
             int size = 0;
 
             if (hasFields.IsSet(0))
             {
-                size += stream.PacketWriteByte(0, measureOnly);
-                size += stream.PacketWriteInt(this.Id, measureOnly);
+                size += stream.PacketWriteByte(0);
+                size += stream.PacketWriteInt(this.Id);
             }
 
             return size;

@@ -16,26 +16,26 @@ namespace Game.Networking.PacketData
         // 2
         public float rotation;
 
-        public int Serialize(in BitField hasFields, Stream stream, bool measureOnly)
+        public int Serialize(in BitField hasFields, Stream stream)
         {
             int size = 0;
 
             if (hasFields.IsSet(0))
             {
-                size += stream.PacketWriteByte(0, measureOnly);
-                size += stream.PacketWriteFloat(x, measureOnly);
+                size += stream.PacketWriteByte(0);
+                size += stream.PacketWriteFloat(x);
             }
 
             if (hasFields.IsSet(1))
             {
-                size += stream.PacketWriteByte(1, measureOnly);
-                size += stream.PacketWriteFloat(y, measureOnly);
+                size += stream.PacketWriteByte(1);
+                size += stream.PacketWriteFloat(y);
             }
 
             if (hasFields.IsSet(2))
             {
-                size += stream.PacketWriteByte(2, measureOnly);
-                size += stream.PacketWriteFloat(rotation, measureOnly);
+                size += stream.PacketWriteByte(2);
+                size += stream.PacketWriteFloat(rotation);
             }
 
             return size;

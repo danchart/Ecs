@@ -46,7 +46,7 @@ namespace Game.Networking.Tests
 
             using (var writeStream = new MemoryStream())
             {
-                packet.Serialize(writeStream, measureOnly: false);
+                packet.Serialize(writeStream);
 
                 using (var readStream = new MemoryStream(writeStream.GetBuffer()))
                 {

@@ -23,17 +23,17 @@ namespace Game.Networking
         [FieldOffset(2)]
         public ControlAckPacketData ControlAckPacketData;
 
-        public int Serialize(Stream stream, bool measureOnly)
+        public int Serialize(Stream stream)
         {
-            int size = stream.PacketWriteUShort((ushort) this.ControlMessage, measureOnly);
+            int size = stream.PacketWriteUShort((ushort) this.ControlMessage);
 
             switch (this.ControlMessage)
             {
                 case ControlMessageEnum.ConnectSyn:
-                    return size + this.ControlSynPacketData.Serialize(stream, measureOnly);
+                    return size + this.ControlSynPacketData.Serialize(stream);
                 case ControlMessageEnum.ConnectSynAck:
                 case ControlMessageEnum.ConnectAck:
-                    return size + this.ControlAckPacketData.Serialize(stream, measureOnly);
+                    return size + this.ControlAckPacketData.Serialize(stream);
             }
 
             return -1;
@@ -65,9 +65,9 @@ namespace Game.Networking
         /// </summary>
         public uint SequenceKey;
 
-        public int Serialize(Stream stream, bool measureOnly)
+        public int Serialize(Stream stream)
         {
-            int size = stream.PacketWriteUInt(this.SequenceKey, measureOnly);
+            int size = stream.PacketWriteUInt(this.SequenceKey);
 
             return size;
         }
@@ -92,10 +92,10 @@ namespace Game.Networking
         /// </summary>
         public uint AcknowledgementKey;
 
-        public int Serialize(Stream stream, bool measureOnly)
+        public int Serialize(Stream stream)
         {
-            int size = stream.PacketWriteUInt(this.SequenceKey, measureOnly);
-            size += stream.PacketWriteUInt(this.AcknowledgementKey, measureOnly);
+            int size = stream.PacketWriteUInt(this.SequenceKey);
+            size += stream.PacketWriteUInt(this.AcknowledgementKey);
 
             return size;
         }
