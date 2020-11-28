@@ -21,7 +21,7 @@ namespace Game.Server
         private readonly AppendOnlyList<Entity> _clientEntitiesToRemove;
 
         // Single, shared struct used for each serial outgoing packet.
-        private ServerPacketEnvelope _outgoingPacket = default;
+        private ServerPacket _outgoingPacket = default;
 
         public OutgoingServerChannel(
             NetworkTransportConfig config,
@@ -37,7 +37,7 @@ namespace Game.Server
             this._clientEntitiesToRemove = new AppendOnlyList<Entity>(64);
         }
 
-        public void SendClientPacket(IPEndPoint endPoint, in ServerPacketEnvelope serverPacket)
+        public void SendClientPacket(IPEndPoint endPoint, in PacketEnvelope<ServerPacket> serverPacket)
         {
             // TODO: Add flow control?
             this._transport.SendPacket(endPoint, in serverPacket);
@@ -65,12 +65,12 @@ namespace Game.Server
                     continue;
                 }
 
-                // Increment frame.
-                player.Frame += 1;
+                // Increment sequence #.
+                player.Sequence += 1;
 
                 // Reset/init replication packet.
                 _outgoingPacket.PlayerId = playerConnection.PlayerId;
-                _outgoingPacket.ReplicationPacket.FrameNumber = player.Frame;
+                _outgoingPacket.ReplicationPacket.Sequence = player.Sequence;
                 _outgoingPacket.ReplicationPacket.EntityCount = 0;
 
                 measureStream.SetLength(0);

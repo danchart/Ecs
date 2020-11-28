@@ -2,7 +2,7 @@
 using System.Text;
 using Xunit;
 
-namespace Game.Networking.Tests
+namespace Networking.Core.Tests
 {
     public class PacketEncryptionTests
     {

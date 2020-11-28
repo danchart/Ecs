@@ -126,7 +126,7 @@ namespace Game.Client
                     {
                         using (var stream = new MemoryStream(data, offset, count))
                         {
-                            ServerPacketEnvelope packetEnvelope = default;
+                            ServerPacket packetEnvelope = default;
 
                             if (!packetEnvelope.Deserialize(stream, this._connection.PacketEncryptor))
                             {
@@ -164,7 +164,7 @@ namespace Game.Client
         {
             this._connection.Handshake.SequenceKey = sequenceKey;
 
-            var synPacket = new ClientPacketEnvelope
+            var synPacket = new ClientPacket
             {
                 Type = ClientPacketType.ControlPlane,
                 PlayerId = this._connection.PlayerId,

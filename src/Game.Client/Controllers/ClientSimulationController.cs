@@ -43,7 +43,7 @@ namespace Game.Client
             this._connection.Handshake.AcknowledgementKey = acknowledgementKey;
             this._connection.State = GameServerConnection.ConnectionState.Connected;
 
-            var packet = new ClientPacketEnvelope();
+            var packet = new ClientPacket();
 
             packet.Type = ClientPacketType.ControlPlane;
             packet.PlayerId = this._connection.PlayerId;

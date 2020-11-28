@@ -6,9 +6,10 @@ namespace Game.Simulation.Server
 {
     public struct WorldPlayer
     {
-        public FrameIndex Frame;
-        public FrameIndex LastInputFrame;
-        public FrameIndex LastAcknowledgedSimulationFrame;
+        // Current sequence/frame # for this player.
+        public FrameNumber Sequence;
+        public FrameNumber LastInputFrame;
+        public FrameNumber LastAcknowledgedSimulationFrame;
 
         public readonly PlayerConnectionRef ConnectionRef;
 
@@ -52,9 +53,9 @@ namespace Game.Simulation.Server
         {
             this._entity = entity;
 
-            this.Frame = FrameIndex.Zero;
-            this.LastAcknowledgedSimulationFrame = FrameIndex.Zero;
-            this.LastInputFrame = FrameIndex.Zero;
+            this.Sequence = FrameNumber.Zero;
+            this.LastAcknowledgedSimulationFrame = FrameNumber.Zero;
+            this.LastInputFrame = FrameNumber.Zero;
 
             this._isReplicating = true;
         }

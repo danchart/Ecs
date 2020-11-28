@@ -19,6 +19,8 @@ namespace Game.Server
 
         private ByteArrayPool _packetSerializationBytePool;
 
+        private FrameNumber _sequence = FrameNumber.Zero;
+
         public ServerUdpPacketTransport(
             ILogger logger, 
             IPacketEncryptor packetEncryption, 
@@ -49,8 +51,23 @@ namespace Game.Server
             this._udpSocket.Stop();
         }
 
-        public void SendPacket(IPEndPoint endPoint, in ServerPacketEnvelope packet)
+        public FrameNumber SendPacket(IPEndPoint endPoint, in ServerPacket packet)
         {
+            this._sequence += 1;
+
+            var packetEnvelope = new PacketEnvelope<ServerPacket>
+            {
+                Header = new PacketEnvelopeHeader
+                {
+                    Sequence = this._sequence,
+                    Ac
+                },
+                Contents = packet,
+            };
+            
+
+            
+
             var bufferPoolIndex = this._packetSerializationBytePool.New();
             var data = this._packetSerializationBytePool.GetBuffer(bufferPoolIndex);
 

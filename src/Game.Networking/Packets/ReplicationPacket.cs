@@ -8,16 +8,19 @@ using System.Runtime.InteropServices;
 
 namespace Game.Networking
 {
-    public struct ReplicationPacket
+    public struct ReplicationPacket : IPacketSerialization
     {
-        public ushort FrameNumber;
+        // Current sequence #, incremented for each sent packet.
+        public ushort Sequence;
+        // # of entities 
         public byte EntityCount;
+        // entity + data changes.
         public EntityPacketData[] Entities;
 
         public int Serialize(Stream stream)
         {
             // frame #
-            int size = stream.PacketWriteUShort(FrameNumber);
+            int size = stream.PacketWriteUShort(Sequence);
             // entity count
             size += stream.PacketWriteByte(EntityCount);
 
@@ -32,7 +35,7 @@ namespace Game.Networking
         public bool Deserialize(Stream stream)
         {
             // frame #
-            stream.PacketReadUShort(out FrameNumber);
+            stream.PacketReadUShort(out Sequence);
             // packet count
             stream.PacketReadByte(out EntityCount);
 
@@ -47,7 +50,7 @@ namespace Game.Networking
         }
     }
 
-    public struct EntityPacketData
+    public struct EntityPacketData : IPacketSerialization
     {
         public NetworkEntity NetworkEntity;
         public byte ItemCount;
@@ -87,7 +90,7 @@ namespace Game.Networking
     }
 
     [StructLayout(LayoutKind.Explicit, Pack = 1)]
-    public struct ComponentPacketData
+    public struct ComponentPacketData : IPacketSerialization
     {
         public enum TypeEnum : ushort
         {

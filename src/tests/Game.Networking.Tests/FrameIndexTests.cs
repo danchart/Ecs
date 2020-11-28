@@ -8,9 +8,9 @@ namespace Game.Networking.Tests
         public void TestIsInrange()
         {
             // Trivial case.
-            Assert.False(FrameIndex.Zero.IsInRange(GetFrameIndexValue(1), 1));
-            Assert.True(FrameIndex.Zero.IsInRange(FrameIndex.Zero, 0));
-            Assert.True(FrameIndex.Zero.IsInRange(FrameIndex.Zero, 1));
+            Assert.False(FrameNumber.Zero.IsInRange(GetFrameIndexValue(1), 1));
+            Assert.True(FrameNumber.Zero.IsInRange(FrameNumber.Zero, 0));
+            Assert.True(FrameNumber.Zero.IsInRange(FrameNumber.Zero, 1));
 
             // Simple non-rollover case.
             Assert.False(GetFrameIndexValue(100).IsInRange(GetFrameIndexValue(0), 20));
@@ -27,20 +27,20 @@ namespace Game.Networking.Tests
         public void TestCompare()
         {
             // Trivial.
-            Assert.Equal(0, FrameIndex.Compare(FrameIndex.Zero, FrameIndex.Zero));
+            Assert.Equal(0, FrameNumber.Compare(FrameNumber.Zero, FrameNumber.Zero));
 
             // Simple.
-            Assert.Equal(1, FrameIndex.Compare(FrameIndex.Zero, GetFrameIndexValue(1)));
-            Assert.Equal(-1, FrameIndex.Compare(GetFrameIndexValue(1), FrameIndex.Zero));
+            Assert.Equal(1, FrameNumber.Compare(FrameNumber.Zero, GetFrameIndexValue(1)));
+            Assert.Equal(-1, FrameNumber.Compare(GetFrameIndexValue(1), FrameNumber.Zero));
 
             // Rollover.
-            Assert.Equal(1, FrameIndex.Compare(GetFrameIndexValue(ushort.MaxValue - 1), GetFrameIndexValue(1)));
-            Assert.Equal(-1, FrameIndex.Compare(GetFrameIndexValue(1), GetFrameIndexValue(ushort.MaxValue - 1)));
+            Assert.Equal(1, FrameNumber.Compare(GetFrameIndexValue(ushort.MaxValue - 1), GetFrameIndexValue(1)));
+            Assert.Equal(-1, FrameNumber.Compare(GetFrameIndexValue(1), GetFrameIndexValue(ushort.MaxValue - 1)));
         }
 
-        private static FrameIndex GetFrameIndexValue(ushort value)
+        private static FrameNumber GetFrameIndexValue(ushort value)
         {
-            return FrameIndex.Zero + value;
+            return FrameNumber.Zero + value;
         }
     }
 }

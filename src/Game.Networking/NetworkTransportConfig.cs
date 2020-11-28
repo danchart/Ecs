@@ -1,4 +1,6 @@
-﻿namespace Game.Networking
+﻿using Networking.Core;
+
+namespace Game.Networking
 {
     public sealed class NetworkTransportConfig
     {

@@ -8,7 +8,7 @@ namespace Game.Server
 {
     public class ControlPlaneServerController
     {
-        private ServerPacketEnvelope _serverPacket;
+        private ServerPacket _serverPacket;
 
         private readonly OutgoingServerChannel _channelOutgoing;
         private readonly PlayerConnectionManager _playerConnections;

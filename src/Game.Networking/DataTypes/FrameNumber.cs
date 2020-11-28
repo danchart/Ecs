@@ -3,24 +3,24 @@ using System.Diagnostics;
 
 namespace Game.Networking
 {
-    public readonly struct FrameIndex : IEquatable<FrameIndex>
+    public readonly struct FrameNumber : IEquatable<FrameNumber>
     {
-        public static readonly FrameIndex Zero = new FrameIndex(0);
-        public static readonly FrameIndex MaxValue = new FrameIndex(ushort.MaxValue);
+        public static readonly FrameNumber Zero = new FrameNumber(0);
+        public static readonly FrameNumber MaxValue = new FrameNumber(ushort.MaxValue);
 
         private readonly ushort _index;
 
         private const ushort HalfUshortMaxValue = (ushort.MaxValue / 2) - 1;
 
-        public FrameIndex(ushort index) => this._index = index;
+        public FrameNumber(ushort index) => this._index = index;
 
-        public static FrameIndex operator +(in FrameIndex lhs, ushort offset) => 
-            new FrameIndex((ushort)unchecked(lhs._index + offset));
+        public static FrameNumber operator +(in FrameNumber lhs, ushort offset) => 
+            new FrameNumber((ushort)unchecked(lhs._index + offset));
 
-        public static FrameIndex operator -(in FrameIndex lhs, ushort offset) =>
-            new FrameIndex((ushort)unchecked(lhs._index - offset));
+        public static FrameNumber operator -(in FrameNumber lhs, ushort offset) =>
+            new FrameNumber((ushort)unchecked(lhs._index - offset));
 
-        public bool IsInRange(in FrameIndex startIndex, int length)
+        public bool IsInRange(in FrameNumber startIndex, int length)
         {
             Debug.Assert(length < (ushort.MaxValue >> 1), "Count must be less than half ushort.MaxValue.");
 
@@ -58,17 +58,17 @@ namespace Game.Networking
             return -1;
         }
 
-        public static FrameIndex New(ushort index = 1) => new FrameIndex(index);
+        public static FrameNumber New(ushort index = 1) => new FrameNumber(index);
 
-        public static implicit operator ushort(FrameIndex id) => id._index;
+        public static implicit operator ushort(FrameNumber id) => id._index;
 
-        public static bool operator ==(in FrameIndex lhs, in FrameIndex rhs)
+        public static bool operator ==(in FrameNumber lhs, in FrameNumber rhs)
         {
             return
                 lhs._index == rhs._index;
         }
 
-        public static bool operator !=(in FrameIndex lhs, in FrameIndex rhs)
+        public static bool operator !=(in FrameNumber lhs, in FrameNumber rhs)
         {
             return
                 lhs._index != rhs._index;
@@ -79,11 +79,11 @@ namespace Game.Networking
         public override bool Equals(object other)
         {
             return
-                other is FrameIndex otherEntity &&
+                other is FrameNumber otherEntity &&
                 Equals(otherEntity);
         }
 
-        public bool Equals(FrameIndex entity)
+        public bool Equals(FrameNumber entity)
         {
             return
                 this._index == entity._index;

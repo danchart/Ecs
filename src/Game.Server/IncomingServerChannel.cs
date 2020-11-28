@@ -1,5 +1,6 @@
 ﻿using Common.Core;
 using Game.Networking;
+using Networking.Core;
 using System;
 using System.IO;
 using System.Net;
@@ -66,7 +67,7 @@ namespace Game.Server
                     {
                         using (var stream = new MemoryStream(data, offset, count))
                         {
-                            ClientPacketEnvelope packetEnvelope = default;
+                            ClientPacket packetEnvelope = default;
 
                             if (!packetEnvelope.Deserialize(stream, this._packetEncryption))
                             {

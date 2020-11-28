@@ -18,99 +18,99 @@ namespace Game.Networking.Tests
 
             jitterBuffer.AddPacket(new ReplicationPacket
             {
-                FrameNumber = 1,
+                Sequence = 1,
             }); ;
             jitterBuffer.AddPacket(new ReplicationPacket
             {
-                FrameNumber = 2,
+                Sequence = 2,
             });
             jitterBuffer.AddPacket(new ReplicationPacket
             {
-                FrameNumber = 3,
+                Sequence = 3,
             });
 
             Assert.Equal(3, jitterBuffer.Count);
 
             ReplicationPacket packet = default;
 
-            Assert.False(jitterBuffer.TryRead(FrameIndex.Zero, ref packet));
-            Assert.True(jitterBuffer.TryRead(FrameIndex.Zero + 1, ref packet));
-            Assert.Equal(1, packet.FrameNumber);
-            Assert.True(jitterBuffer.TryRead(new FrameIndex(packet.FrameNumber) + 1, ref packet));
-            Assert.Equal(2, packet.FrameNumber);
-            Assert.True(jitterBuffer.TryRead(new FrameIndex(packet.FrameNumber) + 1, ref packet));
-            Assert.Equal(3, packet.FrameNumber);
-            Assert.False(jitterBuffer.TryRead(new FrameIndex(packet.FrameNumber) + 1, ref packet));
+            Assert.False(jitterBuffer.TryRead(FrameNumber.Zero, ref packet));
+            Assert.True(jitterBuffer.TryRead(FrameNumber.Zero + 1, ref packet));
+            Assert.Equal(1, packet.Sequence);
+            Assert.True(jitterBuffer.TryRead(new FrameNumber(packet.Sequence) + 1, ref packet));
+            Assert.Equal(2, packet.Sequence);
+            Assert.True(jitterBuffer.TryRead(new FrameNumber(packet.Sequence) + 1, ref packet));
+            Assert.Equal(3, packet.Sequence);
+            Assert.False(jitterBuffer.TryRead(new FrameNumber(packet.Sequence) + 1, ref packet));
 
             //
             // Test: Add packets out of order
             //
 
-            jitterBuffer.Clear(FrameIndex.Zero);
+            jitterBuffer.Clear(FrameNumber.Zero);
 
             // Reverse order
             jitterBuffer.AddPacket(new ReplicationPacket
             {
-                FrameNumber = 3,
+                Sequence = 3,
             }); ;
             jitterBuffer.AddPacket(new ReplicationPacket
             {
-                FrameNumber = 2,
+                Sequence = 2,
             });
             jitterBuffer.AddPacket(new ReplicationPacket
             {
-                FrameNumber = 1,
+                Sequence = 1,
             });
 
             Assert.Equal(3, jitterBuffer.Count);
 
-            Assert.False(jitterBuffer.TryRead(FrameIndex.Zero, ref packet));
-            Assert.True(jitterBuffer.TryRead(FrameIndex.Zero + 1, ref packet));
-            Assert.Equal(1, packet.FrameNumber);
-            Assert.True(jitterBuffer.TryRead(new FrameIndex(packet.FrameNumber) + 1, ref packet));
-            Assert.Equal(2, packet.FrameNumber);
-            Assert.True(jitterBuffer.TryRead(new FrameIndex(packet.FrameNumber) + 1, ref packet));
-            Assert.Equal(3, packet.FrameNumber);
-            Assert.False(jitterBuffer.TryRead(new FrameIndex(packet.FrameNumber) + 1, ref packet));
+            Assert.False(jitterBuffer.TryRead(FrameNumber.Zero, ref packet));
+            Assert.True(jitterBuffer.TryRead(FrameNumber.Zero + 1, ref packet));
+            Assert.Equal(1, packet.Sequence);
+            Assert.True(jitterBuffer.TryRead(new FrameNumber(packet.Sequence) + 1, ref packet));
+            Assert.Equal(2, packet.Sequence);
+            Assert.True(jitterBuffer.TryRead(new FrameNumber(packet.Sequence) + 1, ref packet));
+            Assert.Equal(3, packet.Sequence);
+            Assert.False(jitterBuffer.TryRead(new FrameNumber(packet.Sequence) + 1, ref packet));
 
             //
             // Test: Add packets out of order with an interleaved read.
             //
 
-            jitterBuffer.Clear(FrameIndex.Zero);
+            jitterBuffer.Clear(FrameNumber.Zero);
 
             // Reverse order
             jitterBuffer.AddPacket(new ReplicationPacket
             {
-                FrameNumber = 4,
+                Sequence = 4,
             }); ;
             jitterBuffer.AddPacket(new ReplicationPacket
             {
-                FrameNumber = 3,
+                Sequence = 3,
             });
             jitterBuffer.AddPacket(new ReplicationPacket
             {
-                FrameNumber = 1,
+                Sequence = 1,
             });
 
             Assert.Equal(3, jitterBuffer.Count);
 
-            Assert.False(jitterBuffer.TryRead(FrameIndex.Zero, ref packet));
-            Assert.True(jitterBuffer.TryRead(FrameIndex.Zero + 1, ref packet));
-            Assert.Equal(1, packet.FrameNumber);
+            Assert.False(jitterBuffer.TryRead(FrameNumber.Zero, ref packet));
+            Assert.True(jitterBuffer.TryRead(FrameNumber.Zero + 1, ref packet));
+            Assert.Equal(1, packet.Sequence);
 
             jitterBuffer.AddPacket(new ReplicationPacket
             {
-                FrameNumber = 2,
+                Sequence = 2,
             });
 
-            Assert.True(jitterBuffer.TryRead(new FrameIndex(packet.FrameNumber) + 1, ref packet));
-            Assert.Equal(2, packet.FrameNumber);
-            Assert.True(jitterBuffer.TryRead(new FrameIndex(packet.FrameNumber) + 1, ref packet));
-            Assert.Equal(3, packet.FrameNumber);
-            Assert.True(jitterBuffer.TryRead(new FrameIndex(packet.FrameNumber) + 1, ref packet));
-            Assert.Equal(4, packet.FrameNumber);
-            Assert.False(jitterBuffer.TryRead(new FrameIndex(packet.FrameNumber) + 1, ref packet));
+            Assert.True(jitterBuffer.TryRead(new FrameNumber(packet.Sequence) + 1, ref packet));
+            Assert.Equal(2, packet.Sequence);
+            Assert.True(jitterBuffer.TryRead(new FrameNumber(packet.Sequence) + 1, ref packet));
+            Assert.Equal(3, packet.Sequence);
+            Assert.True(jitterBuffer.TryRead(new FrameNumber(packet.Sequence) + 1, ref packet));
+            Assert.Equal(4, packet.Sequence);
+            Assert.False(jitterBuffer.TryRead(new FrameNumber(packet.Sequence) + 1, ref packet));
         }
     }
 }

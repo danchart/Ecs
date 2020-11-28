@@ -52,7 +52,7 @@ namespace Game.Simulation.Server
 
         public struct Item
         {
-            public FrameIndex FrameIndex;
+            public FrameNumber FrameIndex;
             public InputData Input;
         }
     }

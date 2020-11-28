@@ -21,8 +21,13 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="PacketStreamExtensions.cs" />
+    <Compile Include="Packets\PacketEncryptor.cs" />
+    <Compile Include="Packets\IPacketSerialization.cs" />
+    <Compile Include="Packets\PacketEnvelope.cs" />
+    <Compile Include="Packets\PacketEnvelopeHeader.cs" />
+    <Compile Include="Packets\PacketStreamExtensions.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="PacketBuffer.cs" />
     <Compile Include="ReceiveBuffer.cs" />
     <Compile Include="UdpSocket.cs" />
   </ItemGroup>

@@ -11,7 +11,7 @@ namespace Game.Networking
         ControlPlane = 2,
     }
 
-    public struct ClientPacketEnvelope
+    public struct ClientPacket : IPacketSerialization
     {
         public ClientPacketType Type;
         public PlayerId PlayerId;
@@ -19,7 +19,7 @@ namespace Game.Networking
         public ClientInputPacket PlayerInputPacket;
         public ControlPacket ControlPacket;
 
-        public int Serialize(Stream stream, IPacketEncryptor packetEncryption)
+        public int Serialize(Stream stream)
         {
             int size = stream.PacketWriteByte((byte)this.Type);
             size += stream.PacketWriteInt(this.PlayerId);
@@ -35,7 +35,7 @@ namespace Game.Networking
             return -1;
         }
 
-        public bool Deserialize(Stream stream, IPacketEncryptor packetEncryption)
+        public bool Deserialize(Stream stream)
         {
             byte typeAsByte;
             stream.PacketReadByte(out typeAsByte);

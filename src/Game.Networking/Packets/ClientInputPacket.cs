@@ -5,10 +5,8 @@ using System.IO;
 
 namespace Game.Networking
 {
-    public struct ClientInputPacket
+    public struct ClientInputPacket : IPacketSerialization
     {
-        public PacketHeader Header;
-
         /// <summary>
         /// Count of inputs.
         /// </summary>
@@ -21,10 +19,8 @@ namespace Game.Networking
 
         public int Serialize(Stream stream)
         {
-            // last frame ack 
-            int size = Header.Serialize(stream);
             // entity count
-            size += stream.PacketWriteByte(InputCount);
+            int size = stream.PacketWriteByte(InputCount);
 
             for (int i = 0; i < InputCount; i++)
             {
@@ -36,9 +32,6 @@ namespace Game.Networking
 
         public bool Deserialize(Stream stream)
         {
-            // header
-            Header.Deserialize(stream);
-
             // input count
             stream.PacketReadByte(out InputCount);
 
@@ -53,7 +46,7 @@ namespace Game.Networking
         }
     }
 
-    public struct InputPacketData
+    public struct InputPacketData : IPacketSerialization
     {
         public BitField HasFields;
 

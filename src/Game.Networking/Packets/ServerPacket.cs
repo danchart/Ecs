@@ -12,7 +12,7 @@ namespace Game.Networking
         Control = 2,
     }
 
-    public struct ServerPacketEnvelope
+    public struct ServerPacket : IPacketSerialization
     {
         public ServerPacketType Type;
         public PlayerId PlayerId;
@@ -22,13 +22,15 @@ namespace Game.Networking
 
         /// <summary>
         /// Size of the envelope, in bytes. Excludes the inner packet size.
+        /// 
+        /// TODO: This is wrong, marshalling size isn't same as byte size
         /// </summary>
         public static readonly int EnvelopeSize = 
-            Marshal.SizeOf<ServerPacketEnvelope>() 
+            Marshal.SizeOf<ServerPacket>() 
             - Marshal.SizeOf<ReplicationPacket>() 
             - Marshal.SizeOf<ControlPacket>();
 
-        public int Serialize(Stream stream, IPacketEncryptor packetEncryption)
+        public int Serialize(Stream stream)
         {
             int size = stream.PacketWriteByte((byte) this.Type);
             size += stream.PacketWriteInt(this.PlayerId);
@@ -44,7 +46,7 @@ namespace Game.Networking
             return -1;
         }
 
-        public bool Deserialize(Stream stream, IPacketEncryptor packetEncryption)
+        public bool Deserialize(Stream stream)
         {
             byte typeAsByte;
             stream.PacketReadByte(out typeAsByte);

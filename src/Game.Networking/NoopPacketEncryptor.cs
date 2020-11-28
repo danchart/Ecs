@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Networking.Core;
+using System;
 
 namespace Game.Networking
 {

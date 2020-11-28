@@ -36,6 +36,8 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="PacketBufferTests.cs" />
+    <Compile Include="PacketEncryptionTests.cs" />
     <Compile Include="PacketStreamExtensionsTests.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="ReceiveBufferTests.cs" />

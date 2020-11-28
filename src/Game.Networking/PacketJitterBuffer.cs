@@ -17,7 +17,7 @@ namespace Game.Networking
         private int _count;
         private int _freeCount;
 
-        private FrameIndex _lastFrameIndex;
+        private FrameNumber _lastFrameIndex;
 
         private readonly ReplicationPacket[] _packets;
         private readonly int[] _indices;
@@ -38,12 +38,12 @@ namespace Game.Networking
 
             this._logger = logger;
 
-            this._lastFrameIndex = FrameIndex.Zero;
+            this._lastFrameIndex = FrameNumber.Zero;
         }
 
         public int Count => this._count - this._freeCount;
 
-        public void Clear(FrameIndex lastFrameIndex)
+        public void Clear(FrameNumber lastFrameIndex)
         {
             this._count = 0;
             this._freeCount = 0;
@@ -59,7 +59,7 @@ namespace Game.Networking
 
             lock (_lock)
             {
-                if (!new FrameIndex(packet.FrameNumber).IsInRange(startIndex: this._lastFrameIndex, length: this._packets.Length))
+                if (!new FrameNumber(packet.Sequence).IsInRange(startIndex: this._lastFrameIndex, length: this._packets.Length))
                 {
                     // Discard packet. The frame # is outside the expected range.
                     return false;
@@ -101,9 +101,9 @@ namespace Game.Networking
                     var currentPacketIndex = this._indices[loopIndex];
                     var nextPacketIndex = this._indices[loopIndex + 1];
 
-                    var compare = FrameIndex.Compare(
-                        this._packets[nextPacketIndex].FrameNumber, 
-                        this._packets[currentPacketIndex].FrameNumber);
+                    var compare = FrameNumber.Compare(
+                        this._packets[nextPacketIndex].Sequence, 
+                        this._packets[currentPacketIndex].Sequence);
 
                     if (
                         // Duplicate elements, array is sorted. (will skip in A later read ).
@@ -126,7 +126,7 @@ namespace Game.Networking
             return true;
         }
 
-        public bool TryRead(FrameIndex frameIndex, ref ReplicationPacket packet)
+        public bool TryRead(FrameNumber frameIndex, ref ReplicationPacket packet)
         {
             lock (_lock)
             {
@@ -146,7 +146,7 @@ namespace Game.Networking
                 {
                     var packetIndex = this._indices[loopIndex];
 
-                    if (this._packets[packetIndex].FrameNumber == frameIndex)
+                    if (this._packets[packetIndex].Sequence == frameIndex)
                     {
                         // Found packet with this frame index.
 
@@ -168,7 +168,7 @@ namespace Game.Networking
                         return true;
                     }
 
-                    var compare = FrameIndex.Compare(this._packets[packetIndex].FrameNumber, frameIndex);
+                    var compare = FrameNumber.Compare(this._packets[packetIndex].Sequence, frameIndex);
 
                     if (compare < 0) 
                     {

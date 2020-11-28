@@ -13,7 +13,7 @@ namespace Game.Networking
     }
 
     [StructLayout(LayoutKind.Explicit, Pack = 1)]
-    public struct ControlPacket
+    public struct ControlPacket : IPacketSerialization
     {
         [FieldOffset(0)]
         public ControlMessageEnum ControlMessage;
@@ -58,7 +58,7 @@ namespace Game.Networking
         }
     }
 
-    public struct ControlSynPacketData
+    public struct ControlSynPacketData : IPacketSerialization
     {
         /// <summary>
         /// Client provided synchronization sequence #.
@@ -80,7 +80,7 @@ namespace Game.Networking
         }
     }
 
-    public struct ControlAckPacketData
+    public struct ControlAckPacketData : IPacketSerialization
     {
         /// <summary>
         /// Client provided synchronization sequence # from original SYN request.

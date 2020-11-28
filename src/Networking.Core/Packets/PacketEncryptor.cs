@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Diagnostics;
 
-namespace Game.Networking
+namespace Networking.Core
 {
     public interface IPacketEncryptor
     {

@@ -22,7 +22,7 @@ namespace Game.Simulation.Client
                 var entity = this._world.NewEntity();
                 ref var newReplicationState = ref entity.GetComponent<ClientReplicationStateComponent>();
 
-                newReplicationState.FrameIndex = FrameIndex.Zero;
+                newReplicationState.FrameIndex = FrameNumber.Zero;
             }
 
             ref var replicationState = ref ReplicationStateQuery.GetSingleton();

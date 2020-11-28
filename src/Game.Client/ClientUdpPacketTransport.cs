@@ -39,7 +39,7 @@ namespace Game.Client
             this._socket.Start(this._remoteEndPoint);
         }
 
-        public void SendPacket(in ClientPacketEnvelope packet)
+        public FrameNumber SendPacket(in ClientPacket packet)
         {
             var bufferPoolIndex = this._packetSerializationBytePool.New();
             var data = this._packetSerializationBytePool.GetBuffer(bufferPoolIndex);
