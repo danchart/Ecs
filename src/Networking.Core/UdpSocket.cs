@@ -52,6 +52,7 @@ namespace Networking.Core
             public PacketBuffer<T> PacketBuffer;
             public EndPoint EndPointFrom;
             public byte[] Buffer;
+            public IPacketEncryptor Encryptor;
             public ILogger Logger;
         }
 
@@ -61,6 +62,7 @@ namespace Networking.Core
             {
                 Socket = this._socket,
                 PacketBuffer = this._packetBuffer,
+                Encryptor = this._encryptor,
                 EndPointFrom = new IPEndPoint(IPAddress.Any, 0),
                 Buffer = new byte[MaxPacketSize],
                 Logger = this._logger,
@@ -81,7 +83,16 @@ namespace Networking.Core
             ReceiveState state = (ReceiveState)ar.AsyncState;
             int bytesReceived = state.Socket.EndReceiveFrom(ar, ref state.EndPointFrom);
 
-            state.PacketBuffer.AddPacket(state.Buffer, 0, bytesReceived, (IPEndPoint)state.EndPointFrom);
+            ushort sequence = PacketEnvelope<T>.GetPacketSequence(state.Buffer, 0, bytesReceived);
+
+            ref var packet = ref state.PacketBuffer.GetPacket(sequence);
+
+            using (var stream = new MemoryStream(state.Buffer, 0, bytesReceived))
+            {
+                packet.Deserialize(stream, state.Encryptor);
+            }
+
+            state.PacketBuffer.SetEndPoint(sequence, (IPEndPoint)state.EndPointFrom);
 
             // Chain next receive.
             state.Socket.BeginReceiveFrom(

@@ -1,6 +1,4 @@
-﻿using System;
-using System.Diagnostics;
-using System.IO;
+﻿using System.Diagnostics;
 using System.Net;
 
 namespace Networking.Core
@@ -8,46 +6,19 @@ namespace Networking.Core
     public class PacketBuffer<T>
         where T : struct, IPacketSerialization
     {
-        private ushort _ack;
-
-        private readonly ushort[] _sequences;
-        private readonly PacketEnvelope<T>[] _packets;
+        private readonly uint[] _sequences;
+        private readonly T[] _packets;
         private readonly IPEndPoint[] _fromEndPoints;
-
-        private readonly IPacketEncryptor _encryptor;
 
         private readonly int Size;
 
-        public PacketBuffer(IPacketEncryptor encryptor, int size)
+        public PacketBuffer(int size)
         {
-            this._encryptor = encryptor ?? throw new ArgumentNullException(nameof(encryptor));
-            this._sequences = new ushort[size];
-            this._packets = new PacketEnvelope<T>[size];
+            this._sequences = new uint[size];
+            this._packets = new T[size];
             this._fromEndPoints = new IPEndPoint[size];
 
             this.Size = size;
-
-            this._ack = 0;
-        }
-
-        public ushort Ack => this._ack;
-
-        public void AddPacket(byte[] data, int offset, int count, IPEndPoint ipEndPoint)
-        {
-            using (var stream = new MemoryStream(data, offset, count))
-            {
-                // TODO: Split header and content deserialization so only the packet header is copied
-                PacketEnvelope<T> packet = default;
-
-                if (packet.Deserialize(stream, this._encryptor))
-                {
-                    var index = GetIndexFromSequence(packet.Header.Sequence);
-
-                    this._sequences[index] = packet.Header.Sequence;
-                    this._packets[index] = packet;
-                    this._fromEndPoints[index] = ipEndPoint;
-                }
-            }
         }
 
         public bool HasPacket(ushort sequence)
@@ -58,14 +29,31 @@ namespace Networking.Core
                 this._sequences[index] == sequence;
         }
 
-        public ref PacketEnvelope<T> GetPacket(ushort sequence)
+        public ref T GetPacket(ushort sequence)
+        {
+            var index = GetIndexFromSequence(sequence);
+
+            _sequences[index] = sequence;
+
+            return 
+                ref this._packets[index];
+        }
+
+        public ref readonly T GetPacketReadonly(ushort sequence)
+        {
+            var index = GetIndexFromSequence(sequence);
+
+            return
+                ref this._packets[index];
+        }
+
+        public void SetEndPoint(ushort sequence, in IPEndPoint ipEndPoint)
         {
             Debug.Assert(HasPacket(sequence));
 
             var index = GetIndexFromSequence(sequence);
 
-            return 
-                ref this._packets[index];
+            this._fromEndPoints[index] = ipEndPoint;
         }
 
         public void GetEndPoint(ushort sequence, out IPEndPoint ipEndPoint)

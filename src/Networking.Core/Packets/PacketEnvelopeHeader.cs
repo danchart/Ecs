@@ -38,5 +38,15 @@ namespace Networking.Core
                 // ack bitfield
                 && stream.PacketReadUInt(out AckBitField);
         }
+
+        public static ushort GetPacketSequence(Stream stream)
+        {
+            var startPOsition = stream.Position;
+            stream.PacketReadUShort(out ushort sequence);
+
+            stream.Seek(stream.Position - startPOsition, SeekOrigin.Current);
+
+            return sequence;
+        }
     }
 }

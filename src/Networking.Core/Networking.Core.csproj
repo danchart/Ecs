@@ -21,6 +21,7 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="PacketSequenceBuffer.cs" />
     <Compile Include="Packets\PacketEncryptor.cs" />
     <Compile Include="Packets\IPacketSerialization.cs" />
     <Compile Include="Packets\PacketEnvelope.cs" />

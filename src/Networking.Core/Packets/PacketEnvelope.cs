@@ -11,7 +11,7 @@ namespace Networking.Core
 
         public int Serialize(Stream stream, IPacketEncryptor packetEncryption)
         {
-            // TODO: Encryption
+            // TODO: Encrypt
 
             return
                 Header.Serialize(stream) +
@@ -20,11 +20,22 @@ namespace Networking.Core
 
         public bool Deserialize(Stream stream, IPacketEncryptor packetEncryption)
         {
-            // TODO: Decryption
+            // TODO: Decrypt
 
-            return
-                Header.Deserialize(stream) &&
-                Contents.Deserialize(stream); 
+            return 
+                Header.Deserialize(stream)
+                && Contents.Deserialize(stream);
+        }
+
+        /// <summary>
+        /// Pre-cracks the packet sequence.
+        /// </summary>
+        public static ushort GetPacketSequence(in byte[] data, int offset, int count)
+        {
+            using (var stream = new MemoryStream(data, offset, count))
+            {
+                return PacketEnvelopeHeader.GetPacketSequence(stream);
+            }
         }
     }
 }
