@@ -8,6 +8,8 @@ namespace Networking.Core
     public class PacketBuffer<T>
         where T : struct, IPacketSerialization
     {
+        private ushort _ack;
+
         private readonly ushort[] _sequences;
         private readonly PacketEnvelope<T>[] _packets;
         private readonly IPEndPoint[] _fromEndPoints;
@@ -24,7 +26,11 @@ namespace Networking.Core
             this._fromEndPoints = new IPEndPoint[size];
 
             this.Size = size;
+
+            this._ack = 0;
         }
+
+        public ushort Ack => this._ack;
 
         public void AddPacket(byte[] data, int offset, int count, IPEndPoint ipEndPoint)
         {

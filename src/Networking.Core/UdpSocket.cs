@@ -1,5 +1,6 @@
 ﻿using Common.Core;
 using System;
+using System.IO;
 using System.Net;
 using System.Net.Sockets;
 
@@ -12,6 +13,7 @@ namespace Networking.Core
 
         protected ILogger _logger;
         protected PacketBuffer<T> _packetBuffer;
+        protected IPacketEncryptor _encryptor;
 
         // Save delegate reference to avoid allocation.
         protected static readonly AsyncCallback ReceiveAsyncCallback = new AsyncCallback(ReceiveAsync);
@@ -19,16 +21,18 @@ namespace Networking.Core
 
         private readonly int _closeTimeout;
 
-        private readonly int MaxPacketSize;
+        protected readonly int MaxPacketSize;
 
         protected UdpSocketBase(
             ILogger logger, 
-            PacketBuffer<T> packetBuffer, 
+            PacketBuffer<T> packetBuffer,
+            IPacketEncryptor encryptor,
             int maxPacketSize, 
             int closeTimeout = 0)
         {
             this._logger = logger ?? throw new ArgumentNullException(nameof(logger));
             this._packetBuffer = packetBuffer ?? throw new ArgumentNullException(nameof(packetBuffer));
+            this._encryptor = encryptor ?? throw new ArgumentNullException(nameof(encryptor));
             this.MaxPacketSize = maxPacketSize;
             this._closeTimeout = closeTimeout;
 
@@ -100,10 +104,17 @@ namespace Networking.Core
     public class ClientUdpSocket<T> : UdpSocketBase<T>
         where T : struct, IPacketSerialization
     {
-        public ClientUdpSocket(ILogger logger, PacketBuffer<T> packetBuffer, int maxPacketSize) 
-            : base(logger, packetBuffer, maxPacketSize)
+        public ClientUdpSocket(
+            ILogger logger, 
+            PacketBuffer<T> packetBuffer, 
+            IPacketEncryptor encryptor,
+            int maxPacketSize) 
+            : base(logger, packetBuffer, encryptor, maxPacketSize)
         {
         }
+
+        public EndPoint LocalEndPoint => this._socket.LocalEndPoint;
+        public EndPoint RemoteEndPoint => this._socket.RemoteEndPoint;
 
         public void Start(IPEndPoint ipEndPoint)
         {
@@ -111,12 +122,20 @@ namespace Networking.Core
             BeginReceive();
         }
 
-        public SocketError Send(byte[] data)
+        public SocketError Send(PacketEnvelope<T> packet)
         {
+            var data = new byte[MaxPacketSize];
+            int size;
+
+            using (var stream = new MemoryStream(data))
+            {
+                size = packet.Serialize(stream, this._encryptor);
+            }
+
             this._socket.BeginSend(
                 data,
                 0,
-                data.Length,
+                size,
                 SocketFlags.None,
                 out SocketError errorCode,
                 SendAsyncCallback,
@@ -129,8 +148,12 @@ namespace Networking.Core
     public class ServerUdpSocket<T> : UdpSocketBase<T>
         where T : struct, IPacketSerialization
     {
-        public ServerUdpSocket(ILogger logger, PacketBuffer<T> packetBuffer, int maxPacketSize)
-            : base(logger, packetBuffer, maxPacketSize)
+        public ServerUdpSocket(
+            ILogger logger, 
+            PacketBuffer<T> packetBuffer,
+            IPacketEncryptor encryptor, 
+            int maxPacketSize)
+            : base(logger, packetBuffer, encryptor, maxPacketSize)
         {
         }
 
@@ -142,17 +165,20 @@ namespace Networking.Core
             BeginReceive();
         }
 
-        public void SendTo(byte[] data, IPEndPoint ipEndPoint)
+        public void SendTo(PacketEnvelope<T> packet, IPEndPoint ipEndPoint)
         {
-            SendTo(data, 0, data.Length, ipEndPoint);
-        }
+            var data = new byte[MaxPacketSize];
+            int size;
 
-        public void SendTo(byte[] data, int offset, int length, IPEndPoint ipEndPoint)
-        {
+            using (var stream = new MemoryStream(data))
+            {
+                size = packet.Serialize(stream, this._encryptor);
+            }
+
             this._socket.BeginSendTo(
                 data,
-                offset,
-                length,
+                0,
+                size,
                 SocketFlags.None,
                 ipEndPoint,
                 SendAsyncCallback,

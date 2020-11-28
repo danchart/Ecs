@@ -18,15 +18,36 @@ namespace Networking.Core.Tests
             var logger = new TestLogger();
             var serverPacketBuffer = new PacketBuffer<ServerPacket>(encryptor, size: 4);
 
-            var server = new ServerUdpSocket<ServerPacket>(logger, serverPacketBuffer, MaxPacketSize);
-            server.Start(new IPEndPoint(IPAddress.Parse("127.0.0.1"), 27000));
+            var serverEndPoint = new IPEndPoint(IPAddress.Parse("127.0.0.1"), 27000);
+
+            var serverSocket = new ServerUdpSocket<ServerPacket>(logger, serverPacketBuffer, MaxPacketSize);
+            serverSocket.Start(serverEndPoint);
 
             var clientPacketBuffer = new PacketBuffer<ClientPacket>(encryptor, size: 4);
-            var client = new ClientUdpSocket<ClientPacket>(logger, clientPacketBuffer, MaxPacketSize);
-            client.Start(new IPEndPoint(IPAddress.Parse("127.0.0.1"), 27000));
+            var client = new ClientUdpSocket<ClientPacket>(logger, clientPacketBuffer, MaxPacketSize);            
+            client.Start(serverEndPoint);
 
 
+            // Test simulation UDP loop:
+            //  - client waits for packet
+            //  - server sends packet
+            //  - client sends input + ack
+            //  - server recieves ack
 
+            var serverState = new ServerState
+            {
+                Sequence = 1,
+                Socket = serverSocket,
+                PacketBuffer = serverPacketBuffer,
+
+                ClientEndPoint = (IPEndPoint) client.LocalEndPoint,
+            };
+
+            var timer = new Timer(
+                new TimerCallback(ServerCallback),
+                serverState,
+                0,
+                16);
 
 
 
@@ -62,7 +83,7 @@ namespace Networking.Core.Tests
 
             // Server->Client SYN-ACK
 
-            server.SendTo(Encoding.ASCII.GetBytes("SYN-ACK"), clientIpEndPoint);
+            serverSocket.SendTo(Encoding.ASCII.GetBytes("SYN-ACK"), clientIpEndPoint);
 
             WaitForReceive(clientPacketBuffer, 1);
 
@@ -85,6 +106,23 @@ namespace Networking.Core.Tests
             Assert.Equal("ACK", ackText);
         }
 
+        private void ServerCallback(object obj)
+        {
+            var state = (ServerState)obj;
+
+            state.Socket.SendTo(
+                new PacketEnvelope<ServerPacket>
+                {
+                    Header = new PacketEnvelopeHeader
+                    {
+                        Sequence = state.Sequence++,
+                        Ack = state.PacketBuffer.AddPacket
+                    }
+                },
+                state.ClientEndPoint);
+        }
+
+
         private static void WaitForReceive(ReceiveBuffer serverBuffer, int queueCount)
         {
             for (int countdown = 10; countdown >= 0 && serverBuffer.Count != queueCount; countdown--)
@@ -93,15 +131,25 @@ namespace Networking.Core.Tests
             }
         }
 
+        private class ServerState
+        {
+            public ushort Sequence;
+            public ServerUdpSocket<ServerPacket> Socket;
+            public PacketBuffer<ServerPacket> PacketBuffer;
+
+            public IPEndPoint ClientEndPoint;
+        }
+
         private struct ServerPacket : IPacketSerialization
         {
-            public int a, b, c;
+            // Frame?
+
+            public float x, y;
 
             public bool Deserialize(Stream stream)
             {
-                stream.PacketReadInt(out this.a);
-                stream.PacketReadInt(out this.b);
-                stream.PacketReadInt(out this.c);
+                stream.PacketReadFloat(out this.x);
+                stream.PacketReadFloat(out this.y);
 
                 return true;
             }
@@ -109,9 +157,8 @@ namespace Networking.Core.Tests
             public int Serialize(Stream stream)
             {
                 return
-                    stream.PacketWriteInt(this.a)
-                    + stream.PacketWriteInt(this.b)
-                    + stream.PacketWriteInt(this.c);
+                    stream.PacketWriteFloat(this.x)
+                    + stream.PacketWriteFloat(this.y);
             }
         }
 
