@@ -1,8 +1,15 @@
-﻿namespace Networking.Core
+﻿using System;
+
+namespace Networking.Core
 {
+    /// <summary>
+    /// Sequence buffer.
+    /// 
+    /// https://www.gafferongames.com/post/reliable_ordered_messages/
+    /// </summary>
     public class PacketSequenceBuffer
     {
-        private int _highestInsertSequence;
+        private ushort _lastHighestInsertSequence;
 
         private readonly uint[] _sequences;
         private readonly PacketData[] _packets;
@@ -11,10 +18,15 @@
 
         public PacketSequenceBuffer(int size)
         {
-            this._highestInsertSequence = -1;
+            this._lastHighestInsertSequence = 0;
 
             this._sequences = new uint[size];
             this._packets = new PacketData[size];
+
+            for (int i = 0; i < this._sequences.Length; i++)
+            {
+                this._sequences[i] = uint.MaxValue;
+            }
 
             this.Size = size;
         }
@@ -33,22 +45,26 @@
 
             _sequences[index] = sequence;
 
-            if (this._highestInsertSequence >= 0 
-                && unchecked(sequence - this._highestInsertSequence) < (ushort.MaxValue >> 1))
+            if (IsHighestInsertSequence(sequence))
             {
-                // Update all sequence #'s between last highest and this sequence with int.MaxValue, which will always 
-                // be != to (ushort) sequence.
-                var count = ushort.MaxValue >> 1;
+                // Reset sequence buffer between the last and new highest sequence #'s with int.MaxValue. 
+                // This value is always  != to (ushort) sequence.
+                var cleanUpSequence = unchecked((ushort)(this._lastHighestInsertSequence + 1));
+                var count =  Math.Min(
+                    (ushort)unchecked(sequence - cleanUpSequence), 
+                    (ushort)Size - 1);
 
                 for (int i = 0; i < count; i++)
                 {
-                    this._sequences[this._highestInsertSequence + i] = int.MaxValue;
+                    var cleanUpIndex = GetIndexFromSequence(cleanUpSequence++);
+
+                    this._sequences[cleanUpIndex] = uint.MaxValue;
                 }
 
-                this._highestInsertSequence = sequence;
+                this._lastHighestInsertSequence = sequence;
             }
 
-            return 
+            return
                 ref this._packets[index];
         }
 
@@ -60,9 +76,15 @@
                 ref this._packets[index];
         }
 
-        private int GetIndexFromSequence(ushort sequence)
+        private ushort GetIndexFromSequence(ushort sequence)
         {
-            return sequence % Size;
+            return (ushort)(sequence % Size);
+        }
+
+        private bool IsHighestInsertSequence(ushort sequence)
+        {
+            return
+                ((ushort)unchecked(sequence - this._lastHighestInsertSequence)) < (ushort.MaxValue >> 1);
         }
 
         public struct PacketData

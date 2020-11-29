@@ -89,7 +89,7 @@ namespace Networking.Core
 
             using (var stream = new MemoryStream(state.Buffer, 0, bytesReceived))
             {
-                packet.Deserialize(stream, state.Encryptor);
+                //packet.Deserialize(stream, state.Encryptor);
             }
 
             state.PacketBuffer.SetEndPoint(sequence, (IPEndPoint)state.EndPointFrom);
