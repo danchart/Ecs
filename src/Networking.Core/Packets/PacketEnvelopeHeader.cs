@@ -15,7 +15,7 @@ namespace Networking.Core
         // Most recent received sequence #.
         public ushort Ack;
         // If bit n is set in ack_bits, then ack - n is acked.
-        public uint AckBitField;
+        public uint AckBitfield;
 
         public int Serialize(Stream stream)
         {
@@ -25,7 +25,7 @@ namespace Networking.Core
                 // ack
                 + stream.PacketWriteUShort(Ack)
                 // ack bitfield
-                + stream.PacketWriteUInt(AckBitField);
+                + stream.PacketWriteUInt(AckBitfield);
         }
 
         public bool Deserialize(Stream stream)
@@ -36,7 +36,7 @@ namespace Networking.Core
                 // ack
                 && stream.PacketReadUShort(out Ack)
                 // ack bitfield
-                && stream.PacketReadUInt(out AckBitField);
+                && stream.PacketReadUInt(out AckBitfield);
         }
 
         public static ushort GetPacketSequence(Stream stream)

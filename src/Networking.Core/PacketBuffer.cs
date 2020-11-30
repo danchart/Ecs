@@ -7,18 +7,16 @@ namespace Networking.Core
     public sealed class PacketBuffer<T>
         where T : struct, IPacketSerialization
     {
-        private ushort _lastHighestInsertSequence;
-
         private readonly uint[] _sequences;
         private readonly T[] _packets;
         private readonly IPEndPoint[] _fromEndPoints;
 
         private readonly int Size;
 
+        private const uint NullSequence = uint.MaxValue;
+
         public PacketBuffer(int size)
         {
-            this._lastHighestInsertSequence = 0;
-
             this._sequences = new uint[size];
             this._packets = new T[size];
             this._fromEndPoints = new IPEndPoint[size];
@@ -27,7 +25,7 @@ namespace Networking.Core
 
             for (int i = 0; i < this._sequences.Length; i++)
             {
-                this._sequences[i] = uint.MaxValue;
+                this._sequences[i] = NullSequence;
             }
         }
 
@@ -39,7 +37,7 @@ namespace Networking.Core
                 this._sequences[index] == sequence;
         }
 
-        public ref T Insert(ushort sequence, in IPEndPoint ipEndPoint)
+        public ref T Add(ushort sequence, in IPEndPoint ipEndPoint)
         {
             var index = GetIndexFromSequence(sequence);
 
@@ -47,32 +45,17 @@ namespace Networking.Core
 
             this._fromEndPoints[index] = ipEndPoint;
 
-            if (IsHighestInsertSequence(sequence))
-            {
-                // Reset sequence buffer between the last and new highest sequence #'s with int.MaxValue. 
-                // This value is always  != to (ushort) sequence.
-                var cleanUpSequence = unchecked((ushort)(this._lastHighestInsertSequence + 1));
-                var count = Math.Min(
-                    (ushort)unchecked(sequence - cleanUpSequence),
-                    (ushort)Size - 1);
-
-                for (int i = 0; i < count; i++)
-                {
-                    var cleanUpIndex = GetIndexFromSequence(cleanUpSequence++);
-
-                    this._sequences[cleanUpIndex] = uint.MaxValue;
-                }
-
-                this._lastHighestInsertSequence = sequence;
-            }
-
             return
                 ref this._packets[index];
         }
 
         public ref readonly T Get(ushort sequence)
         {
+            Debug.Assert(Contains(sequence));
+
             var index = GetIndexFromSequence(sequence);
+
+            this._sequences[index] = NullSequence;
 
             return
                 ref this._packets[index];
@@ -87,15 +70,18 @@ namespace Networking.Core
             ipEndPoint = this._fromEndPoints[index];
         }
 
+        public void Remove(ushort sequence)
+        {
+            Debug.Assert(Contains(sequence));
+
+            var index = GetIndexFromSequence(sequence);
+
+            this._sequences[index] = NullSequence;
+        }
+
         private int GetIndexFromSequence(ushort sequence)
         {
             return sequence % Size;
-        }
-
-        private bool IsHighestInsertSequence(ushort sequence)
-        {
-            return
-                ((ushort)unchecked(sequence - this._lastHighestInsertSequence)) < (ushort.MaxValue >> 1);
         }
     }
 }

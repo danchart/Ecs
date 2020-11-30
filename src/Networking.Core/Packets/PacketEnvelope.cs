@@ -7,25 +7,36 @@ namespace Networking.Core
     {
         public PacketEnvelopeHeader Header;
 
-        public T Contents;
-
-        public int Serialize(Stream stream, IPacketEncryptor packetEncryption)
+        public int Serialize(Stream stream, T contents, IPacketEncryptor packetEncryption)
         {
             // TODO: Encrypt
 
             return
                 Header.Serialize(stream) +
-                Contents.Serialize(stream);
+                contents.Serialize(stream);
         }
 
-        public bool Deserialize(Stream stream, IPacketEncryptor packetEncryption)
+        public static bool Deserialize(
+            Stream stream, 
+            IPacketEncryptor packetEncryption, 
+            ref PacketEnvelopeHeader header, 
+            ref T contents)
         {
             // TODO: Decrypt
 
-            return 
-                Header.Deserialize(stream)
-                && Contents.Deserialize(stream);
+            return
+                header.Deserialize(stream) 
+                && contents.Deserialize(stream);
         }
+
+        //public bool Deserialize(Stream stream, IPacketEncryptor packetEncryption)
+        //{
+        //    // TODO: Decrypt
+
+        //    return
+        //        Header.Deserialize(stream);
+        //        && Contents.Deserialize(stream);
+        //}
 
         /// <summary>
         /// Pre-cracks the packet sequence.

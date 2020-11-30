@@ -12,7 +12,7 @@ namespace Networking.Core.Tests
             Assert.False(buffer.Contains(100));
 
             ref var packetData = ref buffer.Insert(100);
-            packetData.IsAcked = true;
+            //packetData.IsAcked = true;
 
             Assert.True(buffer.Contains(100));
             Assert.Equal(100U, buffer.Ack);
@@ -34,9 +34,11 @@ namespace Networking.Core.Tests
             Assert.True(buffer.Contains(111));
 
             packetData = ref buffer.Insert(110);
-            Assert.True(buffer.Contains(110));
 
-            packetData = ref buffer.Insert(111);
+            Assert.True(buffer.Contains(110));
+            Assert.True(buffer.Contains(111));
+
+            //packetData = ref buffer.Insert(111);
             //Assert.Equal(3U, buffer.GetAckBitfield());
         }
     }

@@ -1,6 +1,5 @@
 ﻿using System.IO;
 using System.Net;
-using System.Text;
 using System.Threading;
 using Test.Common;
 using Xunit;
@@ -16,15 +15,33 @@ namespace Networking.Core.Tests
 
             var encryptor = new XorPacketEncryptor();
             var logger = new TestLogger();
+            var serverLocalSequenceBuffer = new PacketSequenceBuffer(size: 4);
+            var serverRemoteSequenceBuffer = new PacketSequenceBuffer(size: 4);
             var serverPacketBuffer = new PacketBuffer<ServerPacket>(size: 4);
 
             var serverEndPoint = new IPEndPoint(IPAddress.Parse("127.0.0.1"), 27000);
 
-            var serverSocket = new ServerUdpSocket<ServerPacket>(logger, serverPacketBuffer, encryptor, MaxPacketSize);
+            var serverSocket = new ServerUdpSocket<ServerPacket>(
+                logger, 
+                serverLocalSequenceBuffer,
+                serverRemoteSequenceBuffer, 
+                serverPacketBuffer, 
+                encryptor, 
+                MaxPacketSize);
+
             serverSocket.Start(serverEndPoint);
 
+            var clientLocalSequenceBuffer = new PacketSequenceBuffer(size: 4);
+            var clientRemoteSequenceBuffer = new PacketSequenceBuffer(size: 4);
             var clientPacketBuffer = new PacketBuffer<ClientPacket>(size: 4);
-            var client = new ClientUdpSocket<ClientPacket>(logger, clientPacketBuffer, encryptor, MaxPacketSize);
+            var client = new ClientUdpSocket<ClientPacket>(
+                logger, 
+                clientLocalSequenceBuffer,
+                clientRemoteSequenceBuffer,
+                clientPacketBuffer, 
+                encryptor, 
+                MaxPacketSize);
+
             client.Start(serverEndPoint);
 
 
@@ -38,6 +55,8 @@ namespace Networking.Core.Tests
             {
                 Sequence = 1,
                 Socket = serverSocket,
+                LocalSequenceBuffer = serverLocalSequenceBuffer,
+                RemoteSequenceBuffer = serverRemoteSequenceBuffer,
                 PacketBuffer = serverPacketBuffer,
 
                 ClientEndPoint = (IPEndPoint)client.LocalEndPoint,
@@ -48,20 +67,21 @@ namespace Networking.Core.Tests
                 serverState,
                 0,
                 16);
+
+            Thread.Sleep(1000);
+
+            int i = 0;
         }
 
         private void ServerCallback(object obj)
         {
             var state = (ServerState)obj;
 
-            state.Socket.SendTo(
-                new PacketEnvelope<ServerPacket>
+            var sequence = state.Socket.SendTo(
+                new ServerPacket
                 {
-                    Header = new PacketEnvelopeHeader
-                    {
-                        Sequence = state.Sequence++,
-                        //Ack = state.PacketBuffer.Ack
-                    }
+                    x = 10,
+                    y = 11
                 },
                 state.ClientEndPoint);
         }
@@ -70,7 +90,8 @@ namespace Networking.Core.Tests
         {
             public ushort Sequence;
             public ServerUdpSocket<ServerPacket> Socket;
-            public PacketSequenceBuffer SequenceBuffer;
+            public PacketSequenceBuffer LocalSequenceBuffer;
+            public PacketSequenceBuffer RemoteSequenceBuffer;
             public PacketBuffer<ServerPacket> PacketBuffer;
 
             public IPEndPoint ClientEndPoint;

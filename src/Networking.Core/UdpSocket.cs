@@ -3,17 +3,26 @@ using System;
 using System.IO;
 using System.Net;
 using System.Net.Sockets;
+using System.Threading;
 
 namespace Networking.Core
 {
+    public delegate void OnPacketAckedDelegate(ushort sequence);
+
     public abstract class UdpSocketBase<T>
         where T : struct, IPacketSerialization
     {
+        public OnPacketAckedDelegate OnAcked;
+
+        protected int _sequence; // not ushort so we can use Interlocked.Increment(), must convert to ushort.ss
+
         protected readonly Socket _socket;
 
-        protected ILogger _logger;
-        protected PacketBuffer<T> _packetBuffer;
-        protected IPacketEncryptor _encryptor;
+        protected readonly ILogger _logger;
+        protected readonly PacketSequenceBuffer _localSequenceBuffer;
+        protected readonly PacketSequenceBuffer _remoteSequenceBuffer;
+        protected readonly PacketBuffer<T> _packetBuffer;
+        protected readonly IPacketEncryptor _encryptor;
 
         // Save delegate reference to avoid allocation.
         protected static readonly AsyncCallback ReceiveAsyncCallback = new AsyncCallback(ReceiveAsync);
@@ -24,16 +33,22 @@ namespace Networking.Core
         protected readonly int MaxPacketSize;
 
         protected UdpSocketBase(
-            ILogger logger, 
+            ILogger logger,
+            PacketSequenceBuffer localSequenceBuffer,
+            PacketSequenceBuffer remoteSequenceBuffer,
             PacketBuffer<T> packetBuffer,
             IPacketEncryptor encryptor,
             int maxPacketSize, 
             int closeTimeout = 0)
         {
             this._logger = logger ?? throw new ArgumentNullException(nameof(logger));
+            this._localSequenceBuffer = localSequenceBuffer ?? throw new ArgumentNullException(nameof(localSequenceBuffer));
+            this._remoteSequenceBuffer = remoteSequenceBuffer ?? throw new ArgumentNullException(nameof(remoteSequenceBuffer));
             this._packetBuffer = packetBuffer ?? throw new ArgumentNullException(nameof(packetBuffer));
             this._encryptor = encryptor ?? throw new ArgumentNullException(nameof(encryptor));
             this.MaxPacketSize = maxPacketSize;
+
+            this._sequence = 0;
             this._closeTimeout = closeTimeout;
 
             //this._socket = new Socket(AddressFamily.InterNetwork, SocketType.Dgram, ProtocolType.Udp);
@@ -49,10 +64,13 @@ namespace Networking.Core
         protected class ReceiveState
         {
             public Socket Socket;
+            public PacketSequenceBuffer LocalSequenceBuffer;
+            public PacketSequenceBuffer RemoteSequenceBuffer;
             public PacketBuffer<T> PacketBuffer;
             public EndPoint EndPointFrom;
             public byte[] Data;
             public IPacketEncryptor Encryptor;
+            public OnPacketAckedDelegate OnAcked;
             public ILogger Logger;
         }
 
@@ -61,10 +79,13 @@ namespace Networking.Core
             var state = new ReceiveState
             {
                 Socket = this._socket,
+                LocalSequenceBuffer = this._localSequenceBuffer,
+                RemoteSequenceBuffer = this._remoteSequenceBuffer,
                 PacketBuffer = this._packetBuffer,
                 Encryptor = this._encryptor,
                 EndPointFrom = new IPEndPoint(IPAddress.Any, 0),
                 Data = new byte[MaxPacketSize],
+                OnAcked = this.OnAcked,
                 Logger = this._logger,
             };
 
@@ -78,19 +99,32 @@ namespace Networking.Core
                 state);
         }
 
+        protected ushort GetNextSequence()
+        {
+            return (ushort)(Interlocked.Increment(ref this._sequence) % ushort.MaxValue);
+        }
+
         private static void ReceiveAsync(IAsyncResult ar)
         {
             ReceiveState state = (ReceiveState)ar.AsyncState;
             int bytesReceived = state.Socket.EndReceiveFrom(ar, ref state.EndPointFrom);
 
             ushort sequence = PacketEnvelope<T>.GetPacketSequence(state.Data, 0, bytesReceived);
+            PacketEnvelopeHeader packetHeader = default;
 
-            ref var packet = ref state.PacketBuffer.Insert(sequence, (IPEndPoint)state.EndPointFrom);
+            ref var packet = ref state.PacketBuffer.Add(sequence, (IPEndPoint)state.EndPointFrom);
 
             using (var stream = new MemoryStream(state.Data, 0, bytesReceived))
             {
-                packet.Deserialize(stream);
+                PacketEnvelope<T>.Deserialize(stream, state.Encryptor, ref packetHeader, ref packet);
             }
+
+            state.RemoteSequenceBuffer.Insert(packetHeader.Sequence);
+
+            state.LocalSequenceBuffer.Update(
+                packetHeader.Ack, 
+                packetHeader.AckBitfield, 
+                state.OnAcked);
 
             // Chain next receive.
             state.Socket.BeginReceiveFrom(
@@ -114,11 +148,19 @@ namespace Networking.Core
         where T : struct, IPacketSerialization
     {
         public ClientUdpSocket(
-            ILogger logger, 
+            ILogger logger,
+            PacketSequenceBuffer localSequenceBuffer,
+            PacketSequenceBuffer remoteSequenceBuffer,
             PacketBuffer<T> packetBuffer, 
             IPacketEncryptor encryptor,
             int maxPacketSize) 
-            : base(logger, packetBuffer, encryptor, maxPacketSize)
+            : base(
+                  logger, 
+                  localSequenceBuffer, 
+                  remoteSequenceBuffer,
+                  packetBuffer, 
+                  encryptor, 
+                  maxPacketSize)
         {
         }
 
@@ -131,14 +173,27 @@ namespace Networking.Core
             BeginReceive();
         }
 
-        public SocketError Send(PacketEnvelope<T> packet)
+        public ushort Send(in T packet)
         {
             var data = new byte[MaxPacketSize];
             int size;
 
+            PacketEnvelope<T> envelope = new PacketEnvelope<T>
+            {
+                Header = new PacketEnvelopeHeader
+                {
+                    Sequence = GetNextSequence(),
+                    Ack = this._remoteSequenceBuffer.Ack,
+                    AckBitfield = this._remoteSequenceBuffer.GetAckBitfield()
+                }
+            };
+
             using (var stream = new MemoryStream(data))
             {
-                size = packet.Serialize(stream, this._encryptor);
+                size = envelope.Serialize(
+                    stream, 
+                    packet,
+                    this._encryptor);
             }
 
             this._socket.BeginSend(
@@ -150,7 +205,12 @@ namespace Networking.Core
                 SendAsyncCallback,
                 this._socket);
 
-            return errorCode;
+            if (errorCode != SocketError.Success)
+            {
+                this._logger.VerboseError($"Socket send error: errorCode={errorCode}");
+            }
+
+            return envelope.Header.Sequence;
         }
     }
 
@@ -158,11 +218,19 @@ namespace Networking.Core
         where T : struct, IPacketSerialization
     {
         public ServerUdpSocket(
-            ILogger logger, 
+            ILogger logger,
+            PacketSequenceBuffer localSequenceBuffer,
+            PacketSequenceBuffer remoteSequenceBuffer,
             PacketBuffer<T> packetBuffer,
             IPacketEncryptor encryptor, 
             int maxPacketSize)
-            : base(logger, packetBuffer, encryptor, maxPacketSize)
+            : base(
+                  logger, 
+                  localSequenceBuffer,
+                  remoteSequenceBuffer, 
+                  packetBuffer, 
+                  encryptor, 
+                  maxPacketSize)
         {
         }
 
@@ -174,14 +242,27 @@ namespace Networking.Core
             BeginReceive();
         }
 
-        public void SendTo(PacketEnvelope<T> packet, IPEndPoint ipEndPoint)
+        public ushort SendTo(in T packet, IPEndPoint ipEndPoint)
         {
             var data = new byte[MaxPacketSize];
             int size;
 
+            PacketEnvelope<T> envelope = new PacketEnvelope<T>
+            {
+                Header = new PacketEnvelopeHeader
+                {
+                    Sequence = GetNextSequence(),
+                    Ack = this._remoteSequenceBuffer.Ack,
+                    AckBitfield = this._remoteSequenceBuffer.GetAckBitfield()
+                }
+            };
+
             using (var stream = new MemoryStream(data))
             {
-                size = packet.Serialize(stream, this._encryptor);
+                size = envelope.Serialize(
+                    stream,
+                    packet,
+                    this._encryptor);
             }
 
             this._socket.BeginSendTo(
@@ -192,6 +273,8 @@ namespace Networking.Core
                 ipEndPoint,
                 SendAsyncCallback,
                 this._socket);
+
+            return envelope.Header.Sequence;
         }
     }
 }

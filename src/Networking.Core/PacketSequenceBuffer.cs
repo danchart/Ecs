@@ -16,6 +16,8 @@ namespace Networking.Core
 
         private readonly int Size;
 
+        private const uint NullSequence = uint.MaxValue;
+
         public PacketSequenceBuffer(int size)
         {
             this._ack = 0;
@@ -25,18 +27,18 @@ namespace Networking.Core
 
             for (int i = 0; i < this._sequences.Length; i++)
             {
-                this._sequences[i] = uint.MaxValue;
+                this._sequences[i] = NullSequence;
             }
 
             this.Size = size;
         }
 
         public ushort Ack => this._ack;
-#if MOTHBALL
+
         public uint GetAckBitfield()
         {
             uint ackBitfield = 0;
-            var sequence = unchecked((ushort)(this._ack - 32));
+            ushort sequence = unchecked((ushort)(this._ack - 32));
 
             for (int i = 0; i < sizeof(uint) * 8; i++, sequence++)
             {
@@ -44,14 +46,14 @@ namespace Networking.Core
 
                 ackBitfield <<= 1;
                 ackBitfield |= 
-                    this._sequences[cleanUpIndex] == sequence 
+                    (this._sequences[cleanUpIndex] == sequence)
                     ? 1U 
                     : 0;
             }
 
             return ackBitfield;
         }
-#endif
+
         public bool Contains(ushort sequence)
         {
             var index = GetIndexFromSequence(sequence);
@@ -79,7 +81,7 @@ namespace Networking.Core
                 {
                     var cleanUpIndex = GetIndexFromSequence(cleanUpSequence++);
 
-                    this._sequences[cleanUpIndex] = uint.MaxValue;
+                    this._sequences[cleanUpIndex] = NullSequence;
                 }
 
                 this._ack = sequence;
@@ -114,6 +116,31 @@ namespace Networking.Core
         public struct PacketData
         {
             public bool IsAcked;
+        }
+    }
+
+    public static class PacketSequenceBufferExtensions
+    {
+        public static void Update(
+            this PacketSequenceBuffer sequenceBuffer, 
+            ushort ack, 
+            uint ackBitfield,
+            OnPacketAckedDelegate ackedCallback)
+        {
+            for (int i = 0; i < 32; i++, ackBitfield >>= 1)
+            {
+                if ((ackBitfield & 1) != 0)
+                {
+                    ushort ackSequence = (ushort)unchecked(ack - i);
+
+                    if (!sequenceBuffer.Contains(ackSequence))
+                    {
+                        sequenceBuffer.Insert(ackSequence);
+
+                        ackedCallback?.Invoke(ackSequence);
+                    }
+                }
+            }
         }
     }
 }
