@@ -7,9 +7,9 @@ namespace Networking.Core
     /// 
     /// https://www.gafferongames.com/post/reliable_ordered_messages/
     /// </summary>
-    public class PacketSequenceBuffer
+    public sealed class PacketSequenceBuffer
     {
-        private ushort _lastHighestInsertSequence;
+        private ushort _ack; // last acknowledged sequence #.
 
         private readonly uint[] _sequences;
         private readonly PacketData[] _packets;
@@ -18,7 +18,7 @@ namespace Networking.Core
 
         public PacketSequenceBuffer(int size)
         {
-            this._lastHighestInsertSequence = 0;
+            this._ack = 0;
 
             this._sequences = new uint[size];
             this._packets = new PacketData[size];
@@ -31,7 +31,28 @@ namespace Networking.Core
             this.Size = size;
         }
 
-        public bool HasPacket(ushort sequence)
+        public ushort Ack => this._ack;
+#if MOTHBALL
+        public uint GetAckBitfield()
+        {
+            uint ackBitfield = 0;
+            var sequence = unchecked((ushort)(this._ack - 32));
+
+            for (int i = 0; i < sizeof(uint) * 8; i++, sequence++)
+            {
+                var cleanUpIndex = GetIndexFromSequence(sequence);
+
+                ackBitfield <<= 1;
+                ackBitfield |= 
+                    this._sequences[cleanUpIndex] == sequence 
+                    ? 1U 
+                    : 0;
+            }
+
+            return ackBitfield;
+        }
+#endif
+        public bool Contains(ushort sequence)
         {
             var index = GetIndexFromSequence(sequence);
 
@@ -45,11 +66,11 @@ namespace Networking.Core
 
             _sequences[index] = sequence;
 
-            if (IsHighestInsertSequence(sequence))
+            if (IsHighestAck(sequence))
             {
                 // Reset sequence buffer between the last and new highest sequence #'s with int.MaxValue. 
                 // This value is always  != to (ushort) sequence.
-                var cleanUpSequence = unchecked((ushort)(this._lastHighestInsertSequence + 1));
+                var cleanUpSequence = unchecked((ushort)(this._ack + 1));
                 var count =  Math.Min(
                     (ushort)unchecked(sequence - cleanUpSequence), 
                     (ushort)Size - 1);
@@ -61,7 +82,7 @@ namespace Networking.Core
                     this._sequences[cleanUpIndex] = uint.MaxValue;
                 }
 
-                this._lastHighestInsertSequence = sequence;
+                this._ack = sequence;
             }
 
             return
@@ -81,10 +102,13 @@ namespace Networking.Core
             return (ushort)(sequence % Size);
         }
 
-        private bool IsHighestInsertSequence(ushort sequence)
+        private bool IsHighestAck(ushort sequence)
         {
+            var difference = ((ushort)unchecked(sequence - this._ack));
+
             return
-                ((ushort)unchecked(sequence - this._lastHighestInsertSequence)) < (ushort.MaxValue >> 1);
+                difference != 0 &&
+                difference < (ushort.MaxValue >> 1);
         }
 
         public struct PacketData

@@ -9,7 +9,6 @@ namespace Networking.Core.Tests
 {
     public class UdpSocketTests
     {
-#if NEVER
         [Fact]
         public void ClientServerSendReceive()
         {
@@ -41,7 +40,7 @@ namespace Networking.Core.Tests
                 Socket = serverSocket,
                 PacketBuffer = serverPacketBuffer,
 
-                ClientEndPoint = (IPEndPoint) client.LocalEndPoint,
+                ClientEndPoint = (IPEndPoint)client.LocalEndPoint,
             };
 
             var timer = new Timer(
@@ -49,10 +48,78 @@ namespace Networking.Core.Tests
                 serverState,
                 0,
                 16);
+        }
+
+        private void ServerCallback(object obj)
+        {
+            var state = (ServerState)obj;
+
+            state.Socket.SendTo(
+                new PacketEnvelope<ServerPacket>
+                {
+                    Header = new PacketEnvelopeHeader
+                    {
+                        Sequence = state.Sequence++,
+                        //Ack = state.PacketBuffer.Ack
+                    }
+                },
+                state.ClientEndPoint);
+        }
+
+        private class ServerState
+        {
+            public ushort Sequence;
+            public ServerUdpSocket<ServerPacket> Socket;
+            public PacketSequenceBuffer SequenceBuffer;
+            public PacketBuffer<ServerPacket> PacketBuffer;
+
+            public IPEndPoint ClientEndPoint;
+        }
+
+        private struct ServerPacket : IPacketSerialization
+        {
+            // Frame?
+
+            public float x, y;
+
+            public bool Deserialize(Stream stream)
+            {
+                stream.PacketReadFloat(out this.x);
+                stream.PacketReadFloat(out this.y);
+
+                return true;
+            }
+
+            public int Serialize(Stream stream)
+            {
+                return
+                    stream.PacketWriteFloat(this.x)
+                    + stream.PacketWriteFloat(this.y);
+            }
+        }
+
+        private struct ClientPacket : IPacketSerialization
+        {
+            public float xAxis;
+            public float yAxis;
+
+            public bool Deserialize(Stream stream)
+            {
+                stream.PacketReadFloat(out xAxis);
+                stream.PacketReadFloat(out yAxis);
+
+                return true;
+            }
+
+            public int Serialize(Stream stream)
+            {
+                return
+                    stream.PacketWriteFloat(this.xAxis)
+                    + stream.PacketWriteFloat(this.yAxis);
+            }
 
 
-
-
+#if MOHTBALL
             // Simulate TCP style SYN > SYN-ACK > ACK handshake...
 
             // Client->Server SYN
@@ -107,21 +174,6 @@ namespace Networking.Core.Tests
             Assert.Equal("ACK", ackText);
         }
 
-        private void ServerCallback(object obj)
-        {
-            var state = (ServerState)obj;
-
-            state.Socket.SendTo(
-                new PacketEnvelope<ServerPacket>
-                {
-                    Header = new PacketEnvelopeHeader
-                    {
-                        Sequence = state.Sequence++,
-                        Ack = state.PacketBuffer.Ack
-                    }
-                },
-                state.ClientEndPoint);
-        }
 
 
         private static void WaitForReceive(ReceiveBuffer serverBuffer, int queueCount)
@@ -132,57 +184,7 @@ namespace Networking.Core.Tests
             }
         }
 
-        private class ServerState
-        {
-            public ushort Sequence;
-            public ServerUdpSocket<ServerPacket> Socket;
-            public PacketBuffer<ServerPacket> PacketBuffer;
-
-            public IPEndPoint ClientEndPoint;
-        }
-
-        private struct ServerPacket : IPacketSerialization
-        {
-            // Frame?
-
-            public float x, y;
-
-            public bool Deserialize(Stream stream)
-            {
-                stream.PacketReadFloat(out this.x);
-                stream.PacketReadFloat(out this.y);
-
-                return true;
-            }
-
-            public int Serialize(Stream stream)
-            {
-                return
-                    stream.PacketWriteFloat(this.x)
-                    + stream.PacketWriteFloat(this.y);
-            }
-        }
-
-        private struct ClientPacket : IPacketSerialization
-        {
-            public float xAxis;
-            public float yAxis;
-
-            public bool Deserialize(Stream stream)
-            {
-                stream.PacketReadFloat(out xAxis);
-                stream.PacketReadFloat(out yAxis);
-
-                return true;
-            }
-
-            public int Serialize(Stream stream)
-            {
-                return
-                    stream.PacketWriteFloat(this.xAxis)
-                    + stream.PacketWriteFloat(this.yAxis);
-            }
-        }
 #endif
+        }
     }
 }

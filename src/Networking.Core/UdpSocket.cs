@@ -51,7 +51,7 @@ namespace Networking.Core
             public Socket Socket;
             public PacketBuffer<T> PacketBuffer;
             public EndPoint EndPointFrom;
-            public byte[] Buffer;
+            public byte[] Data;
             public IPacketEncryptor Encryptor;
             public ILogger Logger;
         }
@@ -64,12 +64,12 @@ namespace Networking.Core
                 PacketBuffer = this._packetBuffer,
                 Encryptor = this._encryptor,
                 EndPointFrom = new IPEndPoint(IPAddress.Any, 0),
-                Buffer = new byte[MaxPacketSize],
+                Data = new byte[MaxPacketSize],
                 Logger = this._logger,
             };
 
             this._socket.BeginReceiveFrom(
-                state.Buffer,
+                state.Data,
                 0,
                 MaxPacketSize,
                 SocketFlags.None,
@@ -83,22 +83,20 @@ namespace Networking.Core
             ReceiveState state = (ReceiveState)ar.AsyncState;
             int bytesReceived = state.Socket.EndReceiveFrom(ar, ref state.EndPointFrom);
 
-            ushort sequence = PacketEnvelope<T>.GetPacketSequence(state.Buffer, 0, bytesReceived);
+            ushort sequence = PacketEnvelope<T>.GetPacketSequence(state.Data, 0, bytesReceived);
 
-            ref var packet = ref state.PacketBuffer.GetPacket(sequence);
+            ref var packet = ref state.PacketBuffer.Insert(sequence, (IPEndPoint)state.EndPointFrom);
 
-            using (var stream = new MemoryStream(state.Buffer, 0, bytesReceived))
+            using (var stream = new MemoryStream(state.Data, 0, bytesReceived))
             {
-                //packet.Deserialize(stream, state.Encryptor);
+                packet.Deserialize(stream);
             }
-
-            state.PacketBuffer.SetEndPoint(sequence, (IPEndPoint)state.EndPointFrom);
 
             // Chain next receive.
             state.Socket.BeginReceiveFrom(
-                state.Buffer,
+                state.Data,
                 0,
-                state.Buffer.Length,
+                state.Data.Length,
                 SocketFlags.None,
                 ref state.EndPointFrom,
                 ReceiveAsyncCallback,
